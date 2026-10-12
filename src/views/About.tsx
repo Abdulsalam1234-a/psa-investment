@@ -156,13 +156,22 @@ export const About: React.FC<AboutProps> = ({ setActiveTab: _setActiveTab, onOpe
               </div>
             </div>
 
-            {/* Right Badge */}
+            {/* Right Headshot Card */}
             <div className="lg:col-span-4 flex flex-col items-center justify-center p-8 bg-slate-800/60 rounded-3xl border border-slate-700/80 text-center space-y-4">
-              <div className="w-24 h-24 rounded-3xl bg-[#C9A84C] text-[#0A1F44] flex items-center justify-center font-serif font-black text-4xl shadow-xl">
-                SA
+              <div className="relative">
+                <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-[#C9A84C] shadow-2xl bg-slate-900 border-2 border-slate-800">
+                  <img
+                    src="/salami-abdullahi.jpg"
+                    alt="Salami Abdullahi - Founder, CEO, COO & Chief Analyst at PSA Investment"
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#0A1F44] text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-md whitespace-nowrap">
+                  Verified Executive
+                </div>
               </div>
-              <div>
-                <h4 className="font-serif font-black text-lg text-white">Salami Abdullahi</h4>
+              <div className="pt-2">
+                <h4 className="font-serif font-black text-xl text-white">Salami Abdullahi</h4>
                 <div className="text-xs text-[#C9A84C] font-semibold mt-0.5">Lagos, Nigeria</div>
                 <div className="text-[11px] text-slate-400 mt-2 font-mono">
                   Administrator UID: PSA-CEO001
@@ -170,7 +179,12 @@ export const About: React.FC<AboutProps> = ({ setActiveTab: _setActiveTab, onOpe
               </div>
               <div className="text-[11px] text-slate-400 leading-relaxed">
                 Direct Inquiries: <br />
-                <span className="text-white font-mono">salamiabdullahi257@gmail.com</span>
+                <a
+                  href="mailto:salamiabdullahi257@gmail.com"
+                  className="text-white hover:text-[#C9A84C] font-mono transition-colors"
+                >
+                  salamiabdullahi257@gmail.com
+                </a>
               </div>
             </div>
           </div>
