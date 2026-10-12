@@ -37,7 +37,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
     updateMemberProfile
   } = useAuth();
 
-  const { reports, downloadLogs, logReportDownload } = useData();
+  const { reports, downloadLogs, logReportDownload, chronicles, logChronicleDownload } = useData();
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -484,6 +484,74 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
                   className="px-4 py-2 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 07:00 WAT Daily Financial Chronicle Vault */}
+      <div className="bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 border border-slate-300 shadow-xs space-y-6 font-serif">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-300 pb-4">
+          <div className="space-y-1 font-sans">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] uppercase font-bold tracking-wider text-[#0A1F44]">
+                07:00 WAT Daily Intelligence Archive
+              </span>
+            </div>
+            <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+              The PSA Financial Chronicle (Archived Editions)
+            </h3>
+            <p className="text-xs text-slate-600">
+              Verified daily broadsheets published every morning before floor open.
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              if (chronicles[0]) {
+                logChronicleDownload(chronicles[0].id, memberProfile?.email);
+                window.print();
+              }
+            }}
+            className="px-4 py-2 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer font-sans"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Today's Broadsheet (PDF)</span>
+          </button>
+        </div>
+
+        <div className="divide-y divide-slate-200 font-sans">
+          {chronicles.map(chron => (
+            <div
+              key={chron.id}
+              className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-xs text-[#0A1F44] bg-white px-2 py-0.5 rounded border border-slate-200">
+                    {chron.volume}
+                  </span>
+                  <span className="text-xs text-slate-500 font-semibold">{chron.editionDate}</span>
+                </div>
+                <h4 className="font-serif font-bold text-sm text-slate-900 leading-snug">
+                  {chron.headline}
+                </h4>
+                <p className="text-[11px] text-slate-500 line-clamp-1">{chron.subheadline}</p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => {
+                    logChronicleDownload(chron.id, memberProfile?.email);
+                    window.print();
+                  }}
+                  className="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-[#0A1F44] font-bold text-xs rounded-lg border border-slate-300 shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#C9A84C]" />
                   <span>Download PDF</span>
                 </button>
               </div>

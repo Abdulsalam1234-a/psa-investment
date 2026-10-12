@@ -115,8 +115,66 @@ export interface StorageFile {
   uploadedBy: string;
 }
 
+export interface MarketBarometer {
+  metric: string;
+  fridayClose: string;
+  thursdayClose: string;
+  change: string;
+  source: string;
+}
+
+export interface StockMover {
+  ticker: string;
+  name: string;
+  close: string;
+  change: string;
+}
+
+export interface BellwetherItem {
+  ticker: string;
+  close: string;
+  turnover: string;
+  signal: string;
+  notes: string;
+}
+
+export interface MacroBenchmark {
+  indicator: string;
+  level: string;
+  variance: string;
+  source: string;
+}
+
+export interface ChronicleEdition {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  volume: string;
+  editionDate: string;
+  briefingTime: string;
+  headline: string;
+  subheadline: string;
+  leadArticle: string;
+  marketBarometers: MarketBarometer[];
+  topGainers: StockMover[];
+  topLosers: StockMover[];
+  bellwethers: BellwetherItem[];
+  macroBenchmarks: MacroBenchmark[];
+  tacticalPlaybook: string[];
+  rawText: string;
+  pdfUrl?: string;
+  status: 'published' | 'draft';
+  source: 'gemini_automation' | 'admin_upload';
+  downloadCount: number;
+  viewCount: number;
+  createdAt: string;
+  publishedAt: string;
+}
+
 export type ViewTab =
   | 'home'
+  | 'chronicle'
   | 'about'
   | 'services'
   | 'research'

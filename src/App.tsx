@@ -13,6 +13,7 @@ import { AnalystCircle } from './views/AnalystCircle';
 import { Contact } from './views/Contact';
 import { MemberPortal } from './views/MemberPortal';
 import { AdminPanel } from './views/AdminPanel';
+import { ChronicleView } from './views/ChronicleView';
 import { useAuth } from './context/AuthContext';
 import { useData } from './context/DataContext';
 
@@ -39,6 +40,8 @@ export const AppContent: React.FC = () => {
       setActiveTab('admin-panel');
     } else if (path === 'portal' || path === 'member-portal') {
       setActiveTab('member-portal');
+    } else if (path === 'chronicle' || path === 'newspaper' || path === 'daily-report') {
+      setActiveTab('chronicle');
     }
   }, [currentUser]);
 
@@ -71,6 +74,9 @@ export const AppContent: React.FC = () => {
             onOpenAuthModal={handleOpenAuth}
             onSelectReport={handleSelectReport}
           />
+        )}
+        {activeTab === 'chronicle' && (
+          <ChronicleView onOpenAuthModal={handleOpenAuth} />
         )}
         {activeTab === 'about' && (
           <About setActiveTab={setActiveTab} onOpenAuthModal={handleOpenAuth} />

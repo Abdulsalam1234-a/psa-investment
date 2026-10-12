@@ -14,7 +14,10 @@ import {
   ExternalLink,
   Lock,
   Clock,
-  Sparkles
+  Sparkles,
+  Download,
+  Calendar,
+  Archive
 } from 'lucide-react';
 import { ViewTab } from '../types';
 import { useData } from '../context/DataContext';
@@ -30,7 +33,8 @@ export const Home: React.FC<HomeProps> = ({
   onOpenAuthModal,
   onSelectReport
 }) => {
-  const { services, reports, videos } = useData();
+  const { services, reports, videos, chronicles, logChronicleDownload } = useData();
+  const latestChronicle = chronicles[0];
 
   const getServiceIcon = (iconName: string) => {
     switch (iconName) {
@@ -283,7 +287,115 @@ export const Home: React.FC<HomeProps> = ({
         </div>
       </section>
 
-      {/* 3. Core Advisory Services (Refined Seamless Card Layout) */}
+      {/* 3. The PSA Financial Chronicle (Today's Daily Newspaper & Pre-Market Briefing) */}
+      {latestChronicle && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#FAF8F5] rounded-3xl p-6 sm:p-10 border-2 border-[#0A1F44]/20 shadow-xl space-y-6 relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b-2 border-slate-900 pb-5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-sans uppercase font-bold tracking-widest text-[#0A1F44]">
+                    Daily 07:00 WAT Automation Dispatch
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-[#0A1F44] text-[#C9A84C] text-[10px] font-mono font-bold">
+                    {latestChronicle.volume}
+                  </span>
+                </div>
+                <h2 className="font-serif font-black text-2xl sm:text-3xl text-[#0A1F44] uppercase tracking-tight">
+                  The PSA Financial Chronicle
+                </h2>
+                <div className="text-xs text-slate-600 font-sans italic font-medium">
+                  {latestChronicle.subtitle}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => {
+                    setActiveTab('chronicle');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <span>Read Broadsheet Online</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => {
+                    logChronicleDownload(latestChronicle.id);
+                    window.print();
+                  }}
+                  className="px-4 py-2.5 bg-white hover:bg-slate-50 text-[#0A1F44] font-bold text-xs rounded-xl border border-slate-300 shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Download className="w-4 h-4 text-[#C9A84C]" />
+                  <span>Download Newspaper (PDF)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Broadsheet Headline & Snippet */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-8 space-y-3">
+                <div className="inline-block bg-[#0A1F44]/10 text-[#0A1F44] text-[11px] font-sans font-bold uppercase tracking-wider px-2.5 py-0.5 rounded">
+                  {latestChronicle.editionDate} | {latestChronicle.briefingTime}
+                </div>
+                <h3 className="font-serif font-bold text-xl sm:text-2xl text-slate-900 leading-snug">
+                  {latestChronicle.headline}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-700 font-sans leading-relaxed border-l-4 border-[#C9A84C] pl-3 py-0.5">
+                  {latestChronicle.subheadline}
+                </p>
+                <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed font-serif">
+                  {latestChronicle.leadArticle}
+                </p>
+              </div>
+
+              {/* Fast Barometer Snapshot Cards */}
+              <div className="lg:col-span-4 bg-white rounded-2xl p-4 border border-slate-300/80 space-y-3 font-sans">
+                <div className="text-[11px] font-bold uppercase text-[#0A1F44] border-b border-slate-200 pb-1.5 flex items-center justify-between">
+                  <span>Market Barometer Snapshot</span>
+                  <span className="text-[10px] text-emerald-600 font-mono font-bold">+0.13% Close</span>
+                </div>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 font-medium">NGX ASI:</span>
+                    <span className="font-bold text-slate-900">248,363.55 pts</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 font-medium">Equities Cap:</span>
+                    <span className="font-bold text-slate-900">₦161.26 Trillion</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 font-medium">Traded Value:</span>
+                    <span className="font-bold text-slate-900">₦20.50 Billion</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-600 font-medium">Top Gainer:</span>
+                    <span className="font-bold text-emerald-700">REGALINS (+10.0%)</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500">Public Archive:</span>
+                  <button
+                    onClick={() => {
+                      setActiveTab('chronicle');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="font-bold text-[#0A1F44] hover:text-[#C9A84C] transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    <span>Browse {chronicles.length} Past Editions</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 4. Core Advisory Services (Refined Seamless Card Layout) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C]">

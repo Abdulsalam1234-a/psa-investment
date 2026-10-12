@@ -27,6 +27,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { Member, ResearchReport, LearningVideo, StorageFile } from '../types';
+import { ChronicleAdminDesk } from '../components/ChronicleAdminDesk';
 
 export const AdminPanel: React.FC = () => {
   const { isAdmin, switchDemoRole, updateAdminProfile, memberProfile } = useAuth();
@@ -56,7 +57,7 @@ export const AdminPanel: React.FC = () => {
   } = useData();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'analytics' | 'members' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile'
+    'analytics' | 'chronicle' | 'members' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile'
   >('analytics');
 
   // Member filter & state
@@ -186,6 +187,21 @@ export const AdminPanel: React.FC = () => {
         >
           <LayoutDashboard className="w-4 h-4" />
           <span>Analytics</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('chronicle')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'chronicle'
+              ? 'bg-[#0A1F44] text-[#C9A84C]'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-[#C9A84C]" />
+          <span>Daily Chronicle (7 AM)</span>
+          <span className="px-1.5 py-0.2 bg-[#C9A84C]/20 text-[#C9A84C] rounded-full text-[10px] font-bold">
+            Auto
+          </span>
         </button>
 
         <button
@@ -388,6 +404,9 @@ export const AdminPanel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Daily Chronicle Tab */}
+      {activeAdminTab === 'chronicle' && <ChronicleAdminDesk />}
 
       {/* 2. Members Tab */}
       {activeAdminTab === 'members' && (

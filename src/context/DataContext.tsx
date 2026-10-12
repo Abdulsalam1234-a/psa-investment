@@ -8,7 +8,8 @@ import {
   DownloadLog,
   EmailDispatch,
   NewsletterSubscriber,
-  StorageFile
+  StorageFile,
+  ChronicleEdition
 } from '../types';
 import {
   INITIAL_SERVICES,
@@ -19,6 +20,8 @@ import {
   INITIAL_DOWNLOAD_LOGS,
   INITIAL_SUBSCRIBERS
 } from '../data/initialData';
+import { INITIAL_CHRONICLES } from '../data/initialChronicles';
+import { parseRawChronicle } from '../utils/chronicleParser';
 
 interface DataContextType {
   reports: ResearchReport[];
@@ -30,6 +33,7 @@ interface DataContextType {
   emailLogs: EmailDispatch[];
   storageFiles: StorageFile[];
   subscribers: NewsletterSubscriber[];
+  chronicles: ChronicleEdition[];
   loading: boolean;
   saveReport: (report: Partial<ResearchReport>) => Promise<ResearchReport>;
   deleteReport: (id: string) => Promise<void>;
@@ -49,6 +53,11 @@ interface DataContextType {
   subscribeNewsletter: (email: string, fullName?: string, preferences?: string[], source?: string) => Promise<NewsletterSubscriber>;
   addStorageFile: (file: Omit<StorageFile, 'id' | 'uploadedAt'>) => Promise<void>;
   deleteStorageFile: (id: string) => Promise<void>;
+  saveChronicle: (chronicle: Partial<ChronicleEdition>) => Promise<ChronicleEdition>;
+  deleteChronicle: (id: string) => Promise<void>;
+  incrementChronicleView: (id: string) => Promise<void>;
+  logChronicleDownload: (chronicleId: string, memberEmail?: string) => Promise<void>;
+  autoPublishGeminiChronicle: (rawText: string, customVolume?: string) => Promise<ChronicleEdition>;
   refreshData: () => Promise<void>;
 }
 
@@ -97,6 +106,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : INITIAL_SUBSCRIBERS;
   });
 
+  const [chronicles, setChronicles] = useState<ChronicleEdition[]>(() => {
+    const saved = localStorage.getItem('psa_chronicles');
+    return saved ? JSON.parse(saved) : INITIAL_CHRONICLES;
+  });
+
   const [loading, setLoading] = useState<boolean>(false);
 
   // Sync state to local storage
@@ -131,6 +145,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('psa_newsletter_subscribers', JSON.stringify(subscribers));
   }, [subscribers]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_chronicles', JSON.stringify(chronicles));
+  }, [chronicles]);
 
   const logDispatch = useCallback(
     (dispatch: Omit<EmailDispatch, 'id' | 'sentAt' | 'status'>) => {
@@ -394,6 +412,122 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setStorageFiles(prev => prev.filter(f => f.id !== id));
   };
 
+  const saveChronicle = async (chronicleData: Partial<ChronicleEdition>): Promise<ChronicleEdition> => {
+    let result: ChronicleEdition;
+    if (chronicleData.id) {
+      setChronicles(prev => {
+        const index = prev.findIndex(c => c.id === chronicleData.id);
+        if (index >= 0) {
+          const updated = {
+            ...prev[index],
+            ...chronicleData
+          } as ChronicleEdition;
+          result = updated;
+          const newArr = [...prev];
+          newArr[index] = updated;
+          return newArr;
+        }
+        result = chronicleData as ChronicleEdition;
+        return [chronicleData as ChronicleEdition, ...prev];
+      });
+    } else {
+      const now = new Date().toISOString();
+      const newChronicle: ChronicleEdition = {
+        id: `chronicle-${Date.now()}`,
+        slug: (chronicleData.headline || 'pre-market-intelligence')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .slice(0, 50),
+        title: chronicleData.title || 'THE PSA FINANCIAL CHRONICLE',
+        subtitle: chronicleData.subtitle || 'Verified Pre-Market Intelligence Briefing for Institutional Partners, Stockbrokers & Analysts',
+        volume: chronicleData.volume || `VOL. ${chronicles.length + 1}`,
+        editionDate: chronicleData.editionDate || new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+        briefingTime: chronicleData.briefingTime || '07:00 WAT',
+        headline: chronicleData.headline || 'Pre-Market Intelligence Dispatch',
+        subheadline: chronicleData.subheadline || 'Institutional overview of trading metrics and order flows.',
+        leadArticle: chronicleData.leadArticle || '',
+        marketBarometers: chronicleData.marketBarometers || [],
+        topGainers: chronicleData.topGainers || [],
+        topLosers: chronicleData.topLosers || [],
+        bellwethers: chronicleData.bellwethers || [],
+        macroBenchmarks: chronicleData.macroBenchmarks || [],
+        tacticalPlaybook: chronicleData.tacticalPlaybook || [],
+        rawText: chronicleData.rawText || '',
+        status: chronicleData.status || 'published',
+        source: chronicleData.source || 'admin_upload',
+        downloadCount: 0,
+        viewCount: 0,
+        createdAt: now,
+        publishedAt: now
+      };
+      result = newChronicle;
+      setChronicles(prev => [newChronicle, ...prev]);
+    }
+    return result!;
+  };
+
+  const deleteChronicle = async (id: string) => {
+    setChronicles(prev => prev.filter(c => c.id !== id));
+  };
+
+  const incrementChronicleView = async (id: string) => {
+    setChronicles(prev =>
+      prev.map(c => (c.id === id ? { ...c, viewCount: c.viewCount + 1 } : c))
+    );
+  };
+
+  const logChronicleDownload = async (chronicleId: string, memberEmail?: string) => {
+    const chron = chronicles.find(c => c.id === chronicleId);
+    setChronicles(prev =>
+      prev.map(c => (c.id === chronicleId ? { ...c, downloadCount: c.downloadCount + 1 } : c))
+    );
+    const newLog: DownloadLog = {
+      id: `download-chron-${Date.now()}`,
+      memberId: 'public-download',
+      memberEmail: memberEmail || 'public-reader@psa-investment.ai.studio',
+      reportId: chronicleId,
+      fileId: `pdf-${chronicleId}`,
+      reportTitle: chron ? `${chron.title} (${chron.volume})` : 'The PSA Financial Chronicle',
+      timestamp: new Date().toISOString()
+    };
+    setDownloadLogs(prev => [newLog, ...prev]);
+  };
+
+  const autoPublishGeminiChronicle = async (rawText: string, customVolume?: string): Promise<ChronicleEdition> => {
+    const parsed = parseRawChronicle(rawText);
+    const now = new Date().toISOString();
+    const newChronicle: ChronicleEdition = {
+      id: `chronicle-gemini-${Date.now()}`,
+      slug: (parsed.headline || 'pre-market-dispatch')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .slice(0, 50),
+      title: parsed.title || 'THE PSA FINANCIAL CHRONICLE',
+      subtitle: parsed.subtitle || 'Verified Pre-Market Intelligence Briefing for Institutional Partners, Stockbrokers & Analysts',
+      volume: customVolume || parsed.volume || `VOL. ${chronicles.length + 1}`,
+      editionDate: parsed.editionDate || new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+      briefingTime: parsed.briefingTime || '07:00 WAT',
+      headline: parsed.headline || 'NGX Pre-Market Daily Intelligence Briefing',
+      subheadline: parsed.subheadline || 'Institutional overview of NGX order flows and price metrics.',
+      leadArticle: parsed.leadArticle || '',
+      marketBarometers: parsed.marketBarometers || [],
+      topGainers: parsed.topGainers || [],
+      topLosers: parsed.topLosers || [],
+      bellwethers: parsed.bellwethers || [],
+      macroBenchmarks: parsed.macroBenchmarks || [],
+      tacticalPlaybook: parsed.tacticalPlaybook || [],
+      rawText: rawText,
+      status: 'published',
+      source: 'gemini_automation',
+      downloadCount: 0,
+      viewCount: 1,
+      createdAt: now,
+      publishedAt: now
+    };
+    setChronicles(prev => [newChronicle, ...prev]);
+    return newChronicle;
+  };
+
   const refreshData = async () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 300);
@@ -411,6 +545,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emailLogs,
         storageFiles,
         subscribers,
+        chronicles,
         loading,
         saveReport,
         deleteReport,
@@ -430,6 +565,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         subscribeNewsletter,
         addStorageFile,
         deleteStorageFile,
+        saveChronicle,
+        deleteChronicle,
+        incrementChronicleView,
+        logChronicleDownload,
+        autoPublishGeminiChronicle,
         refreshData
       }}
     >
