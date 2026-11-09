@@ -237,7 +237,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       {/* Top Banner: Member Welcome & Profile Hub */}
-      <div className="bg-gradient-to-br from-[#0A1F44] to-[#122A5E] text-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-800 space-y-6">
+      <div className="bg-[#0A1F44] bg-gradient-to-br from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-800 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-[#C9A84C] text-[#0A1F44] flex items-center justify-center font-serif font-black text-2xl shadow-lg">

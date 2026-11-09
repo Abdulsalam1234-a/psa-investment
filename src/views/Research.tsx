@@ -206,7 +206,7 @@ export const Research: React.FC<ResearchProps> = ({ onSelectReport, onOpenAuthMo
 
       {/* Analyst Circle Teaser */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-[#0A1F44] to-[#122A5E] text-white rounded-3xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+        <div className="bg-[#0A1F44] bg-gradient-to-r from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-3xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-2 text-center md:text-left">
             <h3 className="font-serif font-black text-2xl text-white">
               Looking for Complete Financial Models in Excel?

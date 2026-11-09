@@ -651,7 +651,7 @@ export const Home: React.FC<HomeProps> = ({
 
       {/* 6. PSA Analyst Circle CTA Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-[#0A1F44] via-[#0D2450] to-[#122A5E] text-white rounded-3xl p-8 sm:p-14 text-center space-y-6 shadow-2xl relative overflow-hidden border border-[#C9A84C]/30">
+        <div className="bg-[#0A1F44] bg-gradient-to-br from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-3xl p-8 sm:p-14 text-center space-y-6 shadow-2xl relative overflow-hidden border border-[#C9A84C]/30">
           <div className="w-16 h-16 rounded-2xl bg-[#C9A84C]/20 border border-[#C9A84C]/40 text-[#C9A84C] flex items-center justify-center mx-auto shadow-lg">
             <ShieldCheck className="w-8 h-8 stroke-[2.2]" />
           </div>

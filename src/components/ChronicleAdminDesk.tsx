@@ -467,7 +467,7 @@ LAGOS (PSA INVESTMENT DESK) — Trading on the Nigerian Exchange Limited (NGX) c
             </div>
 
             {/* Live Trigger Button */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#0A1F44] to-[#122A5E] text-white">
+            <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-[#0A1F44] bg-gradient-to-r from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white shadow-xl border border-slate-700">
               <div className="space-y-1">
                 <div className="text-xs font-bold text-[#C9A84C] uppercase tracking-wider">
                   Live Dispatch Execution

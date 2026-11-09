@@ -187,7 +187,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
           {/* Locked State for Premium Memos */}
           {isLocked ? (
-            <div className="bg-gradient-to-br from-slate-900 to-[#0A1F44] text-white rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-xl border border-slate-800 relative overflow-hidden">
+            <div className="bg-[#0A1F44] bg-gradient-to-b from-slate-950 via-[#0A1F44] to-[#07152E] text-white rounded-3xl p-8 sm:p-12 text-center space-y-6 shadow-xl border border-slate-800 relative overflow-hidden">
               <div className="w-16 h-16 rounded-2xl bg-[#C9A84C]/20 border border-[#C9A84C]/40 text-[#C9A84C] flex items-center justify-center mx-auto">
                 <Lock className="w-8 h-8 stroke-[2.2]" />
               </div>
@@ -202,7 +202,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-4 bg-slate-800/80 rounded-2xl border border-slate-700 max-w-md mx-auto text-left text-xs space-y-2 text-slate-300">
+              <div className="p-4 bg-[#07152E] rounded-2xl border border-slate-700 max-w-md mx-auto text-left text-xs space-y-2 text-slate-300 shadow-md">
                 <div className="font-bold text-[#C9A84C] flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4" />
                   What is included in this valuation note:

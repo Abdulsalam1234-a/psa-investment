@@ -173,7 +173,7 @@ export const AnalystCircle: React.FC<AnalystCircleProps> = ({
 
       {/* Referral Incentive Card */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-[#0A1F44] to-[#122A5E] text-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-800">
+        <div className="bg-[#0A1F44] bg-gradient-to-br from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-800">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-8 space-y-4">
               <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C] flex items-center gap-1.5">
@@ -191,12 +191,12 @@ export const AnalystCircle: React.FC<AnalystCircleProps> = ({
               </p>
             </div>
 
-            <div className="lg:col-span-4 p-6 bg-slate-800/80 rounded-2xl border border-slate-700 text-center space-y-3">
-              <div className="text-xs text-slate-400">Sample Member Referral Link</div>
-              <div className="p-3 bg-slate-900 rounded-xl font-mono text-xs text-[#C9A84C] font-bold truncate">
+            <div className="lg:col-span-4 p-6 bg-[#07152E] rounded-2xl border border-slate-700 text-center space-y-3 shadow-lg">
+              <div className="text-xs text-[#C9A84C] font-semibold">Sample Member Referral Link</div>
+              <div className="p-3 bg-slate-900 rounded-xl font-mono text-xs text-[#C9A84C] font-bold truncate border border-slate-800">
                 psainvestment.com/?ref=PSA-DEMO77
               </div>
-              <div className="text-[11px] text-slate-400">
+              <div className="text-[11px] text-slate-300">
                 Pre-fills referral code for new applicants automatically.
               </div>
             </div>

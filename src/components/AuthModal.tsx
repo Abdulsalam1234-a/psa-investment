@@ -97,7 +97,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         {/* Header */}
-        <div className="bg-gradient-to-br from-[#0A1F44] to-[#122A5E] p-6 text-white text-center">
+        <div className="bg-[#0A1F44] bg-gradient-to-b from-[#0A1F44] to-[#07152E] p-6 text-white text-center">
           <div className="w-12 h-12 rounded-xl bg-[#C9A84C]/20 border border-[#C9A84C]/40 text-[#C9A84C] flex items-center justify-center mx-auto mb-3">
             <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
           </div>

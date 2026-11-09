@@ -373,7 +373,7 @@ export const ChronicleReader: React.FC<ChronicleReaderProps> = ({
           </section>
 
           {/* TACTICAL PRE-MARKET PLAYBOOK */}
-          <section className="bg-gradient-to-br from-[#0A1F44] to-[#122A5E] text-white rounded-2xl p-6 sm:p-8 space-y-4 font-sans shadow-lg">
+          <section className="bg-[#0A1F44] bg-gradient-to-br from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-2xl p-6 sm:p-8 space-y-4 font-sans shadow-lg">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[#C9A84C]" />
               <h3 className="font-serif font-black text-lg text-white">

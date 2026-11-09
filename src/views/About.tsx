@@ -63,7 +63,7 @@ export const About: React.FC<AboutProps> = ({ setActiveTab: _setActiveTab, onOpe
 
       {/* Founder Profile */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-[#0A1F44] to-[#122A5E] text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden border border-slate-800">
+        <div className="bg-[#0A1F44] bg-gradient-to-br from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden border border-slate-800">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             {/* Left Bio Details */}
             <div className="lg:col-span-8 space-y-6">
@@ -157,7 +157,7 @@ export const About: React.FC<AboutProps> = ({ setActiveTab: _setActiveTab, onOpe
             </div>
 
             {/* Right Headshot Card */}
-            <div className="lg:col-span-4 flex flex-col items-center justify-center p-8 bg-slate-800/60 rounded-3xl border border-slate-700/80 text-center space-y-4">
+            <div className="lg:col-span-4 flex flex-col items-center justify-center p-8 bg-[#07152E]/90 rounded-3xl border border-slate-700 shadow-xl text-center space-y-4">
               <div className="relative">
                 <div className="w-32 h-32 rounded-3xl overflow-hidden ring-4 ring-[#C9A84C] shadow-2xl bg-slate-900 border-2 border-slate-800">
                   <img

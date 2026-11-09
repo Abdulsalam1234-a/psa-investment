@@ -251,7 +251,7 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
         </section>
 
         {/* Member Circle Callout */}
-        <section className="bg-gradient-to-r from-[#0A1F44] to-[#122A5E] text-white rounded-3xl p-8 sm:p-10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-[#C9A84C]/30">
+        <section className="bg-[#0A1F44] bg-gradient-to-r from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-3xl p-8 sm:p-10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border border-[#C9A84C]/30">
           <div className="space-y-2 max-w-2xl">
             <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C]">
               Institutional Circle Access

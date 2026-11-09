@@ -119,7 +119,7 @@ export const Contact: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Left Column: Direct channels */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-gradient-to-br from-[#0A1F44] to-[#122A5E] text-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-800 space-y-6">
+            <div className="bg-[#0A1F44] bg-gradient-to-b from-[#0A1F44] via-[#0B1C3D] to-[#07152E] text-white rounded-3xl p-8 sm:p-10 shadow-2xl border border-slate-700/80 space-y-6">
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C]">
                   Direct Channels
@@ -137,34 +137,34 @@ export const Contact: React.FC = () => {
                   href="https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-4 rounded-2xl bg-slate-800/80 hover:bg-[#C9A84C] group transition-all flex items-center justify-between cursor-pointer border border-slate-700/80"
+                  className="p-4 rounded-2xl bg-[#0F2752] hover:bg-[#13306B] hover:border-[#C9A84C] group transition-all flex items-center justify-between cursor-pointer border border-slate-700 shadow-md"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 group-hover:bg-[#0A1F44] group-hover:text-[#C9A84C] flex items-center justify-center font-bold font-mono">
                       WA
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-white group-hover:text-[#0A1F44]">
+                      <div className="text-sm font-bold text-white group-hover:text-[#C9A84C] transition-colors">
                         WhatsApp Broadcast Channel
                       </div>
-                      <div className="text-[11px] text-slate-300 group-hover:text-[#0A1F44]/80">
+                      <div className="text-[11px] text-slate-300">
                         Fast market updates and announcements
                       </div>
                     </div>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-[#0A1F44]" />
+                  <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-[#C9A84C]" />
                 </a>
 
                 {/* Email */}
-                <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center">
+                <div className="p-4 rounded-2xl bg-[#0F2752] border border-slate-700 shadow-md flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center shrink-0">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400">Direct Email</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">Direct Email</div>
                     <a
                       href="mailto:salamiabdullahi257@gmail.com"
-                      className="text-xs font-bold font-mono text-white hover:text-[#C9A84C] transition-colors"
+                      className="text-xs font-bold font-mono text-white hover:text-[#C9A84C] transition-colors break-all"
                     >
                       salamiabdullahi257@gmail.com
                     </a>
@@ -172,12 +172,12 @@ export const Contact: React.FC = () => {
                 </div>
 
                 {/* Phone */}
-                <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center">
+                <div className="p-4 rounded-2xl bg-[#0F2752] border border-slate-700 shadow-md flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center shrink-0">
                     <Phone className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400">Official Desk Line</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">Official Desk Line</div>
                     <div className="text-xs font-bold font-mono text-white">
                       +234 803 000 0000 / +234 800 000 0000
                     </div>
@@ -185,12 +185,12 @@ export const Contact: React.FC = () => {
                 </div>
 
                 {/* Location */}
-                <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center">
+                <div className="p-4 rounded-2xl bg-[#0F2752] border border-slate-700 shadow-md flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center shrink-0">
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-xs text-slate-400">Headquarters</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">Headquarters</div>
                     <div className="text-xs font-semibold text-white">
                       Lagos, Nigeria (Primary Capital Operations)
                     </div>
@@ -198,7 +198,7 @@ export const Contact: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1">
+              <div className="pt-2 border-t border-slate-700/80 text-[11px] text-slate-300 space-y-1">
                 <div className="flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-[#C9A84C]" />
                   <span>Inquiries acknowledged within 24 business hours</span>
