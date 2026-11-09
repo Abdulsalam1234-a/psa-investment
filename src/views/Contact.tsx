@@ -155,19 +155,30 @@ export const Contact: React.FC = () => {
                   <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-[#C9A84C]" />
                 </a>
 
-                {/* Email */}
-                <div className="p-4 rounded-2xl bg-[#0F2752] border border-slate-700 shadow-md flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center shrink-0">
+                {/* Email - Both Personal and Corporate */}
+                <div className="p-4 rounded-2xl bg-[#0F2752] border border-slate-700 shadow-md flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#C9A84C]/20 text-[#C9A84C] flex items-center justify-center shrink-0 mt-0.5">
                     <Mail className="w-5 h-5" />
                   </div>
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">Direct Email</div>
-                    <a
-                      href="mailto:salamiabdullahi257@gmail.com"
-                      className="text-xs font-bold font-mono text-white hover:text-[#C9A84C] transition-colors break-all"
-                    >
-                      salamiabdullahi257@gmail.com
-                    </a>
+                  <div className="space-y-1.5 min-w-0">
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">Official Desk Email</div>
+                      <a
+                        href="mailto:psainvestment.ng@gmail.com"
+                        className="text-xs font-bold font-mono text-white hover:text-[#C9A84C] transition-colors break-all block"
+                      >
+                        psainvestment.ng@gmail.com
+                      </a>
+                    </div>
+                    <div className="pt-1 border-t border-slate-700/60">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Chief Analyst / CEO Direct</div>
+                      <a
+                        href="mailto:salamiabdullahi257@gmail.com"
+                        className="text-xs font-bold font-mono text-slate-200 hover:text-[#C9A84C] transition-colors break-all block"
+                      >
+                        salamiabdullahi257@gmail.com
+                      </a>
+                    </div>
                   </div>
                 </div>
 
@@ -177,10 +188,13 @@ export const Contact: React.FC = () => {
                     <Phone className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">Official Desk Line</div>
-                    <div className="text-xs font-bold font-mono text-white">
-                      +234 803 000 0000 / +234 800 000 0000
-                    </div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">Direct & Desk Line</div>
+                    <a
+                      href="tel:+2347068371292"
+                      className="text-xs font-bold font-mono text-white hover:text-[#C9A84C] transition-colors block"
+                    >
+                      +234 706 837 1292
+                    </a>
                   </div>
                 </div>
 
@@ -283,7 +297,7 @@ export const Contact: React.FC = () => {
                       </label>
                       <input
                         type="tel"
-                        placeholder="+234 800 000 0000"
+                        placeholder="+234 706 837 1292"
                         value={phone}
                         onChange={e => setPhone(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-[#C9A84C] focus:bg-white font-medium"

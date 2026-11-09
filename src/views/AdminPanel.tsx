@@ -22,11 +22,17 @@ import {
   TrendingUp,
   RefreshCw,
   Search,
-  Filter
+  Filter,
+  Briefcase,
+  Shield,
+  Award,
+  UserPlus,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { Member, ResearchReport, LearningVideo, StorageFile } from '../types';
+import { Member, ResearchReport, LearningVideo, StorageFile, StaffMember, StaffRole } from '../types';
 import { ChronicleAdminDesk } from '../components/ChronicleAdminDesk';
 
 export const AdminPanel: React.FC = () => {
@@ -39,6 +45,7 @@ export const AdminPanel: React.FC = () => {
     downloadLogs,
     emailLogs,
     storageFiles,
+    staffMembers,
     saveReport,
     deleteReport,
     saveVideo,
@@ -48,6 +55,10 @@ export const AdminPanel: React.FC = () => {
     suspendMember,
     reinstateMember,
     updateMemberRecord,
+    addStaffMember,
+    updateStaffRole,
+    updateStaffStatus,
+    deleteStaffMember,
     updateContactStatus,
     deleteContact,
     addStorageFile,
@@ -57,8 +68,20 @@ export const AdminPanel: React.FC = () => {
   } = useData();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'analytics' | 'chronicle' | 'members' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile'
+    'analytics' | 'chronicle' | 'members' | 'staff' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile'
   >('analytics');
+
+  // Staff management state
+  const [staffRoleFilter, setStaffRoleFilter] = useState<string>('all');
+  const [staffSearch, setStaffSearch] = useState<string>('');
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [newStaffName, setNewStaffName] = useState('');
+  const [newStaffEmail, setNewStaffEmail] = useState('');
+  const [newStaffPhone, setNewStaffPhone] = useState('');
+  const [newStaffRole, setNewStaffRole] = useState<StaffRole>('analyst');
+  const [newStaffTitle, setNewStaffTitle] = useState('');
+  const [newStaffDept, setNewStaffDept] = useState('');
+  const [newStaffNotes, setNewStaffNotes] = useState('');
 
   // Member filter & state
   const [memberFilter, setMemberFilter] = useState<string>('all');
@@ -83,7 +106,7 @@ export const AdminPanel: React.FC = () => {
 
   // Admin Profile state
   const [adminFullName, setAdminFullName] = useState(memberProfile?.fullName || 'Salami Abdullahi');
-  const [adminPhone, setAdminPhone] = useState(memberProfile?.phone || '+234 803 000 0000');
+  const [adminPhone, setAdminPhone] = useState(memberProfile?.phone || '+234 706 837 1292');
   const [adminTitle, setAdminTitle] = useState('Founder, CEO, COO, and Chief Analyst');
   const [adminBio, setAdminBio] = useState(
     'Directs institutional equity research, sovereign sensitivity models, and capital allocation frameworks for NGX-listed assets.'
@@ -219,6 +242,21 @@ export const AdminPanel: React.FC = () => {
               {pendingCount}
             </span>
           )}
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('staff')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'staff'
+              ? 'bg-[#0A1F44] text-[#C9A84C]'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Briefcase className="w-4 h-4" />
+          <span>Staff & Management</span>
+          <span className="px-1.5 py-0.2 bg-[#C9A84C]/20 text-[#C9A84C] rounded-full text-[10px] font-bold">
+            {staffMembers.length}
+          </span>
         </button>
 
         <button
@@ -641,6 +679,564 @@ export const AdminPanel: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 2b. Staff & Management RBAC Tab */}
+      {activeAdminTab === 'staff' && (
+        <div className="space-y-6">
+          {/* Top Bar & Stats */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-200">
+                    Role-Based Access Control (RBAC)
+                  </span>
+                  <span className="text-xs text-slate-400">•</span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {staffMembers.length} Staff Credentials Authorized
+                  </span>
+                </div>
+                <h3 className="font-serif font-black text-2xl text-[#0A1F44] mt-1">
+                  Staff & Management Governance
+                </h3>
+                <p className="text-xs text-slate-500 max-w-2xl">
+                  Assign operational access and executive roles across Management, Social Media Director, Analyst, and Partners.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setNewStaffName('');
+                  setNewStaffEmail('');
+                  setNewStaffPhone('');
+                  setNewStaffRole('analyst');
+                  setNewStaffTitle('Associate Equity Analyst');
+                  setNewStaffDept('Research & Valuation');
+                  setNewStaffNotes('');
+                  setIsAddStaffModalOpen(true);
+                }}
+                className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-2 shrink-0"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>+ Add Staff Member</span>
+              </button>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Staff</span>
+                <span className="font-serif font-black text-2xl text-[#0A1F44]">{staffMembers.length}</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200">
+                <span className="text-[10px] uppercase font-bold text-purple-700 block">Management</span>
+                <span className="font-serif font-black text-2xl text-purple-950">
+                  {staffMembers.filter(s => s.role === 'management').length}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-rose-50/60 border border-rose-200">
+                <span className="text-[10px] uppercase font-bold text-rose-700 block">Social Media</span>
+                <span className="font-serif font-black text-2xl text-rose-950">
+                  {staffMembers.filter(s => s.role === 'social_media_director').length}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200">
+                <span className="text-[10px] uppercase font-bold text-emerald-700 block">Analysts</span>
+                <span className="font-serif font-black text-2xl text-emerald-950">
+                  {staffMembers.filter(s => s.role === 'analyst').length}
+                </span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 col-span-2 sm:col-span-1">
+                <span className="text-[10px] uppercase font-bold text-amber-700 block">Partners</span>
+                <span className="font-serif font-black text-2xl text-amber-950">
+                  {staffMembers.filter(s => s.role === 'partners').length}
+                </span>
+              </div>
+            </div>
+
+            {/* Role Definitions Guide */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
+              <div className="p-3 rounded-xl bg-purple-50/40 border border-purple-100 space-y-1">
+                <div className="flex items-center gap-1.5 text-purple-900 font-bold text-xs">
+                  <Shield className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Management</span>
+                </div>
+                <p className="text-[11px] text-purple-950/80 leading-relaxed">
+                  Executive oversight, firm administration, compliance checks, and member approval workflows.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-rose-50/40 border border-rose-100 space-y-1">
+                <div className="flex items-center gap-1.5 text-rose-900 font-bold text-xs">
+                  <Video className="w-3.5 h-3.5 text-rose-700" />
+                  <span>Social Media Director</span>
+                </div>
+                <p className="text-[11px] text-rose-950/80 leading-relaxed">
+                  Directs PSA Lens video masterclasses, YouTube channel, TikTok shorts, and X (@salami_abdulslm) snippets.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-50/40 border border-emerald-100 space-y-1">
+                <div className="flex items-center gap-1.5 text-emerald-900 font-bold text-xs">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Analyst</span>
+                </div>
+                <p className="text-[11px] text-emerald-950/80 leading-relaxed">
+                  Authors institutional fundamental equity memos, DCF models, and 7 AM Financial Chronicle dispatches.
+                </p>
+              </div>
+
+              <div className="p-3 rounded-xl bg-amber-50/40 border border-amber-100 space-y-1">
+                <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
+                  <Award className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Partners</span>
+                </div>
+                <p className="text-[11px] text-amber-950/80 leading-relaxed">
+                  Institutional syndication, SME Solar PaaS underwriting, co-investment notes, and family office roundtables.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter & Search Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search staff by name, email, department or title..."
+                value={staffSearch}
+                onChange={e => setStaffSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-[#C9A84C] font-medium"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 shrink-0">
+                <Filter className="w-3 h-3" /> Role:
+              </span>
+              {(['all', 'management', 'social_media_director', 'analyst', 'partners', 'admin'] as const).map(
+                r => (
+                  <button
+                    key={r}
+                    onClick={() => setStaffRoleFilter(r)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      staffRoleFilter === r
+                        ? 'bg-[#0A1F44] text-[#C9A84C]'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {r === 'all'
+                      ? 'All Staff'
+                      : r === 'social_media_director'
+                      ? 'Social Media'
+                      : r === 'management'
+                      ? 'Management'
+                      : r === 'analyst'
+                      ? 'Analyst'
+                      : r === 'partners'
+                      ? 'Partners'
+                      : 'Admin'}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Staff Roster Table */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="p-4">Staff Member & Department</th>
+                    <th className="p-4">Contact Details</th>
+                    <th className="p-4">Assigned Access Role</th>
+                    <th className="p-4">Key Permissions</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {staffMembers
+                    .filter(s => {
+                      const matchesRole =
+                        staffRoleFilter === 'all' || s.role === staffRoleFilter;
+                      const matchesSearch =
+                        s.fullName.toLowerCase().includes(staffSearch.toLowerCase()) ||
+                        s.email.toLowerCase().includes(staffSearch.toLowerCase()) ||
+                        s.department.toLowerCase().includes(staffSearch.toLowerCase()) ||
+                        s.title.toLowerCase().includes(staffSearch.toLowerCase());
+                      return matchesRole && matchesSearch;
+                    })
+                    .map(staff => {
+                      const isCEO = staff.email === 'salamiabdullahi257@gmail.com' || staff.role === 'admin';
+
+                      return (
+                        <tr key={staff.id} className="hover:bg-slate-50/80 transition-colors">
+                          {/* Name & Title */}
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-[#0A1F44] text-[#C9A84C] font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+                                {staff.fullName
+                                  .split(' ')
+                                  .map(n => n[0])
+                                  .join('')
+                                  .toUpperCase()
+                                  .slice(0, 2)}
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                                  <span>{staff.fullName}</span>
+                                  {isCEO && (
+                                    <span className="px-1.5 py-0.2 bg-[#C9A84C]/20 text-[#0A1F44] rounded text-[9px] font-black uppercase">
+                                      Founder
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-medium">{staff.title}</div>
+                                <div className="text-[10px] text-slate-400">{staff.department}</div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Contact */}
+                          <td className="p-4">
+                            <div className="space-y-0.5">
+                              <div className="font-mono text-slate-800 font-semibold">{staff.email}</div>
+                              <div className="font-mono text-slate-500 text-[11px]">{staff.phone || '—'}</div>
+                            </div>
+                          </td>
+
+                          {/* Role Dropdown Selector */}
+                          <td className="p-4">
+                            {isCEO ? (
+                              <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-[#0A1F44] text-[#C9A84C] border border-[#C9A84C]/40 inline-flex items-center gap-1.5">
+                                <ShieldCheck className="w-3.5 h-3.5" />
+                                <span>Executive Command</span>
+                              </span>
+                            ) : (
+                              <div className="relative inline-block">
+                                <select
+                                  value={staff.role}
+                                  onChange={e => {
+                                    const nextRole = e.target.value as StaffRole;
+                                    updateStaffRole(staff.id, nextRole);
+                                    showToast(`Assigned ${staff.fullName} to ${nextRole.toUpperCase()} role.`);
+                                  }}
+                                  className="px-3 py-1.5 pr-8 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-[#C9A84C] cursor-pointer appearance-none shadow-2xs"
+                                >
+                                  <option value="management">Management</option>
+                                  <option value="social_media_director">Social Media Director</option>
+                                  <option value="analyst">Analyst</option>
+                                  <option value="partners">Partners</option>
+                                </select>
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Key Permissions */}
+                          <td className="p-4 max-w-xs">
+                            <div className="flex flex-wrap gap-1">
+                              {staff.permissions.slice(0, 2).map((perm, pIdx) => (
+                                <span
+                                  key={pIdx}
+                                  className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium"
+                                >
+                                  {perm}
+                                </span>
+                              ))}
+                              {staff.permissions.length > 2 && (
+                                <span className="px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold">
+                                  +{staff.permissions.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="p-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                                staff.status === 'active'
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  staff.status === 'active' ? 'bg-emerald-600' : 'bg-rose-600'
+                                }`}
+                              />
+                              {staff.status === 'active' ? 'Active' : 'Suspended'}
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td className="p-4 text-right">
+                            {!isCEO && (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => {
+                                    const nextStatus = staff.status === 'active' ? 'suspended' : 'active';
+                                    updateStaffStatus(staff.id, nextStatus);
+                                    showToast(
+                                      `${staff.fullName} credential ${
+                                        nextStatus === 'active' ? 'activated' : 'suspended'
+                                      }.`
+                                    );
+                                  }}
+                                  className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                                  title={staff.status === 'active' ? 'Suspend Access' : 'Activate Access'}
+                                >
+                                  {staff.status === 'active' ? (
+                                    <UserX className="w-3.5 h-3.5 text-amber-600" />
+                                  ) : (
+                                    <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`Remove staff credential for ${staff.fullName}?`)) {
+                                      deleteStaffMember(staff.id);
+                                      showToast(`Removed staff member ${staff.fullName}.`);
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                  title="Delete Staff Member"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Add Staff Modal */}
+          {isAddStaffModalOpen && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">
+                      Staff Provisioning Desk
+                    </span>
+                    <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+                      Add New Staff / Management Member
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setIsAddStaffModalOpen(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={async e => {
+                    e.preventDefault();
+                    if (!newStaffName.trim() || !newStaffEmail.trim()) return;
+
+                    await addStaffMember({
+                      fullName: newStaffName.trim(),
+                      email: newStaffEmail.trim().toLowerCase(),
+                      phone: newStaffPhone.trim() || undefined,
+                      role: newStaffRole,
+                      title: newStaffTitle.trim() || 'Staff Officer',
+                      department: newStaffDept.trim() || 'General Operations',
+                      status: 'active',
+                      notes: newStaffNotes.trim() || undefined,
+                      permissions: []
+                    });
+
+                    setIsAddStaffModalOpen(false);
+                    showToast(`Successfully added ${newStaffName} as ${newStaffRole.toUpperCase()}.`);
+                  }}
+                  className="space-y-4 text-xs"
+                >
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Full Legal / Professional Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Babajide Olufemi"
+                      value={newStaffName}
+                      onChange={e => setNewStaffName(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Corporate / Work Email *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="name@psainvestment.com"
+                        value={newStaffEmail}
+                        onChange={e => setNewStaffEmail(e.target.value)}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Direct Phone Line
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+234 800 000 0000"
+                        value={newStaffPhone}
+                        onChange={e => setNewStaffPhone(e.target.value)}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Role Selector with Explanatory Badges */}
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1.5">
+                      Assign Access Role *
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        {
+                          role: 'management' as StaffRole,
+                          label: 'Management',
+                          desc: 'Executive oversight & compliance'
+                        },
+                        {
+                          role: 'social_media_director' as StaffRole,
+                          label: 'Social Media Director',
+                          desc: 'PSA Lens, YouTube & social channels'
+                        },
+                        {
+                          role: 'analyst' as StaffRole,
+                          label: 'Analyst',
+                          desc: 'DCF models, reports & 7 AM Chronicle'
+                        },
+                        {
+                          role: 'partners' as StaffRole,
+                          label: 'Partners',
+                          desc: 'Commercial Solar & syndication'
+                        }
+                      ].map(r => (
+                        <button
+                          key={r.role}
+                          type="button"
+                          onClick={() => {
+                            setNewStaffRole(r.role);
+                            if (r.role === 'management') {
+                              setNewStaffTitle('Operations & Management Director');
+                              setNewStaffDept('Executive Management');
+                            } else if (r.role === 'social_media_director') {
+                              setNewStaffTitle('Director of Social Media Communications');
+                              setNewStaffDept('Media & Public Relations');
+                            } else if (r.role === 'analyst') {
+                              setNewStaffTitle('Senior Equity Research Analyst');
+                              setNewStaffDept('Research & Valuation');
+                            } else if (r.role === 'partners') {
+                              setNewStaffTitle('Managing Partner - Capital Alliances');
+                              setNewStaffDept('Strategic Partnerships');
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                            newStaffRole === r.role
+                              ? 'border-[#0A1F44] bg-[#0A1F44] text-white shadow-xs'
+                              : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800'
+                          }`}
+                        >
+                          <div className="font-bold flex items-center justify-between">
+                            <span>{r.label}</span>
+                            {newStaffRole === r.role && <Check className="w-3.5 h-3.5 text-[#C9A84C]" />}
+                          </div>
+                          <div
+                            className={`text-[10px] mt-0.5 leading-snug ${
+                              newStaffRole === r.role ? 'text-slate-300' : 'text-slate-500'
+                            }`}
+                          >
+                            {r.desc}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Executive Title / Designation
+                      </label>
+                      <input
+                        type="text"
+                        value={newStaffTitle}
+                        onChange={e => setNewStaffTitle(e.target.value)}
+                        placeholder="e.g. Senior Equity Research Analyst"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Department
+                      </label>
+                      <input
+                        type="text"
+                        value={newStaffDept}
+                        onChange={e => setNewStaffDept(e.target.value)}
+                        placeholder="e.g. Research & Valuation"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Internal Notes / Operational Scope
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={newStaffNotes}
+                      onChange={e => setNewStaffNotes(e.target.value)}
+                      placeholder="Notes regarding specific coverage or advisory mandates..."
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium resize-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddStaffModalOpen(false)}
+                      className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Authorize & Deploy Access</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

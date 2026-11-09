@@ -90,7 +90,7 @@ export const AppContent: React.FC = () => {
             onOpenAuthModal={handleOpenAuth}
           />
         )}
-        {activeTab === 'videos' && <Videos />}
+        {activeTab === 'videos' && <Videos onOpenAuthModal={handleOpenAuth} />}
         {activeTab === 'analyst-circle' && (
           <AnalystCircle
             setActiveTab={setActiveTab}

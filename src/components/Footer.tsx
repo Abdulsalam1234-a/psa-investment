@@ -187,18 +187,37 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal })
                 <MapPin className="w-4 h-4 text-[#C9A84C] shrink-0 mt-0.5" />
                 <span>Lagos, Nigeria (Primary Capital Operations)</span>
               </li>
-              <li className="flex items-center gap-2.5 text-slate-400">
-                <Mail className="w-4 h-4 text-[#C9A84C] shrink-0" />
-                <a
-                  href="mailto:salamiabdullahi257@gmail.com"
-                  className="hover:text-white transition-colors"
-                >
-                  salamiabdullahi257@gmail.com
-                </a>
+              <li className="flex items-start gap-2.5 text-slate-400">
+                <Mail className="w-4 h-4 text-[#C9A84C] shrink-0 mt-0.5" />
+                <div className="text-xs space-y-1">
+                  <div>
+                    <span className="text-[10px] text-[#C9A84C] uppercase font-bold block">Desk</span>
+                    <a
+                      href="mailto:psainvestment.ng@gmail.com"
+                      className="hover:text-white font-mono transition-colors"
+                    >
+                      psainvestment.ng@gmail.com
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Founder / CEO</span>
+                    <a
+                      href="mailto:salamiabdullahi257@gmail.com"
+                      className="hover:text-white font-mono transition-colors text-slate-300"
+                    >
+                      salamiabdullahi257@gmail.com
+                    </a>
+                  </div>
+                </div>
               </li>
               <li className="flex items-center gap-2.5 text-slate-400">
                 <Phone className="w-4 h-4 text-[#C9A84C] shrink-0" />
-                <span>+234 803 000 0000</span>
+                <a
+                  href="tel:+2347068371292"
+                  className="hover:text-white font-mono transition-colors text-xs"
+                >
+                  +234 706 837 1292
+                </a>
               </li>
             </ul>
 

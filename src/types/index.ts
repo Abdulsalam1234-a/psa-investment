@@ -172,6 +172,39 @@ export interface ChronicleEdition {
   publishedAt: string;
 }
 
+export type StaffRole = 'management' | 'social_media_director' | 'analyst' | 'partners' | 'admin';
+
+export interface StaffMember {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: StaffRole;
+  title: string;
+  department: string;
+  status: 'active' | 'suspended';
+  assignedAt: string;
+  avatarUrl?: string;
+  notes?: string;
+  permissions: string[];
+}
+
+export type ResourceType = 'report' | 'chronicle' | 'video';
+
+export interface ResourceComment {
+  id: string;
+  resourceId: string;
+  resourceType: ResourceType;
+  authorId: string;
+  authorName: string;
+  authorEmail: string;
+  authorTier: string;
+  authorRole?: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+}
+
 export type ViewTab =
   | 'home'
   | 'chronicle'

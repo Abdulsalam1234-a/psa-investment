@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { ChronicleEdition } from '../types';
 import { useData } from '../context/DataContext';
+import { ResourceComments } from './ResourceComments';
 
 interface ChronicleReaderProps {
   chronicle: ChronicleEdition;
@@ -411,6 +412,16 @@ export const ChronicleReader: React.FC<ChronicleReaderProps> = ({
           </footer>
         </article>
       )}
+
+      {/* Institutional Commentary & Member Discussion */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <ResourceComments
+          resourceId={chronicle.id}
+          resourceType="chronicle"
+          resourceTitle={chronicle.headline}
+          onOpenAuthModal={onOpenAuthModal}
+        />
+      </div>
     </div>
   );
 };

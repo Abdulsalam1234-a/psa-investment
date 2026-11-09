@@ -1,4 +1,14 @@
-import { ServiceItem, ResearchReport, LearningVideo, Member, StorageFile, DownloadLog, NewsletterSubscriber } from '../types';
+import {
+  ServiceItem,
+  ResearchReport,
+  LearningVideo,
+  Member,
+  StorageFile,
+  DownloadLog,
+  NewsletterSubscriber,
+  StaffMember,
+  ResourceComment
+} from '../types';
 
 export const INITIAL_SERVICES: ServiceItem[] = [
   {
@@ -312,5 +322,168 @@ export const INITIAL_SUBSCRIBERS: NewsletterSubscriber[] = [
     status: 'active',
     source: 'member_portal',
     preferences: ['Energy & Oil Gas', 'Dividend Analysis']
+  }
+];
+
+export const INITIAL_STAFF: StaffMember[] = [
+  {
+    id: 'staff-ceo-001',
+    fullName: 'Salami Abdullahi',
+    email: 'salamiabdullahi257@gmail.com',
+    phone: '+234 706 837 1292',
+    role: 'admin',
+    title: 'Founder, CEO, COO, and Chief Analyst',
+    department: 'Executive Directorate',
+    status: 'active',
+    assignedAt: '2026-01-15T08:00:00Z',
+    permissions: [
+      'Full Executive Command',
+      'Publish Research & DCF Models',
+      'Authorize Chronicle Editions',
+      'Approve Circle Members',
+      'Assign Staff Access & Roles',
+      'Manage Billing & Treasury'
+    ],
+    notes: 'Directs all institutional equity valuation, capital strategy, and macroeconomic forecasting.'
+  },
+  {
+    id: 'staff-mgmt-002',
+    fullName: 'Omolara Adeleke',
+    email: 'management@psainvestment.com',
+    phone: '+234 802 334 5566',
+    role: 'management',
+    title: 'Director of Operations & Management',
+    department: 'Executive Management',
+    status: 'active',
+    assignedAt: '2026-03-01T09:00:00Z',
+    permissions: [
+      'Executive Oversight & Performance Tracking',
+      'Member Review Workflow',
+      'Operational Reporting',
+      'Vendor & Compliance Management'
+    ],
+    notes: 'Oversees day-to-day operations and cross-functional administrative execution.'
+  },
+  {
+    id: 'staff-smd-003',
+    fullName: 'Chidinma Nwosu',
+    email: 'media@psainvestment.com',
+    phone: '+234 813 445 6677',
+    role: 'social_media_director',
+    title: 'Director of Social Media & Digital Communications',
+    department: 'Media & Public Relations',
+    status: 'active',
+    assignedAt: '2026-04-10T10:30:00Z',
+    permissions: [
+      'PSA Lens Masterclasses Management',
+      'YouTube & Social Video Scheduling',
+      'X (@salami_abdulslm) Market Snippets',
+      'Public Dispatches & Community Engagement'
+    ],
+    notes: 'Leads digital broadcast channels, educational content distribution, and investor reach.'
+  },
+  {
+    id: 'staff-analyst-004',
+    fullName: 'Farouk Ibrahim',
+    email: 'analyst@psainvestment.com',
+    phone: '+234 814 556 7788',
+    role: 'analyst',
+    title: 'Senior Equity Research Analyst',
+    department: 'Research & Valuation',
+    status: 'active',
+    assignedAt: '2026-05-15T09:00:00Z',
+    permissions: [
+      'Draft Equity Research Reports',
+      'DCF & Multiple Valuation Modeling',
+      'Pre-Market Chronicle Drafting',
+      'NGX Order Flow & Barometer Analytics'
+    ],
+    notes: 'Focuses on NGX banking recapitalization, consumer goods balance sheets, and dividend yields.'
+  },
+  {
+    id: 'staff-partner-005',
+    fullName: 'Kenneth Okoye',
+    email: 'partners@psainvestment.com',
+    phone: '+234 809 667 8899',
+    role: 'partners',
+    title: 'Managing Partner - Capital Alliances & SME Syndication',
+    department: 'Strategic Partnerships',
+    status: 'active',
+    assignedAt: '2026-06-01T11:00:00Z',
+    permissions: [
+      'Commercial Solar PaaS Financing',
+      'Institutional Deal Structuring',
+      'SME Capital Syndication',
+      'Partner Roundtables & Joint Ventures'
+    ],
+    notes: 'Drives commercial partnerships, clean energy transition funding, and co-investment syndicates.'
+  }
+];
+
+export const INITIAL_COMMENTS: ResourceComment[] = [
+  {
+    id: 'comm-1',
+    resourceId: 'seplat-deepwater-gas-valuation-2026',
+    resourceType: 'report',
+    authorId: 'sample-active-member-2',
+    authorName: 'Chidinma Okonkwo',
+    authorEmail: 'chidinma.o@example.com',
+    authorTier: 'Charter Analyst',
+    authorRole: 'Analyst Circle Member',
+    content: 'Outstanding breakdown of the ANOH gas plant commissioning timeline. How does your model treat the domestic gas supply obligation (DGSO) pricing vs export parity?',
+    createdAt: '2026-10-09T14:22:00Z',
+    likes: 6
+  },
+  {
+    id: 'comm-2',
+    resourceId: 'seplat-deepwater-gas-valuation-2026',
+    resourceType: 'report',
+    authorId: 'staff-ceo-001',
+    authorName: 'Salami Abdullahi',
+    authorEmail: 'salamiabdullahi257@gmail.com',
+    authorTier: 'Chief Analyst',
+    authorRole: 'Founder & CEO',
+    content: 'We modeled domestic gas at $2.42/mmbtu base case with an upside flex to $2.80/mmbtu once the OB3 pipeline interconnector reaches full compressor pressure. Export parity remains the key catalyst for free cashflow expansion in FY27.',
+    createdAt: '2026-10-09T16:05:00Z',
+    likes: 14
+  },
+  {
+    id: 'comm-3',
+    resourceId: 'ngx-banking-recapitalization-2026',
+    resourceType: 'report',
+    authorId: 'sample-pending-member-1',
+    authorName: 'Babatunde Adeleke',
+    authorEmail: 'babatunde.adeleke@example.com',
+    authorTier: 'Associate Analyst',
+    authorRole: 'Analyst Circle Member',
+    content: 'The sensitivity table for GTCO and Zenith Bank recapitalization dilution is spot on. Clear evidence that tier-1 banks with offshore capital buffers will outperform post-recapitalization without eroding ROE.',
+    createdAt: '2026-10-07T11:45:00Z',
+    likes: 4
+  },
+  {
+    id: 'comm-4',
+    resourceId: 'chronicle-vol-42-2026-10-12',
+    resourceType: 'chronicle',
+    authorId: 'sample-active-member-2',
+    authorName: 'Chidinma Okonkwo',
+    authorEmail: 'chidinma.o@example.com',
+    authorTier: 'Charter Analyst',
+    authorRole: 'Analyst Circle Member',
+    content: 'The pre-market barometer at 07:00 WAT was invaluable ahead of today’s opening bell. The 106,420 NGX ASI resistance test played out exactly as forecasted in Table 1.',
+    createdAt: '2026-10-12T07:45:00Z',
+    likes: 9
+  },
+  {
+    id: 'comm-5',
+    resourceId: 'vid-financial-statement-masterclass',
+    resourceType: 'video',
+    authorId: 'sample-active-member-2',
+    authorName: 'Chidinma Okonkwo',
+    authorEmail: 'chidinma.o@example.com',
+    authorTier: 'Charter Analyst',
+    authorRole: 'Analyst Circle Member',
+    content: 'The working capital cycle adjustment explained at minute 11:20 completely clarified how Nigerian consumer stocks navigate FX translation losses. Great masterclass!',
+    createdAt: '2026-10-05T18:30:00Z',
+    likes: 5
   }
 ];

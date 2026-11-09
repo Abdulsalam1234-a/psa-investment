@@ -177,14 +177,34 @@ export const About: React.FC<AboutProps> = ({ setActiveTab: _setActiveTab, onOpe
                   Administrator UID: PSA-CEO001
                 </div>
               </div>
-              <div className="text-[11px] text-slate-400 leading-relaxed">
-                Direct Inquiries: <br />
-                <a
-                  href="mailto:salamiabdullahi257@gmail.com"
-                  className="text-white hover:text-[#C9A84C] font-mono transition-colors"
-                >
-                  salamiabdullahi257@gmail.com
-                </a>
+              <div className="text-[11px] text-slate-300 leading-relaxed space-y-1.5 pt-1">
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Personal Direct (CEO):</span>
+                  <a
+                    href="mailto:salamiabdullahi257@gmail.com"
+                    className="text-white hover:text-[#C9A84C] font-mono transition-colors block"
+                  >
+                    salamiabdullahi257@gmail.com
+                  </a>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">PSA Official Desk:</span>
+                  <a
+                    href="mailto:psainvestment.ng@gmail.com"
+                    className="text-white hover:text-[#C9A84C] font-mono transition-colors block"
+                  >
+                    psainvestment.ng@gmail.com
+                  </a>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Direct Line:</span>
+                  <a
+                    href="tel:+2347068371292"
+                    className="text-[#C9A84C] hover:underline font-mono font-semibold"
+                  >
+                    +234 706 837 1292
+                  </a>
+                </div>
               </div>
             </div>
           </div>

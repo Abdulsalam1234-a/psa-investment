@@ -14,6 +14,7 @@ import {
 import { ResearchReport } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { ResourceComments } from './ResourceComments';
 
 interface ReportModalProps {
   report: ResearchReport | null;
@@ -319,6 +320,14 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               </div>
             </div>
           )}
+
+          {/* Analyst Circle Discussion on this Report */}
+          <ResourceComments
+            resourceId={report.id}
+            resourceType="report"
+            resourceTitle={report.title}
+            onOpenAuthModal={onOpenAuthModal}
+          />
         </div>
       </div>
     </div>

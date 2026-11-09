@@ -9,7 +9,10 @@ import {
   EmailDispatch,
   NewsletterSubscriber,
   StorageFile,
-  ChronicleEdition
+  ChronicleEdition,
+  StaffMember,
+  StaffRole,
+  ResourceComment
 } from '../types';
 import {
   INITIAL_SERVICES,
@@ -18,7 +21,9 @@ import {
   INITIAL_MEMBERS,
   INITIAL_STORAGE_FILES,
   INITIAL_DOWNLOAD_LOGS,
-  INITIAL_SUBSCRIBERS
+  INITIAL_SUBSCRIBERS,
+  INITIAL_STAFF,
+  INITIAL_COMMENTS
 } from '../data/initialData';
 import { INITIAL_CHRONICLES } from '../data/initialChronicles';
 import { parseRawChronicle } from '../utils/chronicleParser';
@@ -34,6 +39,8 @@ interface DataContextType {
   storageFiles: StorageFile[];
   subscribers: NewsletterSubscriber[];
   chronicles: ChronicleEdition[];
+  staffMembers: StaffMember[];
+  comments: ResourceComment[];
   loading: boolean;
   saveReport: (report: Partial<ResearchReport>) => Promise<ResearchReport>;
   deleteReport: (id: string) => Promise<void>;
@@ -47,6 +54,13 @@ interface DataContextType {
   suspendMember: (uid: string) => Promise<void>;
   reinstateMember: (uid: string) => Promise<void>;
   updateMemberRecord: (uid: string, data: Partial<Member>) => Promise<void>;
+  addStaffMember: (data: Omit<StaffMember, 'id' | 'assignedAt'>) => Promise<StaffMember>;
+  updateStaffRole: (id: string, role: StaffRole, title?: string, permissions?: string[]) => Promise<void>;
+  updateStaffStatus: (id: string, status: 'active' | 'suspended') => Promise<void>;
+  deleteStaffMember: (id: string) => Promise<void>;
+  addComment: (data: Omit<ResourceComment, 'id' | 'createdAt' | 'likes'>) => Promise<ResourceComment>;
+  deleteComment: (id: string) => Promise<void>;
+  likeComment: (id: string) => Promise<void>;
   submitContactForm: (data: Omit<ContactSubmission, 'id' | 'status' | 'createdAt'>) => Promise<void>;
   updateContactStatus: (id: string, status: 'unread' | 'reviewed' | 'archived') => Promise<void>;
   deleteContact: (id: string) => Promise<void>;
@@ -111,6 +125,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : INITIAL_CHRONICLES;
   });
 
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {
+    const saved = localStorage.getItem('psa_staff_members');
+    return saved ? JSON.parse(saved) : INITIAL_STAFF;
+  });
+
+  const [comments, setComments] = useState<ResourceComment[]>(() => {
+    const saved = localStorage.getItem('psa_resource_comments');
+    return saved ? JSON.parse(saved) : INITIAL_COMMENTS;
+  });
+
   const [loading, setLoading] = useState<boolean>(false);
 
   // Sync state to local storage
@@ -149,6 +173,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('psa_chronicles', JSON.stringify(chronicles));
   }, [chronicles]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_staff_members', JSON.stringify(staffMembers));
+  }, [staffMembers]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_resource_comments', JSON.stringify(comments));
+  }, [comments]);
 
   const logDispatch = useCallback(
     (dispatch: Omit<EmailDispatch, 'id' | 'sentAt' | 'status'>) => {
@@ -353,6 +385,109 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const DEFAULT_ROLE_PERMISSIONS: Record<StaffRole, string[]> = {
+    admin: [
+      'Full Executive Command',
+      'Publish Research & DCF Models',
+      'Authorize Chronicle Editions',
+      'Approve Circle Members',
+      'Assign Staff Access & Roles',
+      'Manage Billing & Treasury'
+    ],
+    management: [
+      'Executive Oversight & Performance Tracking',
+      'Member Review Workflow',
+      'Operational Reporting',
+      'Vendor & Compliance Management'
+    ],
+    social_media_director: [
+      'PSA Lens Masterclasses Management',
+      'YouTube & Social Video Scheduling',
+      'X (@salami_abdulslm) Market Snippets',
+      'Public Dispatches & Community Engagement'
+    ],
+    analyst: [
+      'Draft Equity Research Reports',
+      'DCF & Multiple Valuation Modeling',
+      'Pre-Market Chronicle Drafting',
+      'NGX Order Flow & Barometer Analytics'
+    ],
+    partners: [
+      'Commercial Solar PaaS Financing',
+      'Institutional Deal Structuring',
+      'SME Capital Syndication',
+      'Partner Roundtables & Joint Ventures'
+    ]
+  };
+
+  const addStaffMember = async (
+    data: Omit<StaffMember, 'id' | 'assignedAt'>
+  ): Promise<StaffMember> => {
+    const newStaff: StaffMember = {
+      ...data,
+      id: `staff-${data.role}-${Date.now()}`,
+      assignedAt: new Date().toISOString(),
+      permissions:
+        data.permissions && data.permissions.length > 0
+          ? data.permissions
+          : DEFAULT_ROLE_PERMISSIONS[data.role] || []
+    };
+    setStaffMembers(prev => [newStaff, ...prev]);
+    return newStaff;
+  };
+
+  const updateStaffRole = async (
+    id: string,
+    role: StaffRole,
+    title?: string,
+    permissions?: string[]
+  ) => {
+    setStaffMembers(prev =>
+      prev.map(s => {
+        if (s.id !== id) return s;
+        return {
+          ...s,
+          role,
+          title: title || s.title,
+          permissions: permissions || DEFAULT_ROLE_PERMISSIONS[role] || s.permissions
+        };
+      })
+    );
+  };
+
+  const updateStaffStatus = async (id: string, status: 'active' | 'suspended') => {
+    setStaffMembers(prev =>
+      prev.map(s => (s.id === id ? { ...s, status } : s))
+    );
+  };
+
+  const deleteStaffMember = async (id: string) => {
+    setStaffMembers(prev => prev.filter(s => s.id !== id));
+  };
+
+  const addComment = async (
+    data: Omit<ResourceComment, 'id' | 'createdAt' | 'likes'>
+  ): Promise<ResourceComment> => {
+    const newComment: ResourceComment = {
+      ...data,
+      id: `comment-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      likes: 0
+    };
+    setComments(prev => [newComment, ...prev]);
+    return newComment;
+  };
+
+  const deleteComment = async (id: string) => {
+    setComments(prev => prev.filter(c => c.id !== id));
+  };
+
+  const likeComment = async (id: string) => {
+    setComments(prev =>
+      prev.map(c => (c.id === id ? { ...c, likes: (c.likes || 0) + 1 } : c))
+    );
+  };
+
   const submitContactForm = async (
     data: Omit<ContactSubmission, 'id' | 'status' | 'createdAt'>
   ) => {
@@ -546,6 +681,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         storageFiles,
         subscribers,
         chronicles,
+        staffMembers,
+        comments,
         loading,
         saveReport,
         deleteReport,
@@ -559,6 +696,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         suspendMember,
         reinstateMember,
         updateMemberRecord,
+        addStaffMember,
+        updateStaffRole,
+        updateStaffStatus,
+        deleteStaffMember,
+        addComment,
+        deleteComment,
+        likeComment,
         submitContactForm,
         updateContactStatus,
         deleteContact,

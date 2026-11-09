@@ -3,16 +3,25 @@ import {
   Search,
   Filter,
   ExternalLink,
-  Clock
+  Clock,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { YoutubeIcon } from '../components/BrandIcons';
+import { ResourceComments } from '../components/ResourceComments';
 
-export const Videos: React.FC = () => {
-  const { videos, trackVideoClick } = useData();
+interface VideosProps {
+  onOpenAuthModal?: (mode: 'login' | 'signup') => void;
+}
+
+export const Videos: React.FC<VideosProps> = ({ onOpenAuthModal }) => {
+  const { videos, trackVideoClick, comments } = useData();
 
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
+  const [expandedVideoId, setExpandedVideoId] = useState<string | null>(null);
 
   const topicTags = ['All', 'Dividend Investing', 'Financial Statements', 'NGX Basics'];
 
@@ -141,8 +150,26 @@ export const Videos: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-6 sm:px-8 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className="text-slate-400">{vid.clicksToYouTube} YouTube interactions</span>
+                <div className="p-4 sm:px-8 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-400">{vid.clicksToYouTube} interactions</span>
+                    <button
+                      onClick={() =>
+                        setExpandedVideoId(prev => (prev === vid.id ? null : vid.id))
+                      }
+                      className="font-bold text-[#0A1F44] hover:text-[#C9A84C] flex items-center gap-1.5 cursor-pointer transition-colors bg-white px-3 py-1.5 rounded-lg border border-slate-200"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-[#C9A84C]" />
+                      <span>
+                        Discussion ({comments.filter(c => c.resourceId === vid.id).length})
+                      </span>
+                      {expandedVideoId === vid.id ? (
+                        <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      )}
+                    </button>
+                  </div>
 
                   <button
                     onClick={() => handleExternalClick(vid.id, vid.youtubeUrl)}
@@ -152,6 +179,18 @@ export const Videos: React.FC = () => {
                     <ExternalLink className="w-3.5 h-3.5" />
                   </button>
                 </div>
+
+                {/* Expanded Analyst Discussion */}
+                {expandedVideoId === vid.id && (
+                  <div className="p-6 sm:px-8 pt-0 border-t border-slate-100 bg-white">
+                    <ResourceComments
+                      resourceId={vid.id}
+                      resourceType="video"
+                      resourceTitle={vid.title}
+                      onOpenAuthModal={onOpenAuthModal}
+                    />
+                  </div>
+                )}
               </div>
             ))}
           </div>
