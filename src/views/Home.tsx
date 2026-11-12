@@ -324,12 +324,22 @@ export const Home: React.FC<HomeProps> = ({
                 <button
                   onClick={() => {
                     logChronicleDownload(latestChronicle.id);
-                    window.print();
+                    const targetUrl =
+                      latestChronicle.docxUrl || '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx';
+                    const targetName =
+                      latestChronicle.docxFileName ||
+                      `PSA_Financial_Transcript_${(latestChronicle.volume || 'VOL').replace(/[^a-zA-Z0-9]+/g, '_')}.docx`;
+                    const link = document.createElement('a');
+                    link.href = targetUrl;
+                    link.download = targetName;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                   }}
-                  className="px-4 py-2.5 bg-white hover:bg-slate-50 text-[#0A1F44] font-bold text-xs rounded-xl border border-slate-300 shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-4 py-2.5 bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-[#C9A84C]" />
-                  <span>Download Newspaper (PDF)</span>
+                  <span>Download Word Document (.docx)</span>
                 </button>
               </div>
             </div>

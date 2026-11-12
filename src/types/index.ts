@@ -164,6 +164,10 @@ export interface ChronicleEdition {
   tacticalPlaybook: string[];
   rawText: string;
   pdfUrl?: string;
+  docxUrl?: string;
+  docxFileName?: string;
+  formattedHtml?: string;
+  fileSizeBytes?: number;
   status: 'published' | 'draft';
   source: 'gemini_automation' | 'admin_upload';
   downloadCount: number;

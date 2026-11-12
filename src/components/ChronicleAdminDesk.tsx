@@ -15,8 +15,11 @@ import {
   ExternalLink,
   Copy,
   Check,
-  RefreshCw
+  RefreshCw,
+  Download,
+  FileUp
 } from 'lucide-react';
+import mammoth from 'mammoth';
 import { useData } from '../context/DataContext';
 import { ChronicleEdition } from '../types';
 import { parseRawChronicle } from '../utils/chronicleParser';
@@ -27,11 +30,20 @@ export const ChronicleAdminDesk: React.FC = () => {
     chronicles,
     saveChronicle,
     deleteChronicle,
-    autoPublishGeminiChronicle
+    autoPublishGeminiChronicle,
+    publishWordDocumentChronicle
   } = useData();
 
-  // Mode: manual paste upload, gemini automated fetch, or archive list
-  const [subTab, setSubTab] = useState<'upload' | 'gemini_automation' | 'manage'>('upload');
+  // Mode: docx upload, manual paste upload, gemini automated fetch, or archive list
+  const [subTab, setSubTab] = useState<'docx_upload' | 'manual_paste' | 'gemini_automation' | 'manage'>('docx_upload');
+
+  // Word Document Upload State
+  const [uploadedDocxFile, setUploadedDocxFile] = useState<File | null>(null);
+  const [docxBase64, setDocxBase64] = useState<string>('');
+  const [docxFormattedHtml, setDocxFormattedHtml] = useState<string>('');
+  const [docxRawText, setDocxRawText] = useState<string>('');
+  const [docxLoading, setDocxLoading] = useState(false);
+  const [docxDragOver, setDocxDragOver] = useState(false);
 
   // Manual Upload State
   const [rawInput, setRawInput] = useState('');
@@ -51,6 +63,74 @@ export const ChronicleAdminDesk: React.FC = () => {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleDocxFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.docx')) {
+      showToast('Please select a valid Microsoft Word (.docx) file.');
+      return;
+    }
+
+    setDocxLoading(true);
+    try {
+      setUploadedDocxFile(file);
+
+      // Read array buffer for mammoth parsing
+      const arrayBuffer = await file.arrayBuffer();
+
+      // Convert to HTML using mammoth
+      const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
+      const rawTextResult = await mammoth.extractRawText({ arrayBuffer });
+
+      const html = htmlResult.value;
+      const rawText = rawTextResult.value;
+
+      setDocxFormattedHtml(html);
+      setDocxRawText(rawText);
+
+      // Parse structured data from text
+      const parsed = parseRawChronicle(rawText);
+      setParsedPreview(parsed);
+      if (parsed.volume) setCustomVolume(parsed.volume);
+
+      // Read as DataURL for storage and download
+      const reader = new FileReader();
+      reader.onload = () => {
+        setDocxBase64(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      showToast(`Successfully extracted and formatted ${file.name}!`);
+    } catch (err: any) {
+      console.error('Docx parse error:', err);
+      showToast(`Error parsing Word document: ${err.message}`);
+    } finally {
+      setDocxLoading(false);
+    }
+  };
+
+  const handlePublishDocx = async () => {
+    if (!uploadedDocxFile || !docxRawText) {
+      showToast('Please upload a Word document (.docx) first.');
+      return;
+    }
+
+    const newEdition = await publishWordDocumentChronicle({
+      rawText: docxRawText,
+      docxUrl: docxBase64 || '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx',
+      docxFileName: uploadedDocxFile.name,
+      formattedHtml: docxFormattedHtml,
+      fileSizeBytes: uploadedDocxFile.size,
+      customVolume: customVolume || parsedPreview?.volume
+    });
+
+    showToast(`Published ${newEdition.volume} to live PSA Transcripts!`);
+    setUploadedDocxFile(null);
+    setDocxFormattedHtml('');
+    setDocxRawText('');
+    setDocxBase64('');
+    setParsedPreview(null);
+    setSubTab('manage');
   };
 
   const handleParseRaw = () => {
@@ -249,15 +329,27 @@ if __name__ == "__main__":
       {/* Sub Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
         <button
-          onClick={() => setSubTab('upload')}
+          onClick={() => setSubTab('docx_upload')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-            subTab === 'upload'
+            subTab === 'docx_upload'
+              ? 'bg-[#2B579A] text-white shadow-xs'
+              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+          }`}
+        >
+          <FileUp className="w-4 h-4 text-[#C9A84C]" />
+          <span>Upload Word Document (.docx)</span>
+        </button>
+
+        <button
+          onClick={() => setSubTab('manual_paste')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            subTab === 'manual_paste'
               ? 'bg-[#0A1F44] text-[#C9A84C] shadow-xs'
               : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
           }`}
         >
           <Upload className="w-4 h-4" />
-          <span>Upload & Ingest Market Dispatch</span>
+          <span>Manual Text Paste</span>
         </button>
 
         <button
@@ -285,8 +377,180 @@ if __name__ == "__main__":
         </button>
       </div>
 
-      {/* 1. MANUAL UPLOAD & PASTE DESK */}
-      {subTab === 'upload' && (
+      {/* 1. WORD DOCUMENT (.DOCX) UPLOAD DESK */}
+      {subTab === 'docx_upload' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#2B579A]/10 text-[#2B579A] text-[10px] font-bold uppercase tracking-wider mb-1">
+                <FileText className="w-3.5 h-3.5" />
+                <span>Word Document Ingestion Desk</span>
+              </div>
+              <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+                Upload Formatted Word Document (.docx)
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5 max-w-2xl">
+                Upload your formatted Word document. The system will format and view it on screen, allowing members and the public to read it seamlessly and download strictly the Word document (.docx).
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-600">Volume Tag:</span>
+              <input
+                type="text"
+                value={customVolume}
+                onChange={e => setCustomVolume(e.target.value)}
+                placeholder="VOL. XXIX"
+                className="w-28 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold outline-none focus:border-[#C9A84C]"
+              />
+            </div>
+          </div>
+
+          {/* Drag & Drop Upload Zone */}
+          <div
+            onDragOver={e => {
+              e.preventDefault();
+              setDocxDragOver(true);
+            }}
+            onDragLeave={() => setDocxDragOver(false)}
+            onDrop={e => {
+              e.preventDefault();
+              setDocxDragOver(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleDocxFile(file);
+            }}
+            className={`border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all ${
+              docxDragOver
+                ? 'border-[#2B579A] bg-[#2B579A]/5'
+                : 'border-slate-300 hover:border-[#2B579A] bg-slate-50/50'
+            }`}
+          >
+            <input
+              type="file"
+              id="docx-file-input"
+              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) handleDocxFile(file);
+              }}
+            />
+
+            <div className="space-y-4 max-w-md mx-auto">
+              <div className="w-16 h-16 rounded-2xl bg-[#2B579A] text-white flex items-center justify-center mx-auto shadow-md">
+                <FileUp className="w-8 h-8 text-[#C9A84C]" />
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="font-bold text-base text-[#0A1F44]">
+                  {uploadedDocxFile ? uploadedDocxFile.name : 'Drag & drop your Word Document (.docx) here'}
+                </h4>
+                <p className="text-xs text-slate-500">
+                  {uploadedDocxFile
+                    ? `File size: ${(uploadedDocxFile.size / 1024).toFixed(1)} KB • Validated Microsoft Word Document`
+                    : 'Supports Microsoft Word formatted .docx files. Content will be converted and displayed formatted on screen.'}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <label
+                  htmlFor="docx-file-input"
+                  className="px-5 py-2.5 bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-all flex items-center gap-2 hover:scale-102"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>{uploadedDocxFile ? 'Choose Different File' : 'Browse Files on Computer'}</span>
+                </label>
+
+                {!uploadedDocxFile && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setDocxLoading(true);
+                      try {
+                        const response = await fetch('/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx');
+                        const blob = await response.blob();
+                        const file = new File([blob], 'PSA-Financial-Chronicle-VOL-XXIX.docx', {
+                          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        });
+                        await handleDocxFile(file);
+                      } catch (err: any) {
+                        showToast(`Failed to load sample: ${err.message}`);
+                      } finally {
+                        setDocxLoading(false);
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  >
+                    Load Sample Document
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Real-time Document Screen Preview */}
+          {docxLoading && (
+            <div className="p-8 text-center text-slate-500 text-xs font-semibold flex items-center justify-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin text-[#2B579A]" />
+              <span>Parsing Word Document XML structures with Mammoth engine...</span>
+            </div>
+          )}
+
+          {docxFormattedHtml && !docxLoading && (
+            <div className="space-y-4 pt-4 border-t border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <span className="font-bold text-xs text-slate-800">
+                    Document Extracted & Formatted Successfully
+                  </span>
+                  <span className="text-[11px] font-mono text-slate-500">
+                    ({docxRawText.length.toLocaleString()} characters)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (uploadedDocxFile) {
+                        const link = document.createElement('a');
+                        link.href = docxBase64 || '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx';
+                        link.download = uploadedDocxFile.name;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showToast(`Testing download for ${uploadedDocxFile.name}`);
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-lg flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#2B579A]" />
+                    <span>Test Direct Download (.docx)</span>
+                  </button>
+
+                  <button
+                    onClick={handlePublishDocx}
+                    className="px-5 py-2 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-md cursor-pointer transition-all flex items-center gap-2 hover:scale-102"
+                  >
+                    <Check className="w-4 h-4 text-[#C9A84C]" />
+                    <span>Publish Document to Live Website</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Formatted Screen Display */}
+              <div className="bg-white rounded-2xl border border-slate-300 p-6 sm:p-10 max-h-[500px] overflow-y-auto shadow-inner font-serif">
+                <div
+                  className="prose prose-slate max-w-none text-slate-800 text-xs sm:text-sm leading-relaxed space-y-3 [&>table]:w-full [&>table]:border-collapse [&>table]:border [&>table]:border-slate-300 [&>table_td]:border [&>table_td]:border-slate-300 [&>table_td]:p-2 [&>table_th]:border [&>table_th]:border-slate-300 [&>table_th]:p-2 [&>table_th]:bg-slate-100"
+                  dangerouslySetInnerHTML={{ __html: docxFormattedHtml }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 2. MANUAL UPLOAD & PASTE DESK */}
+      {subTab === 'manual_paste' && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>

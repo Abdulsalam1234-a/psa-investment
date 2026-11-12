@@ -32,6 +32,22 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
   const currentChronicle =
     chronicles.find(c => c.id === selectedChronicleId) || chronicles[0];
 
+  const handleDownloadDocx = (chron: ChronicleEdition) => {
+    logChronicleDownload(chron.id);
+    const targetUrl =
+      chron.docxUrl || '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx';
+    const targetName =
+      chron.docxFileName ||
+      `PSA_Financial_Transcript_${(chron.volume || 'VOL').replace(/[^a-zA-Z0-9]+/g, '_')}.docx`;
+
+    const link = document.createElement('a');
+    link.href = targetUrl;
+    link.download = targetName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filteredChronicles = chronicles.filter(c => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -57,12 +73,12 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2 max-w-3xl">
               <h1 className="font-serif font-black text-3xl sm:text-5xl text-white tracking-tight">
-                The PSA Financial Chronicle
+                The PSA Transcripts & Financial Chronicle
               </h1>
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
                 Published every morning at <strong className="text-[#C9A84C]">07:00 AM WAT</strong>.
                 Our automated intelligence desk captures the official NGX close, floor turnover,
-                blue-chip bellwethers, and broker tactical playbooks into an archival newspaper broadsheet.
+                blue-chip bellwethers, and broker tactical playbooks into formatted Word documents (.docx) and archival broadsheets.
               </p>
             </div>
 
@@ -70,14 +86,16 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
               <button
                 onClick={() => {
                   if (currentChronicle) {
-                    logChronicleDownload(currentChronicle.id);
-                    window.print();
+                    handleDownloadDocx(currentChronicle);
                   }
                 }}
-                className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#C9A84C] to-[#B8973D] hover:from-[#B8973D] hover:to-[#A7862C] text-[#0A1F44] font-bold text-xs shadow-lg shadow-[#C9A84C]/20 transition-all flex items-center gap-2 cursor-pointer hover:scale-102"
+                className="px-6 py-3.5 rounded-xl bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-bold text-xs shadow-xl shadow-blue-950/40 transition-all flex items-center gap-2.5 cursor-pointer hover:scale-102"
               >
-                <Download className="w-4 h-4" />
-                <span>Download Today's Newspaper</span>
+                <FileText className="w-4 h-4 text-[#C9A84C]" />
+                <span>Download Word Document (.docx)</span>
+                <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono font-bold">
+                  DOCX
+                </span>
               </button>
             </div>
           </div>
@@ -89,16 +107,16 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
               <span>Published 07:00 WAT Daily</span>
             </div>
             <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#C9A84C]" />
+              <span>Word (.docx) Formatted</span>
+            </div>
+            <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#C9A84C]" />
               <span>NGX & CSCS Verified Logs</span>
             </div>
             <div className="flex items-center gap-2">
               <Archive className="w-4 h-4 text-[#C9A84C]" />
               <span>Public Historical Archive</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#C9A84C]" />
-              <span>Automated Gemini Ingestion</span>
             </div>
           </div>
         </div>

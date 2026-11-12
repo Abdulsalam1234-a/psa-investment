@@ -72,6 +72,14 @@ interface DataContextType {
   incrementChronicleView: (id: string) => Promise<void>;
   logChronicleDownload: (chronicleId: string, memberEmail?: string) => Promise<void>;
   autoPublishGeminiChronicle: (rawText: string, customVolume?: string) => Promise<ChronicleEdition>;
+  publishWordDocumentChronicle: (data: {
+    rawText: string;
+    docxUrl: string;
+    docxFileName: string;
+    formattedHtml: string;
+    fileSizeBytes: number;
+    customVolume?: string;
+  }) => Promise<ChronicleEdition>;
   refreshData: () => Promise<void>;
 }
 
@@ -588,6 +596,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         macroBenchmarks: chronicleData.macroBenchmarks || [],
         tacticalPlaybook: chronicleData.tacticalPlaybook || [],
         rawText: chronicleData.rawText || '',
+        docxUrl: chronicleData.docxUrl,
+        docxFileName: chronicleData.docxFileName,
+        formattedHtml: chronicleData.formattedHtml,
+        fileSizeBytes: chronicleData.fileSizeBytes,
+        pdfUrl: chronicleData.pdfUrl,
         status: chronicleData.status || 'published',
         source: chronicleData.source || 'admin_upload',
         downloadCount: 0,
@@ -663,6 +676,66 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newChronicle;
   };
 
+  const publishWordDocumentChronicle = async (data: {
+    rawText: string;
+    docxUrl: string;
+    docxFileName: string;
+    formattedHtml: string;
+    fileSizeBytes: number;
+    customVolume?: string;
+  }): Promise<ChronicleEdition> => {
+    const parsed = parseRawChronicle(data.rawText);
+    const now = new Date().toISOString();
+    const newChronicle: ChronicleEdition = {
+      id: `chronicle-docx-${Date.now()}`,
+      slug: (parsed.headline || data.docxFileName.replace(/\.docx$/i, '') || 'transcript')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .slice(0, 50),
+      title: parsed.title || 'THE PSA FINANCIAL CHRONICLE & TRANSCRIPTS',
+      subtitle:
+        parsed.subtitle ||
+        'Verified Pre-Market Intelligence Briefing & Official Institutional Transcripts',
+      volume: data.customVolume || parsed.volume || `VOL. ${chronicles.length + 1}`,
+      editionDate:
+        parsed.editionDate ||
+        new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+      briefingTime: parsed.briefingTime || '07:00 WAT',
+      headline:
+        parsed.headline ||
+        data.docxFileName.replace(/\.docx$/i, '').replace(/[-_]/g, ' ') ||
+        'PSA Institutional Financial Transcript',
+      subheadline:
+        parsed.subheadline ||
+        'Official formatted Microsoft Word market transcript and intelligence document.',
+      leadArticle: parsed.leadArticle || '',
+      marketBarometers: parsed.marketBarometers || [],
+      topGainers: parsed.topGainers || [],
+      topLosers: parsed.topLosers || [],
+      bellwethers: parsed.bellwethers || [],
+      macroBenchmarks: parsed.macroBenchmarks || [],
+      tacticalPlaybook: parsed.tacticalPlaybook || [],
+      rawText: data.rawText,
+      docxUrl: data.docxUrl,
+      docxFileName: data.docxFileName,
+      formattedHtml: data.formattedHtml,
+      fileSizeBytes: data.fileSizeBytes,
+      status: 'published',
+      source: 'admin_upload',
+      downloadCount: 0,
+      viewCount: 1,
+      createdAt: now,
+      publishedAt: now
+    };
+    setChronicles(prev => [newChronicle, ...prev]);
+    return newChronicle;
+  };
+
   const refreshData = async () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 300);
@@ -714,6 +787,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         incrementChronicleView,
         logChronicleDownload,
         autoPublishGeminiChronicle,
+        publishWordDocumentChronicle,
         refreshData
       }}
     >

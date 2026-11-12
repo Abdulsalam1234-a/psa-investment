@@ -204,6 +204,9 @@ Equities market capitalization added ₦208.46 billion to settle at ₦161.26 tr
       'Support Defenses at ACCESSCORP & MTNN: With Access Holdings breaching ₦30.00 to close at ₦29.50, and MTNN holding at ₦818.00, institutional bid-ask spreads at these key levels will set the tone for market direction early in the week.'
     ],
     rawText: RAW_CHRONICLE_OCT12_2026,
+    docxUrl: '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx',
+    docxFileName: 'PSA-Financial-Chronicle-VOL-XXIX.docx',
+    fileSizeBytes: 24500,
     status: 'published',
     source: 'gemini_automation',
     downloadCount: 342,
@@ -288,6 +291,9 @@ Equities market capitalization added ₦208.46 billion to settle at ₦161.26 tr
       'Defensive Value Entry: Accumulate dividend aristocrats trading at forward P/E ratios under 3.5x.'
     ],
     rawText: `THE PSA FINANCIAL CHRONICLE - VOL. XXVIII\nFRIDAY, OCTOBER 9, 2026\nNGX All-Share Index Breaches 248,100 Support.`,
+    docxUrl: '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx',
+    docxFileName: 'PSA-Financial-Chronicle-VOL-XXVIII.docx',
+    fileSizeBytes: 23800,
     status: 'published',
     source: 'admin_upload',
     downloadCount: 289,

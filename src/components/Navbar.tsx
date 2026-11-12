@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks: { id: ViewTab; label: string; badge?: string }[] = [
     { id: 'home', label: 'Home' },
-    { id: 'chronicle', label: 'Financial Chronicle', badge: '07:00 WAT' },
+    { id: 'chronicle', label: 'PSA Transcripts', badge: '07:00 WAT' },
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
     { id: 'research', label: 'Research' },
@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     : [];
 
   return (
-    <>
+    <div className="sticky top-0 z-[100] w-full bg-white shadow-sm">
       {/* Demo Persona Bar */}
       <div className="bg-[#0A1F44] border-b border-slate-800 text-slate-300 text-xs px-4 py-1.5 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -159,7 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* Main Navigation */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+      <header className="bg-white border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
@@ -462,6 +462,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

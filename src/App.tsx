@@ -40,7 +40,7 @@ export const AppContent: React.FC = () => {
       setActiveTab('admin-panel');
     } else if (path === 'portal' || path === 'member-portal') {
       setActiveTab('member-portal');
-    } else if (path === 'chronicle' || path === 'newspaper' || path === 'daily-report') {
+    } else if (path === 'chronicle' || path === 'transcripts' || path === 'psa-transcripts' || path === 'newspaper' || path === 'daily-report') {
       setActiveTab('chronicle');
     }
   }, [currentUser]);

@@ -29,7 +29,7 @@ export const ChronicleReader: React.FC<ChronicleReaderProps> = ({
   onOpenAuthModal
 }) => {
   const { logChronicleDownload } = useData();
-  const [viewMode, setViewMode] = useState<'broadsheet' | 'raw'>('broadsheet');
+  const [viewMode, setViewMode] = useState<'doc' | 'broadsheet' | 'raw'>('doc');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -38,9 +38,23 @@ export const ChronicleReader: React.FC<ChronicleReaderProps> = ({
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handlePrintOrDownload = () => {
+  const handleDownloadDocx = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
     logChronicleDownload(chronicle.id);
-    window.print();
+
+    // Target Word document URL
+    const targetUrl =
+      chronicle.docxUrl || '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx';
+    const targetName =
+      chronicle.docxFileName ||
+      `PSA_Financial_Transcript_${(chronicle.volume || 'VOL').replace(/[^a-zA-Z0-9]+/g, '_')}.docx`;
+
+    const link = document.createElement('a');
+    link.href = targetUrl;
+    link.download = targetName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -75,6 +89,17 @@ export const ChronicleReader: React.FC<ChronicleReaderProps> = ({
           {/* View Mode Toggle */}
           <div className="bg-slate-100 p-1 rounded-xl flex items-center text-xs font-semibold">
             <button
+              onClick={() => setViewMode('doc')}
+              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'doc'
+                  ? 'bg-white text-[#2B579A] shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5 text-[#2B579A]" />
+              <span>Formatted Document</span>
+            </button>
+            <button
               onClick={() => setViewMode('broadsheet')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                 viewMode === 'broadsheet'
@@ -94,7 +119,7 @@ export const ChronicleReader: React.FC<ChronicleReaderProps> = ({
               }`}
             >
               <FileCode className="w-3.5 h-3.5" />
-              <span>Raw Dispatch</span>
+              <span>Raw Text</span>
             </button>
           </div>
 
@@ -107,15 +132,241 @@ export const ChronicleReader: React.FC<ChronicleReaderProps> = ({
             <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
           </button>
 
+          {/* Primary Action: Direct Download Word Document (.docx) */}
           <button
-            onClick={handlePrintOrDownload}
-            className="px-4 py-2 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer hover:scale-102"
+            onClick={handleDownloadDocx}
+            className="px-4 py-2 bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer hover:scale-102"
+            title="Direct download Word Document (.docx)"
           >
             <Download className="w-4 h-4" />
-            <span>Download Report (PDF)</span>
+            <span>Download Word Document (.docx)</span>
+            <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono font-bold">
+              DOCX
+            </span>
           </button>
         </div>
       </div>
+
+      {/* 1. FORMATTED WORD DOCUMENT VIEW */}
+      {viewMode === 'doc' && (
+        <div className="bg-white rounded-3xl border border-slate-300 shadow-xl overflow-hidden max-w-5xl mx-auto font-serif">
+          {/* Word Document Top Status Ribbon */}
+          <div className="bg-[#2B579A] text-white px-6 py-3 flex flex-wrap items-center justify-between gap-3 text-xs font-sans">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-[#C9A84C]" />
+              <span className="font-bold">PSA Transcripts</span>
+              <span className="text-white/60">•</span>
+              <span className="text-slate-200">Microsoft Word Formatted Document</span>
+            </div>
+            <button
+              onClick={handleDownloadDocx}
+              className="px-3 py-1 bg-white hover:bg-slate-100 text-[#2B579A] font-bold text-xs rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download (.docx)</span>
+            </button>
+          </div>
+
+          {/* Formatted Document Body */}
+          <div className="p-8 sm:p-14 space-y-8 bg-white text-slate-800">
+            {chronicle.formattedHtml ? (
+              <div
+                className="prose prose-slate max-w-none text-slate-800 leading-relaxed space-y-4 [&>table]:w-full [&>table]:border-collapse [&>table]:border [&>table]:border-slate-300 [&>table_td]:border [&>table_td]:border-slate-300 [&>table_td]:p-2.5 [&>table_th]:border [&>table_th]:border-slate-300 [&>table_th]:p-2.5 [&>table_th]:bg-slate-100 [&>p]:leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: chronicle.formattedHtml }}
+              />
+            ) : (
+              <div className="space-y-6">
+                {/* Document Header */}
+                <div className="text-center pb-6 border-b border-slate-300 space-y-2">
+                  <div className="text-xs uppercase tracking-widest font-sans font-bold text-slate-500">
+                    PSA INVESTMENT CAPITAL INTELLIGENCE • INSTITUTIONAL DESK
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-[#0A1F44] tracking-tight">
+                    {chronicle.title || 'THE PSA FINANCIAL CHRONICLE'}
+                  </h1>
+                  <p className="text-xs italic text-slate-600 font-sans">
+                    {chronicle.subtitle || 'Verified Pre-Market Intelligence Briefing for Institutional Partners, Stockbrokers & Analysts'}
+                  </p>
+                  <div className="pt-2 flex flex-wrap items-center justify-center gap-4 text-xs font-sans font-semibold text-slate-600">
+                    <span className="bg-slate-100 px-2.5 py-1 rounded border border-slate-200 font-mono text-[#0A1F44]">
+                      {chronicle.volume}
+                    </span>
+                    <span>{chronicle.editionDate}</span>
+                    <span>•</span>
+                    <span>{chronicle.briefingTime}</span>
+                  </div>
+                </div>
+
+                {/* Headline Section */}
+                <div className="space-y-2">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#0A1F44] leading-snug">
+                    {chronicle.headline}
+                  </h2>
+                  <p className="text-sm font-sans text-slate-600 leading-relaxed font-medium">
+                    {chronicle.subheadline}
+                  </p>
+                </div>
+
+                {/* Lead Article */}
+                <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-line space-y-4">
+                  {chronicle.leadArticle}
+                </div>
+
+                {/* Table 1: Market Barometers */}
+                {chronicle.marketBarometers && chronicle.marketBarometers.length > 0 && (
+                  <div className="space-y-2 pt-4">
+                    <h3 className="font-sans font-bold text-xs uppercase tracking-wider text-[#0A1F44]">
+                      TABLE 1: VERIFIED OFFICIAL MARKET BAROMETERS
+                    </h3>
+                    <div className="overflow-x-auto border border-slate-300 rounded-lg">
+                      <table className="w-full text-left text-xs font-sans border-collapse">
+                        <thead className="bg-[#0A1F44] text-[#C9A84C] font-bold">
+                          <tr>
+                            <th className="p-3 border-r border-slate-700">Official Market Barometer</th>
+                            <th className="p-3 border-r border-slate-700">Current Close</th>
+                            <th className="p-3 border-r border-slate-700">Prior Close</th>
+                            <th className="p-3 border-r border-slate-700">Change (%)</th>
+                            <th className="p-3">Verified Source</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {chronicle.marketBarometers.map((b, idx) => (
+                            <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                              <td className="p-2.5 font-semibold text-slate-900 border-r border-slate-200">
+                                {b.metric}
+                              </td>
+                              <td className="p-2.5 font-mono text-slate-800 border-r border-slate-200">
+                                {b.fridayClose}
+                              </td>
+                              <td className="p-2.5 font-mono text-slate-600 border-r border-slate-200">
+                                {b.thursdayClose}
+                              </td>
+                              <td
+                                className={`p-2.5 font-mono font-bold border-r border-slate-200 ${
+                                  b.change.startsWith('+') ? 'text-emerald-700' : 'text-rose-700'
+                                }`}
+                              >
+                                {b.change}
+                              </td>
+                              <td className="p-2.5 text-slate-500 text-[11px]">{b.source}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Top Gainers & Losers */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 font-sans text-xs">
+                  {chronicle.topGainers && chronicle.topGainers.length > 0 && (
+                    <div className="border border-slate-300 rounded-lg p-4 space-y-2">
+                      <div className="font-bold text-emerald-800 uppercase tracking-wider text-[11px] pb-1 border-b border-slate-200">
+                        Top Official Gainers
+                      </div>
+                      <div className="space-y-1.5">
+                        {chronicle.topGainers.map((g, idx) => (
+                          <div key={idx} className="flex items-center justify-between">
+                            <span className="font-semibold text-slate-800">{g.name} ({g.ticker})</span>
+                            <span className="font-mono font-bold text-emerald-700">{g.close} ({g.change})</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {chronicle.topLosers && chronicle.topLosers.length > 0 && (
+                    <div className="border border-slate-300 rounded-lg p-4 space-y-2">
+                      <div className="font-bold text-rose-800 uppercase tracking-wider text-[11px] pb-1 border-b border-slate-200">
+                        Top Official Decliners
+                      </div>
+                      <div className="space-y-1.5">
+                        {chronicle.topLosers.map((l, idx) => (
+                          <div key={idx} className="flex items-center justify-between">
+                            <span className="font-semibold text-slate-800">{l.name} ({l.ticker})</span>
+                            <span className="font-mono font-bold text-rose-700">{l.close} ({l.change})</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Blue Chip Bellwethers */}
+                {chronicle.bellwethers && chronicle.bellwethers.length > 0 && (
+                  <div className="space-y-2 pt-4 font-sans">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-[#0A1F44]">
+                      Blue-Chip Bellwethers & Institutional Order Flows
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      {chronicle.bellwethers.map((item, idx) => (
+                        <div key={idx} className="p-3 border border-slate-300 rounded-lg space-y-1 bg-slate-50/50">
+                          <div className="flex items-center justify-between font-bold">
+                            <span className="font-mono text-[#0A1F44]">{item.ticker}</span>
+                            <span className="text-[10px] text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">{item.signal}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-semibold text-slate-800">{item.close}</span>
+                            <span className="text-slate-500">{item.turnover}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 leading-relaxed pt-1">{item.notes}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Macro Benchmarks */}
+                {chronicle.macroBenchmarks && chronicle.macroBenchmarks.length > 0 && (
+                  <div className="space-y-2 pt-4 font-sans">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-[#0A1F44]">
+                      Macroeconomic & Money Market Indicators
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {chronicle.macroBenchmarks.map((m, idx) => (
+                        <div key={idx} className="p-3 border border-slate-200 rounded-lg bg-slate-50">
+                          <div className="text-[10px] text-slate-500 uppercase font-semibold">{m.indicator}</div>
+                          <div className="font-bold font-mono text-slate-900 text-sm mt-0.5">{m.level}</div>
+                          <div className="text-[10px] text-slate-600 mt-1">{m.variance}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tactical Playbook */}
+                {chronicle.tacticalPlaybook && chronicle.tacticalPlaybook.length > 0 && (
+                  <div className="space-y-2 pt-4 font-sans">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-[#0A1F44]">
+                      Tactical Pre-Market Playbook
+                    </h3>
+                    <div className="space-y-2 text-xs">
+                      {chronicle.tacticalPlaybook.map((play, idx) => (
+                        <div key={idx} className="p-3 bg-amber-50/60 border border-amber-200 rounded-lg flex items-start gap-2.5">
+                          <span className="w-5 h-5 rounded-full bg-[#0A1F44] text-[#C9A84C] font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <p className="text-slate-800 leading-relaxed">{play}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Word Document Footer */}
+                <div className="pt-8 border-t border-slate-300 text-center font-sans text-xs text-slate-500 space-y-1">
+                  <div className="font-bold text-slate-700">
+                    PSA INVESTMENT CAPITAL INTELLIGENCE • ALL RIGHTS RESERVED © 2026
+                  </div>
+                  <p className="text-[10px]">
+                    Formatted transcript extracted from official Word (.docx) document. Click "Download Word Document" above for original binary copy.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* RAW DISPATCH VIEW */}
       {viewMode === 'raw' && (
