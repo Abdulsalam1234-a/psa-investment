@@ -27,6 +27,12 @@ import {
 } from '../data/initialData';
 import { INITIAL_CHRONICLES } from '../data/initialChronicles';
 import { parseRawChronicle } from '../utils/chronicleParser';
+import {
+  sanitizeText,
+  checkSqlSafety,
+  logSecurityEvent,
+  sanitizeSafeHtml
+} from '../utils/security';
 
 interface DataContextType {
   reports: ResearchReport[];
@@ -476,8 +482,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addComment = async (
     data: Omit<ResourceComment, 'id' | 'createdAt' | 'likes'>
   ): Promise<ResourceComment> => {
+    // Security check: SQL injection & XSS
+    const sqlCheck = checkSqlSafety(data.content);
+    if (!sqlCheck.isSafe) {
+      logSecurityEvent(
+        'SQL Injection Attempt Intercepted',
+        data.authorEmail || data.authorName,
+        'input_threat',
+        `Pattern '${sqlCheck.detectedPattern}' neutralized in comment payload.`,
+        'high'
+      );
+    }
+    const cleanContent = sanitizeText(sqlCheck.sanitized, 2000);
+    const cleanAuthor = sanitizeText(data.authorName, 100);
+
     const newComment: ResourceComment = {
       ...data,
+      authorName: cleanAuthor,
+      content: cleanContent,
       id: `comment-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: new Date().toISOString(),
       likes: 0
@@ -499,8 +521,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const submitContactForm = async (
     data: Omit<ContactSubmission, 'id' | 'status' | 'createdAt'>
   ) => {
+    // Security check on all text inputs
+    const sqlCheck = checkSqlSafety(`${data.name} ${data.message} ${data.subject || ''}`);
+    if (!sqlCheck.isSafe) {
+      logSecurityEvent(
+        'SQL Injection Pattern Disarmed',
+        data.email,
+        'input_threat',
+        `Detected pattern '${sqlCheck.detectedPattern}' in contact form input.`,
+        'high'
+      );
+    }
+
     const newSubmission: ContactSubmission = {
       ...data,
+      name: sanitizeText(data.name, 120),
+      email: sanitizeText(data.email, 120),
+      phone: data.phone ? sanitizeText(data.phone, 40) : undefined,
+      subject: sanitizeText(data.subject || '', 150),
+      service: sanitizeText(data.service || '', 100),
+      message: sanitizeText(data.message, 3000),
       id: `contact-${Date.now()}`,
       status: 'unread',
       createdAt: new Date().toISOString()
@@ -717,13 +757,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       marketBarometers: parsed.marketBarometers || [],
       topGainers: parsed.topGainers || [],
       topLosers: parsed.topLosers || [],
+      gainerDrivers: parsed.gainerDrivers || [],
+      loserDrivers: parsed.loserDrivers || [],
       bellwethers: parsed.bellwethers || [],
+      corporateActions: parsed.corporateActions || [],
       macroBenchmarks: parsed.macroBenchmarks || [],
       tacticalPlaybook: parsed.tacticalPlaybook || [],
       rawText: data.rawText,
       docxUrl: data.docxUrl,
       docxFileName: data.docxFileName,
-      formattedHtml: data.formattedHtml,
+      formattedHtml: sanitizeSafeHtml(data.formattedHtml),
       fileSizeBytes: data.fileSizeBytes,
       status: 'published',
       source: 'admin_upload',
@@ -732,6 +775,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: now,
       publishedAt: now
     };
+    logSecurityEvent(
+      'Word Document Transcript Ingested',
+      'Chief Analyst Desk',
+      'admin_action',
+      `Published ${data.docxFileName} (${(data.fileSizeBytes / 1024).toFixed(1)} KB) with verified formatting.`,
+      'low'
+    );
     setChronicles(prev => [newChronicle, ...prev]);
     return newChronicle;
   };

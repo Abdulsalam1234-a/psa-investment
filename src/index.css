@@ -36,3 +36,64 @@
 .bg-slate-800\/60 {
   background-color: #0F2752 !important;
 }
+
+/* =========================================================================
+   STRICT DOCUMENT PRINT ISOLATION
+   When user prints or exports to PDF, only #printable-chronicle-document is visible
+   ========================================================================= */
+@media print {
+  /* Hide all elements on page */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Make only the document and its children visible */
+  #printable-chronicle-document,
+  #printable-chronicle-document * {
+    visibility: visible;
+  }
+
+  #printable-chronicle-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Ensure screen-only buttons and ribbons are completely hidden */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Page margins and page-break optimization */
+  @page {
+    size: auto;
+    margin: 1.5cm;
+  }
+
+  table {
+    page-break-inside: avoid;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
+
+/* =========================================================================
+   NAVBAR STATIC HIGHEST PRIORITY STACKING
+   ========================================================================= */
+.navbar-sticky-highest {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9999 !important;
+}
+

@@ -117,7 +117,7 @@ export const ChronicleAdminDesk: React.FC = () => {
 
     const newEdition = await publishWordDocumentChronicle({
       rawText: docxRawText,
-      docxUrl: docxBase64 || '/transcripts/PSA-Financial-Chronicle-VOL-XXIX.docx',
+      docxUrl: docxBase64 || '/transcripts/PSA-Financial-Chronicle-VOL-LIII.docx',
       docxFileName: uploadedDocxFile.name,
       formattedHtml: docxFormattedHtml,
       fileSizeBytes: uploadedDocxFile.size,

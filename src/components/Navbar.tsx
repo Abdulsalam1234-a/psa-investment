@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     : [];
 
   return (
-    <div className="sticky top-0 z-[100] w-full bg-white shadow-sm">
+    <div className="navbar-sticky-highest sticky top-0 z-[9999] w-full bg-white shadow-md">
       {/* Demo Persona Bar */}
       <div className="bg-[#0A1F44] border-b border-slate-800 text-slate-300 text-xs px-4 py-1.5 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Global Search Modal */}
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4">
+        <div className="fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex items-center gap-3">
               <Search className="w-5 h-5 text-slate-400" />

@@ -145,6 +145,13 @@ export interface MacroBenchmark {
   source: string;
 }
 
+export interface CorporateActionItem {
+  entity: string;
+  event: string;
+  details: string;
+  timeline: string;
+}
+
 export interface ChronicleEdition {
   id: string;
   slug: string;
@@ -159,7 +166,10 @@ export interface ChronicleEdition {
   marketBarometers: MarketBarometer[];
   topGainers: StockMover[];
   topLosers: StockMover[];
+  gainerDrivers?: string[];
+  loserDrivers?: string[];
   bellwethers: BellwetherItem[];
+  corporateActions?: CorporateActionItem[];
   macroBenchmarks: MacroBenchmark[];
   tacticalPlaybook: string[];
   rawText: string;
