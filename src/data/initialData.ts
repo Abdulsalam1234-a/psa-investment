@@ -7,7 +7,11 @@ import {
   DownloadLog,
   NewsletterSubscriber,
   StaffMember,
-  ResourceComment
+  ResourceComment,
+  EventProgram,
+  EventRegistration,
+  Announcement,
+  GoogleAdsConfig
 } from '../types';
 
 export const INITIAL_SERVICES: ServiceItem[] = [
@@ -487,3 +491,273 @@ export const INITIAL_COMMENTS: ResourceComment[] = [
     likes: 5
   }
 ];
+
+export const INITIAL_EVENTS: EventProgram[] = [
+  {
+    id: 'event-fmva-masterclass-2026-11-28',
+    slug: 'financial-modeling-valuation-analysis-masterclass-nov-2026',
+    title: 'Financial Modeling & Valuation Analysis (FMVA) Executive Masterclass',
+    category: 'masterclass',
+    description: 'An intensive, hands-on masterclass led directly by Salami Abdullahi (Founder, CEO, COO & Chief Analyst at PSA Investment). Master 3-statement integrated dynamic financial modeling, discounted cash flow (DCF), comparable multiples, and NGX equity valuation with live Excel templates.',
+    learningObjectives: [
+      'Build dynamic 3-statement integrated models from raw NGX corporate filings (Audited P&L, Balance Sheet, Cash Flows)',
+      'Derive Cost of Equity & WACC factoring Nigerian sovereign risk premiums, inflation, and MPR corridor adjustments',
+      'Perform scenario sensitivity tables, Monte Carlo simulations, and downside stress testing for African equities',
+      'Structure professional investment committee valuation pitch decks and institutional equity research notes'
+    ],
+    targetAudience: 'Equity research analysts, investment bankers, portfolio managers, corporate finance executives, and advanced finance students.',
+    instructor: 'Salami Abdullahi',
+    instructorTitle: 'Founder, CEO, COO & Chief Analyst, PSA Investment',
+    instructorPhoto: '/salami-abdullahi.jpg',
+    startDate: '2026-11-28',
+    endDate: '2026-11-28',
+    startTime: '10:00 WAT',
+    endTime: '16:00 WAT',
+    timezone: 'WAT (West Africa Time)',
+    locationType: 'virtual',
+    venue: 'PSA Executive Virtual Suite (Live Zoom Interactive & Excel Lab)',
+    capacity: 150,
+    registrationDeadline: '2026-11-27',
+    price: 'Free for Registered Circle Members (Complimentary Institutional Access)',
+    status: 'upcoming',
+    badge: 'Flagship Program • Nov 28',
+    customFormFields: [
+      {
+        id: 'field_name',
+        label: 'Full Legal Name',
+        type: 'text',
+        placeholder: 'e.g. Salami Abdullahi',
+        required: true
+      },
+      {
+        id: 'field_email',
+        label: 'Official Email Address',
+        type: 'email',
+        placeholder: 'your.name@company.com',
+        required: true
+      },
+      {
+        id: 'field_phone',
+        label: 'WhatsApp / Phone Number',
+        type: 'phone',
+        placeholder: '+234 706 837 1292',
+        required: true
+      },
+      {
+        id: 'field_org',
+        label: 'Current Organization / University / Investment Firm',
+        type: 'text',
+        placeholder: 'e.g. First Bank Capital / University of Lagos',
+        required: true
+      },
+      {
+        id: 'field_role',
+        label: 'Current Professional Role / Background',
+        type: 'select',
+        required: true,
+        options: [
+          'Equity Research Analyst',
+          'Investment Banker / Corporate Finance',
+          'Portfolio Manager / Asset Management',
+          'Private Wealth / Family Office',
+          'Finance / Economics Student',
+          'Independent Retail Investor',
+          'Other Professional'
+        ]
+      },
+      {
+        id: 'field_experience',
+        label: 'Financial Modeling & Excel Proficiency Level',
+        type: 'radio',
+        required: true,
+        options: [
+          'Beginner (Familiar with basic formulas)',
+          'Intermediate (Built basic models or DCFs)',
+          'Advanced (Experienced financial analyst / modeler)'
+        ]
+      },
+      {
+        id: 'field_objective',
+        label: 'Primary Learning Goal for this Masterclass',
+        type: 'textarea',
+        placeholder: 'What specific valuation or modeling skills do you wish to master?',
+        required: true
+      },
+      {
+        id: 'field_has_excel',
+        label: 'Do you have Microsoft Excel ready on your laptop for the live session?',
+        type: 'checkbox',
+        required: true
+      }
+    ],
+    createdAt: '2026-11-10T08:00:00Z',
+    updatedAt: '2026-11-15T07:00:00Z'
+  },
+  {
+    id: 'event-ngx-banking-recap-summit-2026',
+    slug: 'ngx-banking-recapitalization-webinar-dec-2026',
+    title: 'NGX Tier-1 Banking Recapitalization & Capital Structure Summit',
+    category: 'webinar',
+    description: 'An executive symposium analyzing post-recapitalization returns on equity (ROE), book value accretion, and rights issue pricing across GTCO, Zenith Bank, AccessCorp, and UBA.',
+    learningObjectives: [
+      'Analyze dilution mechanics across international vs. national commercial banking licenses',
+      'Assess rights issues and public offers absorption capacity in the Nigerian capital market',
+      'Identify asymmetric dividend yield plays ahead of 2027 statutory compliance'
+    ],
+    targetAudience: 'Institutional investors, treasurers, and stockbrokers.',
+    instructor: 'Salami Abdullahi',
+    instructorTitle: 'Chief Analyst, PSA Investment',
+    instructorPhoto: '/salami-abdullahi.jpg',
+    startDate: '2026-12-12',
+    startTime: '14:00 WAT',
+    endTime: '16:30 WAT',
+    timezone: 'WAT',
+    locationType: 'virtual',
+    venue: 'PSA Capital Advisory Broadcast Room',
+    capacity: 250,
+    registrationDeadline: '2026-12-11',
+    price: 'Complimentary',
+    status: 'upcoming',
+    badge: 'Executive Webinar',
+    customFormFields: [
+      {
+        id: 'field_name',
+        label: 'Full Name',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'field_email',
+        label: 'Work Email',
+        type: 'email',
+        required: true
+      },
+      {
+        id: 'field_firm',
+        label: 'Financial Institution / Firm',
+        type: 'text',
+        required: true
+      }
+    ],
+    createdAt: '2026-11-12T09:00:00Z',
+    updatedAt: '2026-11-15T07:00:00Z'
+  }
+];
+
+export const INITIAL_EVENT_REGISTRATIONS: EventRegistration[] = [
+  {
+    id: 'reg-fmva-1',
+    eventId: 'event-fmva-masterclass-2026-11-28',
+    eventTitle: 'Financial Modeling & Valuation Analysis (FMVA) Executive Masterclass',
+    fullName: 'Folashade Adeleke',
+    email: 'folashade.adeleke@chapelhilldenham.com',
+    phone: '+234 803 456 7890',
+    organization: 'Chapel Hill Denham',
+    jobTitle: 'Research Associate',
+    responses: {
+      field_name: 'Folashade Adeleke',
+      field_email: 'folashade.adeleke@chapelhilldenham.com',
+      field_phone: '+234 803 456 7890',
+      field_org: 'Chapel Hill Denham',
+      field_role: 'Equity Research Analyst',
+      field_experience: 'Intermediate (Built basic models or DCFs)',
+      field_objective: 'Mastering dynamic working capital and terminal growth rate derivations for African consumer staples.',
+      field_has_excel: true
+    },
+    ticketCode: 'PSA-FMVA-8910',
+    registeredAt: '2026-11-12T14:22:00Z',
+    status: 'confirmed'
+  },
+  {
+    id: 'reg-fmva-2',
+    eventId: 'event-fmva-masterclass-2026-11-28',
+    eventTitle: 'Financial Modeling & Valuation Analysis (FMVA) Executive Masterclass',
+    fullName: 'Chukwuemeka Okoye',
+    email: 'c.okoye@stanbicibtc.com',
+    phone: '+234 812 345 6789',
+    organization: 'Stanbic IBTC Asset Management',
+    jobTitle: 'Junior Portfolio Manager',
+    responses: {
+      field_name: 'Chukwuemeka Okoye',
+      field_email: 'c.okoye@stanbicibtc.com',
+      field_phone: '+234 812 345 6789',
+      field_org: 'Stanbic IBTC Asset Management',
+      field_role: 'Portfolio Manager / Asset Management',
+      field_experience: 'Advanced (Experienced financial analyst / modeler)',
+      field_objective: 'Deepen valuation rigor on NGX banking recapitalization multiple adjustments.',
+      field_has_excel: true
+    },
+    ticketCode: 'PSA-FMVA-8911',
+    registeredAt: '2026-11-13T09:15:00Z',
+    status: 'confirmed'
+  },
+  {
+    id: 'reg-fmva-3',
+    eventId: 'event-fmva-masterclass-2026-11-28',
+    eventTitle: 'Financial Modeling & Valuation Analysis (FMVA) Executive Masterclass',
+    fullName: 'Ibrahim Danjuma',
+    email: 'ibrahim.d@unilag.edu.ng',
+    phone: '+234 705 678 1234',
+    organization: 'University of Lagos',
+    jobTitle: 'Postgraduate Finance Scholar',
+    responses: {
+      field_name: 'Ibrahim Danjuma',
+      field_email: 'ibrahim.d@unilag.edu.ng',
+      field_phone: '+234 705 678 1234',
+      field_org: 'University of Lagos',
+      field_role: 'Finance / Economics Student',
+      field_experience: 'Beginner (Familiar with basic formulas)',
+      field_objective: 'Transitioning from academic theory to corporate finance modeling.',
+      field_has_excel: true
+    },
+    ticketCode: 'PSA-FMVA-8912',
+    registeredAt: '2026-11-14T11:40:00Z',
+    status: 'confirmed'
+  }
+];
+
+export const INITIAL_ANNOUNCEMENTS: Announcement[] = [
+  {
+    id: 'ann-fmva-2026',
+    title: 'Active Masterclass: Financial Modeling & Valuation Analysis (FMVA) Program',
+    summary: 'Executive training launching Saturday, November 28th, 2026. Pre-program registration is now open with live Excel lab seats.',
+    content: 'PSA Investment is pleased to announce our flagship Financial Modeling & Valuation Analysis (FMVA) Executive Masterclass scheduled for Saturday, November 28, 2026 (10:00 WAT). Directed by Chief Analyst Salami Abdullahi, participants will learn integrated 3-statement modeling, DCF valuation, and NGX price targets. Register early to guarantee your seat.',
+    category: 'event',
+    urgency: 'high',
+    popupAlert: true,
+    emailBroadcast: true,
+    whatsappBroadcast: true,
+    targetAudience: 'all',
+    linkUrl: '/events',
+    linkText: 'Register for FMVA Masterclass',
+    createdAt: '2026-11-14T07:00:00Z'
+  },
+  {
+    id: 'ann-chronicle-transcripts',
+    title: 'Daily Pre-Market Transcripts Automated Daily at 07:00 WAT',
+    summary: 'Institutional members can now download official Microsoft Word (.docx) daily transcripts and print isolated reports.',
+    content: 'The PSA Financial Chronicle now delivers direct Word document downloads, NGX block volume analytics, and mover fundamental drivers daily before the opening bell.',
+    category: 'market_update',
+    urgency: 'normal',
+    popupAlert: false,
+    emailBroadcast: true,
+    whatsappBroadcast: true,
+    targetAudience: 'all',
+    linkUrl: '/chronicle',
+    linkText: 'Read Today’s Chronicle',
+    createdAt: '2026-11-13T07:00:00Z'
+  }
+];
+
+export const INITIAL_ADS_CONFIG: GoogleAdsConfig = {
+  enabled: true,
+  publisherId: 'ca-pub-9842103847291048',
+  leaderboardSlot: '8492019482',
+  sidebarSlot: '3948102938',
+  inFeedSlot: '5829104829',
+  chronicleSlot: '9182740192',
+  testMode: true,
+  estimatedImpressions: 14820,
+  estimatedCpm: 4.80
+};
+

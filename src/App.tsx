@@ -14,6 +14,8 @@ import { Contact } from './views/Contact';
 import { MemberPortal } from './views/MemberPortal';
 import { AdminPanel } from './views/AdminPanel';
 import { ChronicleView } from './views/ChronicleView';
+import { Events } from './views/Events';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { useAuth } from './context/AuthContext';
 import { useData } from './context/DataContext';
 
@@ -42,6 +44,8 @@ export const AppContent: React.FC = () => {
       setActiveTab('member-portal');
     } else if (path === 'chronicle' || path === 'transcripts' || path === 'psa-transcripts' || path === 'newspaper' || path === 'daily-report') {
       setActiveTab('chronicle');
+    } else if (path === 'events' || path === 'programs' || path === 'fmva' || path === 'masterclass') {
+      setActiveTab('events');
     }
   }, [currentUser]);
 
@@ -77,6 +81,9 @@ export const AppContent: React.FC = () => {
         )}
         {activeTab === 'chronicle' && (
           <ChronicleView onOpenAuthModal={handleOpenAuth} />
+        )}
+        {activeTab === 'events' && (
+          <Events onOpenAuthModal={handleOpenAuth} />
         )}
         {activeTab === 'about' && (
           <About setActiveTab={setActiveTab} onOpenAuthModal={handleOpenAuth} />
@@ -124,6 +131,9 @@ export const AppContent: React.FC = () => {
 
       {/* Footer */}
       <Footer setActiveTab={setActiveTab} onOpenAuthModal={handleOpenAuth} />
+
+      {/* PWA Mobile Installation Prompt */}
+      <PwaInstallBanner />
     </div>
   );
 };

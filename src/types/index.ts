@@ -88,7 +88,7 @@ export interface EmailDispatch {
   id: string;
   recipientEmail: string;
   recipientName: string;
-  templateType: 'application_received' | 'membership_approved' | 'membership_rejected' | 'research_broadcast';
+  templateType: 'application_received' | 'membership_approved' | 'membership_rejected' | 'research_broadcast' | 'event_announcement' | 'password_reset';
   subject: string;
   body: string;
   sentAt: string;
@@ -222,6 +222,7 @@ export interface ResourceComment {
 export type ViewTab =
   | 'home'
   | 'chronicle'
+  | 'events'
   | 'about'
   | 'services'
   | 'research'
@@ -232,3 +233,107 @@ export type ViewTab =
   | 'admin-panel';
 
 export type DemoRole = 'visitor' | 'pending_member' | 'active_member' | 'admin' | null;
+
+// ==========================================
+// EVENTS, TRAINING & CUSTOM FORM BUILDER TYPES
+// ==========================================
+
+export type FormFieldType =
+  | 'text'
+  | 'email'
+  | 'phone'
+  | 'number'
+  | 'select'
+  | 'radio'
+  | 'textarea'
+  | 'checkbox';
+
+export interface FormFieldDefinition {
+  id: string;
+  label: string;
+  type: FormFieldType;
+  placeholder?: string;
+  required: boolean;
+  options?: string[]; // for select, radio, checkbox
+}
+
+export type EventCategory =
+  | 'masterclass'
+  | 'training'
+  | 'webinar'
+  | 'conference'
+  | 'announcement';
+
+export interface EventProgram {
+  id: string;
+  slug: string;
+  title: string;
+  category: EventCategory;
+  description: string;
+  learningObjectives: string[];
+  targetAudience: string;
+  instructor: string;
+  instructorTitle: string;
+  instructorPhoto?: string;
+  startDate: string; // YYYY-MM-DD
+  endDate?: string;
+  startTime: string; // e.g. '10:00 WAT'
+  endTime: string;   // e.g. '16:00 WAT'
+  timezone: string;
+  locationType: 'virtual' | 'physical' | 'hybrid';
+  venue: string;
+  capacity: number;
+  registrationDeadline: string;
+  price: string;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  bannerUrl?: string;
+  badge?: string;
+  customFormFields: FormFieldDefinition[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventRegistration {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  organization?: string;
+  jobTitle?: string;
+  responses: Record<string, any>;
+  ticketCode: string;
+  registeredAt: string;
+  status: 'confirmed' | 'waitlist' | 'attended';
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  summary: string;
+  content: string;
+  category: 'event' | 'research' | 'policy' | 'market_update' | 'system';
+  urgency: 'normal' | 'high' | 'critical';
+  popupAlert: boolean;
+  emailBroadcast: boolean;
+  whatsappBroadcast: boolean;
+  targetAudience: 'all' | 'members_only' | 'public';
+  linkUrl?: string;
+  linkText?: string;
+  createdAt: string;
+  dismissed?: boolean;
+}
+
+export interface GoogleAdsConfig {
+  enabled: boolean;
+  publisherId: string;
+  leaderboardSlot?: string;
+  sidebarSlot?: string;
+  inFeedSlot?: string;
+  chronicleSlot?: string;
+  testMode: boolean;
+  estimatedImpressions: number;
+  estimatedCpm: number;
+}
+

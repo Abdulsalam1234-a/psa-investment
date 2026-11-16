@@ -12,7 +12,11 @@ import {
   ChronicleEdition,
   StaffMember,
   StaffRole,
-  ResourceComment
+  ResourceComment,
+  EventProgram,
+  EventRegistration,
+  Announcement,
+  GoogleAdsConfig
 } from '../types';
 import {
   INITIAL_SERVICES,
@@ -23,7 +27,11 @@ import {
   INITIAL_DOWNLOAD_LOGS,
   INITIAL_SUBSCRIBERS,
   INITIAL_STAFF,
-  INITIAL_COMMENTS
+  INITIAL_COMMENTS,
+  INITIAL_EVENTS,
+  INITIAL_EVENT_REGISTRATIONS,
+  INITIAL_ANNOUNCEMENTS,
+  INITIAL_ADS_CONFIG
 } from '../data/initialData';
 import { INITIAL_CHRONICLES } from '../data/initialChronicles';
 import { parseRawChronicle } from '../utils/chronicleParser';
@@ -47,6 +55,10 @@ interface DataContextType {
   chronicles: ChronicleEdition[];
   staffMembers: StaffMember[];
   comments: ResourceComment[];
+  events: EventProgram[];
+  eventRegistrations: EventRegistration[];
+  announcements: Announcement[];
+  googleAdsConfig: GoogleAdsConfig;
   loading: boolean;
   saveReport: (report: Partial<ResearchReport>) => Promise<ResearchReport>;
   deleteReport: (id: string) => Promise<void>;
@@ -86,6 +98,22 @@ interface DataContextType {
     fileSizeBytes: number;
     customVolume?: string;
   }) => Promise<ChronicleEdition>;
+  saveEvent: (event: Partial<EventProgram>) => Promise<EventProgram>;
+  deleteEvent: (id: string) => Promise<void>;
+  registerForEvent: (eventId: string, data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    organization?: string;
+    jobTitle?: string;
+    responses: Record<string, any>;
+  }) => Promise<EventRegistration>;
+  saveAnnouncement: (announcement: Partial<Announcement>) => Promise<Announcement>;
+  deleteAnnouncement: (id: string) => Promise<void>;
+  dismissAnnouncement: (id: string) => void;
+  updateGoogleAdsConfig: (config: Partial<GoogleAdsConfig>) => void;
+  exportEventRegistrationsToCsv: (eventId: string) => void;
+  triggerEventBroadcast: (eventId: string, channels: { email: boolean; whatsapp: boolean }) => Promise<{ emailsSent: number; whatsappUrl: string }>;
   refreshData: () => Promise<void>;
 }
 
@@ -149,6 +177,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : INITIAL_COMMENTS;
   });
 
+  const [events, setEvents] = useState<EventProgram[]>(() => {
+    const saved = localStorage.getItem('psa_events');
+    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
+  });
+
+  const [eventRegistrations, setEventRegistrations] = useState<EventRegistration[]>(() => {
+    const saved = localStorage.getItem('psa_event_registrations');
+    return saved ? JSON.parse(saved) : INITIAL_EVENT_REGISTRATIONS;
+  });
+
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
+    const saved = localStorage.getItem('psa_announcements');
+    return saved ? JSON.parse(saved) : INITIAL_ANNOUNCEMENTS;
+  });
+
+  const [googleAdsConfig, setGoogleAdsConfig] = useState<GoogleAdsConfig>(() => {
+    const saved = localStorage.getItem('psa_google_ads_config');
+    return saved ? JSON.parse(saved) : INITIAL_ADS_CONFIG;
+  });
+
   const [loading, setLoading] = useState<boolean>(false);
 
   // Sync state to local storage
@@ -195,6 +243,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('psa_resource_comments', JSON.stringify(comments));
   }, [comments]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_events', JSON.stringify(events));
+  }, [events]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_event_registrations', JSON.stringify(eventRegistrations));
+  }, [eventRegistrations]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_announcements', JSON.stringify(announcements));
+  }, [announcements]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_google_ads_config', JSON.stringify(googleAdsConfig));
+  }, [googleAdsConfig]);
 
   const logDispatch = useCallback(
     (dispatch: Omit<EmailDispatch, 'id' | 'sentAt' | 'status'>) => {
@@ -786,6 +850,295 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newChronicle;
   };
 
+  const saveEvent = async (eventData: Partial<EventProgram>): Promise<EventProgram> => {
+    let result: EventProgram;
+    const now = new Date().toISOString();
+    if (eventData.id) {
+      setEvents(prev => {
+        const index = prev.findIndex(e => e.id === eventData.id);
+        if (index >= 0) {
+          const updated = {
+            ...prev[index],
+            ...eventData,
+            updatedAt: now
+          } as EventProgram;
+          result = updated;
+          const copy = [...prev];
+          copy[index] = updated;
+          return copy;
+        }
+        result = eventData as EventProgram;
+        return [result, ...prev];
+      });
+    } else {
+      const newEvent: EventProgram = {
+        id: `event-${Date.now()}`,
+        slug: (eventData.title || 'event').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50),
+        title: sanitizeText(eventData.title || 'New Event Program', 150),
+        category: eventData.category || 'training',
+        description: sanitizeText(eventData.description || '', 2000),
+        learningObjectives: eventData.learningObjectives || [],
+        targetAudience: sanitizeText(eventData.targetAudience || 'Capital market participants', 200),
+        instructor: sanitizeText(eventData.instructor || 'Salami Abdullahi', 100),
+        instructorTitle: sanitizeText(eventData.instructorTitle || 'Chief Analyst, PSA Investment', 120),
+        instructorPhoto: eventData.instructorPhoto || '/salami-abdullahi.jpg',
+        startDate: eventData.startDate || '2026-11-28',
+        endDate: eventData.endDate,
+        startTime: eventData.startTime || '10:00 WAT',
+        endTime: eventData.endTime || '16:00 WAT',
+        timezone: eventData.timezone || 'WAT',
+        locationType: eventData.locationType || 'virtual',
+        venue: sanitizeText(eventData.venue || 'Virtual Executive Suite', 200),
+        capacity: eventData.capacity || 100,
+        registrationDeadline: eventData.registrationDeadline || '2026-11-27',
+        price: eventData.price || 'Complimentary',
+        status: eventData.status || 'upcoming',
+        badge: eventData.badge,
+        customFormFields: eventData.customFormFields || [],
+        createdAt: now,
+        updatedAt: now
+      };
+      result = newEvent;
+      setEvents(prev => [newEvent, ...prev]);
+    }
+
+    logSecurityEvent(
+      'Event Program Saved',
+      'Executive Admin Desk',
+      'admin_action',
+      `Event "${result!.title}" configured with ${result!.customFormFields?.length || 0} custom registration fields.`,
+      'low'
+    );
+    return result!;
+  };
+
+  const deleteEvent = async (id: string) => {
+    setEvents(prev => prev.filter(e => e.id !== id));
+    logSecurityEvent(
+      'Event Program Removed',
+      'Executive Admin Desk',
+      'admin_action',
+      `Event ID ${id} deleted from active database.`,
+      'medium'
+    );
+  };
+
+  const registerForEvent = async (eventId: string, data: {
+    fullName: string;
+    email: string;
+    phone: string;
+    organization?: string;
+    jobTitle?: string;
+    responses: Record<string, any>;
+  }): Promise<EventRegistration> => {
+    const event = events.find(e => e.id === eventId);
+    if (!event) throw new Error('Event not found or has concluded.');
+
+    // Security check on inputs
+    const check = checkSqlSafety(`${data.fullName} ${data.email} ${data.organization || ''}`);
+    if (!check.isSafe) {
+      logSecurityEvent(
+        'SQL Injection Pattern Disarmed in Event Registration',
+        data.email,
+        'input_threat',
+        `Disarmed pattern '${check.detectedPattern}' in event registration payload.`,
+        'high'
+      );
+    }
+
+    const ticketSuffix = Math.floor(1000 + Math.random() * 9000);
+    const categoryPrefix = event.category.toUpperCase().slice(0, 4);
+    const ticketCode = `PSA-${categoryPrefix}-${ticketSuffix}`;
+
+    const newReg: EventRegistration = {
+      id: `reg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      eventId,
+      eventTitle: event.title,
+      fullName: sanitizeText(data.fullName, 120),
+      email: sanitizeText(data.email, 120),
+      phone: sanitizeText(data.phone, 40),
+      organization: data.organization ? sanitizeText(data.organization, 150) : undefined,
+      jobTitle: data.jobTitle ? sanitizeText(data.jobTitle, 100) : undefined,
+      responses: data.responses,
+      ticketCode,
+      registeredAt: new Date().toISOString(),
+      status: 'confirmed'
+    };
+
+    setEventRegistrations(prev => [newReg, ...prev]);
+
+    // Send confirmation email dispatch log
+    logDispatch({
+      recipientEmail: newReg.email,
+      recipientName: newReg.fullName,
+      templateType: 'event_announcement',
+      subject: `Registration Confirmed: ${event.title} [Ticket: ${ticketCode}]`,
+      body: `Dear ${newReg.fullName},\n\nYour registration for "${event.title}" has been confirmed.\n\nDate: ${event.startDate}\nTime: ${event.startTime} - ${event.endTime} (${event.timezone})\nVenue: ${event.venue}\nTicket Code: ${ticketCode}\n\nWe look forward to hosting you.\n\nPSA Investment Executive Desk`
+    });
+
+    logSecurityEvent(
+      'Event Registration Confirmed',
+      newReg.email,
+      'admin_action',
+      `Registered for ${event.title} with ticket ${ticketCode}`,
+      'low'
+    );
+
+    return newReg;
+  };
+
+  const saveAnnouncement = async (announcementData: Partial<Announcement>): Promise<Announcement> => {
+    let result: Announcement;
+    const now = new Date().toISOString();
+    if (announcementData.id) {
+      setAnnouncements(prev => {
+        const index = prev.findIndex(a => a.id === announcementData.id);
+        if (index >= 0) {
+          const updated = { ...prev[index], ...announcementData } as Announcement;
+          result = updated;
+          const copy = [...prev];
+          copy[index] = updated;
+          return copy;
+        }
+        result = announcementData as Announcement;
+        return [result, ...prev];
+      });
+    } else {
+      const newAnn: Announcement = {
+        id: `ann-${Date.now()}`,
+        title: sanitizeText(announcementData.title || 'New Announcement', 150),
+        summary: sanitizeText(announcementData.summary || '', 300),
+        content: sanitizeText(announcementData.content || '', 3000),
+        category: announcementData.category || 'event',
+        urgency: announcementData.urgency || 'normal',
+        popupAlert: announcementData.popupAlert ?? true,
+        emailBroadcast: announcementData.emailBroadcast ?? true,
+        whatsappBroadcast: announcementData.whatsappBroadcast ?? true,
+        targetAudience: announcementData.targetAudience || 'all',
+        linkUrl: announcementData.linkUrl || '/events',
+        linkText: announcementData.linkText || 'Learn More',
+        createdAt: now
+      };
+      result = newAnn;
+      setAnnouncements(prev => [newAnn, ...prev]);
+
+      if (newAnn.emailBroadcast) {
+        members.forEach(m => {
+          logDispatch({
+            recipientEmail: m.email,
+            recipientName: m.fullName,
+            templateType: 'event_announcement',
+            subject: `Announcement: ${newAnn.title}`,
+            body: `Dear ${m.fullName},\n\n${newAnn.content}\n\nRead more: https://psa-investment.ai.studio${newAnn.linkUrl}\n\nPSA Investment Desk`
+          });
+        });
+      }
+    }
+    return result!;
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    setAnnouncements(prev => prev.filter(a => a.id !== id));
+  };
+
+  const dismissAnnouncement = (id: string) => {
+    setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, dismissed: true } : a));
+  };
+
+  const updateGoogleAdsConfig = (config: Partial<GoogleAdsConfig>) => {
+    setGoogleAdsConfig(prev => ({ ...prev, ...config }));
+    logSecurityEvent(
+      'Google Ads Configuration Updated',
+      'Executive Admin Desk',
+      'admin_action',
+      `Google Ads status: ${config.enabled ? 'Enabled' : 'Disabled'}.`,
+      'low'
+    );
+  };
+
+  const exportEventRegistrationsToCsv = (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
+    const regs = eventRegistrations.filter(r => r.eventId === eventId);
+    if (!event) return;
+
+    const headers = [
+      'Ticket Code',
+      'Full Name',
+      'Email',
+      'Phone',
+      'Organization',
+      'Job Title',
+      'Registration Date',
+      'Status'
+    ];
+
+    const customFields = event.customFormFields || [];
+    customFields.forEach(f => headers.push(f.label));
+
+    const rows = regs.map(r => {
+      const standardCols = [
+        `"${r.ticketCode}"`,
+        `"${r.fullName.replace(/"/g, '""')}"`,
+        `"${r.email.replace(/"/g, '""')}"`,
+        `"${r.phone.replace(/"/g, '""')}"`,
+        `"${(r.organization || '').replace(/"/g, '""')}"`,
+        `"${(r.jobTitle || '').replace(/"/g, '""')}"`,
+        `"${new Date(r.registeredAt).toLocaleString()}"`,
+        `"${r.status}"`
+      ];
+
+      customFields.forEach(f => {
+        const val = r.responses?.[f.id];
+        const strVal = val === true ? 'Yes' : val === false ? 'No' : String(val || '');
+        standardCols.push(`"${strVal.replace(/"/g, '""')}"`);
+      });
+
+      return standardCols.join(',');
+    });
+
+    const csvContent = [headers.map(h => `"${h}"`).join(','), ...rows].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `PSA_Registrations_${event.slug}_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const triggerEventBroadcast = async (eventId: string, channels: { email: boolean; whatsapp: boolean }): Promise<{ emailsSent: number; whatsappUrl: string }> => {
+    const event = events.find(e => e.id === eventId);
+    if (!event) throw new Error('Event not found');
+
+    let emailsSent = 0;
+    if (channels.email) {
+      members.forEach(m => {
+        logDispatch({
+          recipientEmail: m.email,
+          recipientName: m.fullName,
+          templateType: 'event_announcement',
+          subject: `Executive Event: ${event.title}`,
+          body: `Dear ${m.fullName},\n\nWe invite you to participate in "${event.title}".\n\nDate: ${event.startDate}\nTime: ${event.startTime} - ${event.endTime} (${event.timezone})\nVenue: ${event.venue}\nInstructor: ${event.instructor} (${event.instructorTitle})\nPrice: ${event.price}\n\nRegister directly online: https://psa-investment.ai.studio/events\n\nPSA Investment Desk`
+        });
+        emailsSent++;
+      });
+    }
+
+    const waText = `*PSA INVESTMENT CAPITAL INTELLIGENCE*\n*EXECUTIVE EVENT BROADCAST*\n\n📌 *${event.title.toUpperCase()}*\n\n📅 *Date:* ${event.startDate}\n⏰ *Time:* ${event.startTime} - ${event.endTime} (${event.timezone})\n📍 *Venue:* ${event.venue}\n👨‍🏫 *Instructor:* ${event.instructor} (${event.instructorTitle})\n💳 *Access:* ${event.price}\n\n*Program Overview:*\n${event.description}\n\n🔗 *Register Online:* https://psa-investment.ai.studio/events\n\nOfficial Desk: +234 706 837 1292 | psainvestment.ng@gmail.com`;
+
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
+
+    logSecurityEvent(
+      'Event Broadcast Approved & Triggered',
+      'Executive Admin Desk',
+      'admin_action',
+      `Broadcast for "${event.title}" sent to ${emailsSent} member emails and generated WhatsApp broadcast link.`,
+      'low'
+    );
+
+    return { emailsSent, whatsappUrl };
+  };
+
   const refreshData = async () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 300);
@@ -838,6 +1191,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logChronicleDownload,
         autoPublishGeminiChronicle,
         publishWordDocumentChronicle,
+        events,
+        eventRegistrations,
+        announcements,
+        googleAdsConfig,
+        saveEvent,
+        deleteEvent,
+        registerForEvent,
+        saveAnnouncement,
+        deleteAnnouncement,
+        dismissAnnouncement,
+        updateGoogleAdsConfig,
+        exportEventRegistrationsToCsv,
+        triggerEventBroadcast,
         refreshData
       }}
     >

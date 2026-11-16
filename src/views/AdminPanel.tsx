@@ -32,12 +32,16 @@ import {
   Lock,
   Key,
   Terminal,
-  ShieldAlert
+  ShieldAlert,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { Member, ResearchReport, LearningVideo, StorageFile, StaffMember, StaffRole } from '../types';
 import { ChronicleAdminDesk } from '../components/ChronicleAdminDesk';
+import { AdminEventsDesk } from '../components/AdminEventsDesk';
+import { AdminAdsDesk } from '../components/AdminAdsDesk';
 import {
   getSecurityAuditLogs,
   logSecurityEvent,
@@ -79,7 +83,7 @@ export const AdminPanel: React.FC = () => {
   } = useData();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'analytics' | 'chronicle' | 'members' | 'staff' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile' | 'security'
+    'analytics' | 'chronicle' | 'events' | 'ads' | 'members' | 'staff' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile' | 'security'
   >('analytics');
 
   // Security & Injection Firewall state
@@ -244,6 +248,33 @@ export const AdminPanel: React.FC = () => {
           <span className="px-1.5 py-0.2 bg-[#C9A84C]/20 text-[#C9A84C] rounded-full text-[10px] font-bold">
             Auto
           </span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('events')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'events'
+              ? 'bg-[#0A1F44] text-[#C9A84C]'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Calendar className="w-4 h-4 text-[#C9A84C]" />
+          <span>Events & Form Builder</span>
+          <span className="px-1.5 py-0.2 bg-[#C9A84C]/20 text-[#C9A84C] rounded-full text-[10px] font-bold">
+            Nov 28
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('ads')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'ads'
+              ? 'bg-[#0A1F44] text-[#C9A84C]'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <DollarSign className="w-4 h-4 text-amber-500" />
+          <span>Google Ads Monetization</span>
         </button>
 
         <button
@@ -482,6 +513,12 @@ export const AdminPanel: React.FC = () => {
 
       {/* Daily Chronicle Tab */}
       {activeAdminTab === 'chronicle' && <ChronicleAdminDesk />}
+
+      {/* Events & Custom Form Builder Tab */}
+      {activeAdminTab === 'events' && <AdminEventsDesk />}
+
+      {/* Google Ads Monetization Tab */}
+      {activeAdminTab === 'ads' && <AdminAdsDesk />}
 
       {/* 2. Members Tab */}
       {activeAdminTab === 'members' && (

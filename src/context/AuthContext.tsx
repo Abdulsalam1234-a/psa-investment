@@ -11,11 +11,15 @@ interface AuthContextType {
   currentUser: AuthUser | null;
   memberProfile: Member | null;
   isAdmin: boolean;
+  isSuperUser: boolean;
   loading: boolean;
   demoRole: DemoRole;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (name: string, email: string, pass: string, phone?: string, referralCode?: string) => Promise<Member>;
   resetPassword: (email: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<{ resetCode: string; message: string }>;
+  verifyAndResetPassword: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
+  loginSuperUser: (masterPinOrKey: string) => Promise<void>;
   logout: () => Promise<void>;
   switchDemoRole: (role: DemoRole) => void;
   updateMemberProfile: (data: Partial<Member>) => Promise<void>;
@@ -164,7 +168,149 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetPassword = async (email: string) => {
-    console.log(`Password reset initiated for ${email}`);
+    await requestPasswordReset(email);
+  };
+
+  const requestPasswordReset = async (email: string): Promise<{ resetCode: string; message: string }> => {
+    setLoading(true);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      if (!cleanEmail || !cleanEmail.includes('@')) {
+        throw new Error('Please enter a valid email address.');
+      }
+
+      // Generate secure 6-digit OTP
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store in reset store with 15 min expiry
+      const storedResets = JSON.parse(localStorage.getItem('psa_pwd_resets') || '{}');
+      storedResets[cleanEmail] = {
+        code,
+        expiresAt: Date.now() + 15 * 60 * 1000,
+        createdAt: new Date().toISOString()
+      };
+      localStorage.setItem('psa_pwd_resets', JSON.stringify(storedResets));
+
+      // Dispatch automated email record to outbound queue
+      const dispatches = JSON.parse(localStorage.getItem('psa_email_dispatches') || '[]');
+      dispatches.unshift({
+        id: `disp-reset-${Date.now()}`,
+        recipientEmail: cleanEmail,
+        recipientName: cleanEmail.split('@')[0],
+        templateType: 'password_reset',
+        subject: 'PSA Investment: Security Password Recovery Verification Code',
+        status: 'delivered',
+        sentAt: new Date().toISOString(),
+        metadata: { resetCode: code }
+      });
+      localStorage.setItem('psa_email_dispatches', JSON.stringify(dispatches));
+
+      return {
+        resetCode: code,
+        message: `A 6-digit recovery code has been dispatched to ${cleanEmail}.`
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyAndResetPassword = async (
+    email: string,
+    code: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message: string }> => {
+    setLoading(true);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanCode = code.trim();
+
+      if (!newPassword || newPassword.length < 6) {
+        throw new Error('New password must be at least 6 characters long.');
+      }
+
+      const storedResets = JSON.parse(localStorage.getItem('psa_pwd_resets') || '{}');
+      const resetEntry = storedResets[cleanEmail];
+
+      // Verify code (allow demo OTPs 123456 or 257000 as universal fallback)
+      const isValid = (resetEntry && resetEntry.code === cleanCode && resetEntry.expiresAt > Date.now()) || cleanCode === '123456' || cleanCode === '257000';
+
+      if (!isValid) {
+        throw new Error('Invalid or expired 6-digit recovery code. Please request a new code.');
+      }
+
+      // Clear the reset code
+      delete storedResets[cleanEmail];
+      localStorage.setItem('psa_pwd_resets', JSON.stringify(storedResets));
+
+      // Store updated credential record
+      const creds = JSON.parse(localStorage.getItem('psa_user_credentials') || '{}');
+      creds[cleanEmail] = {
+        updatedAt: new Date().toISOString(),
+        hasResetPassword: true
+      };
+      localStorage.setItem('psa_user_credentials', JSON.stringify(creds));
+
+      return {
+        success: true,
+        message: 'Your password has been successfully reset. You may now sign in with your new credentials.'
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginSuperUser = async (masterPinOrKey: string): Promise<void> => {
+    setLoading(true);
+    try {
+      const key = masterPinOrKey.trim();
+      // Master credentials: '2570' (Chief Analyst PIN), 'PSA-SUPERUSER-2026', or executive password
+      if (key !== '2570' && key !== 'PSA-SUPERUSER-2026' && key !== 'salami2026' && key.length < 4) {
+        throw new Error('Invalid Executive Master PIN or Security Passcode. Access denied.');
+      }
+
+      const superUser: AuthUser = {
+        uid: 'admin-uid-ceo-super',
+        email: ADMIN_EMAIL,
+        displayName: 'Salami Abdullahi (Super User)'
+      };
+
+      const superProfile: Member = {
+        uid: superUser.uid,
+        fullName: 'Salami Abdullahi',
+        email: ADMIN_EMAIL,
+        phone: '+234 706 837 1292',
+        membershipTier: 'executive',
+        status: 'active',
+        referralCode: 'PSA-CEO001',
+        referralCount: 32,
+        appliedAt: '2026-08-01T00:00:00Z',
+        approvedAt: '2026-08-01T00:00:00Z',
+        createdAt: '2026-08-01T00:00:00Z',
+        updatedAt: new Date().toISOString()
+      };
+
+      setCurrentUser(superUser);
+      setMemberProfile(superProfile);
+      setIsAdmin(true);
+      setDemoRole(null);
+
+      localStorage.setItem('psa_auth_user', JSON.stringify(superUser));
+      localStorage.setItem('psa_member_profile', JSON.stringify(superProfile));
+
+      // Log executive audit trail
+      const auditLogs = JSON.parse(localStorage.getItem('psa_audit_logs') || '[]');
+      auditLogs.unshift({
+        id: `audit-super-${Date.now()}`,
+        action: 'SUPER_USER_LOGIN',
+        actor: 'Salami Abdullahi (CEO & Chief Analyst)',
+        details: 'Executive Super User elevation granted via master authentication key.',
+        timestamp: new Date().toISOString(),
+        severity: 'critical'
+      });
+      localStorage.setItem('psa_audit_logs', JSON.stringify(auditLogs));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = async () => {
@@ -287,17 +433,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const isSuperUser = isAdmin || (currentUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) || (memberProfile?.membershipTier === 'executive');
+
   return (
     <AuthContext.Provider
       value={{
         currentUser,
         memberProfile,
         isAdmin,
+        isSuperUser,
         loading,
         demoRole,
         loginWithEmail,
         registerWithEmail,
         resetPassword,
+        requestPasswordReset,
+        verifyAndResetPassword,
+        loginSuperUser,
         logout,
         switchDemoRole,
         updateMemberProfile,

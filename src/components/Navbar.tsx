@@ -10,11 +10,14 @@ import {
   LayoutDashboard,
   ExternalLink,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Bell,
+  Smartphone
 } from 'lucide-react';
 import { ViewTab, DemoRole } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { NotificationPopup } from './NotificationPopup';
 
 interface NavbarProps {
   activeTab: ViewTab;
@@ -30,16 +33,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectReport
 }) => {
   const { currentUser, memberProfile, isAdmin, logout, switchDemoRole, demoRole } = useAuth();
-  const { reports } = useData();
+  const { reports, announcements } = useData();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [personaDropdownOpen, setPersonaDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  const unreadCount = announcements.filter(a => !a.dismissed).length;
 
   const navLinks: { id: ViewTab; label: string; badge?: string }[] = [
     { id: 'home', label: 'Home' },
     { id: 'chronicle', label: 'PSA Transcripts', badge: '07:00 WAT' },
+    { id: 'events', label: 'Events & FMVA', badge: 'Nov 28' },
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
     { id: 'research', label: 'Research' },
@@ -209,13 +216,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             </nav>
 
             {/* Right Action Icons & Auth */}
-            <div className="hidden sm:flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2.5">
               <button
                 onClick={() => setSearchOpen(true)}
                 className="p-2.5 rounded-lg text-slate-500 hover:text-[#0A1F44] hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Search research and tickers"
               >
                 <Search className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => setNotificationsOpen(true)}
+                className="p-2.5 rounded-lg text-slate-500 hover:text-[#0A1F44] hover:bg-slate-100 transition-colors cursor-pointer relative"
+                title="Announcements & Intelligence Alerts"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white animate-pulse" />
+                )}
               </button>
 
               {isAdmin ? (
@@ -462,6 +480,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+      {/* Notification Drawer & Alerts */}
+      <NotificationPopup
+        isOpenControlled={notificationsOpen}
+        onCloseControlled={() => setNotificationsOpen(false)}
+        onNavigateTab={setActiveTab}
+      />
     </div>
   );
 };

@@ -1,0 +1,62 @@
+{
+  "name": "PSA Investment - Institutional Intelligence",
+  "short_name": "PSA Investment",
+  "description": "Independent Nigerian Equity Research, Stock Valuation & Institutional Pre-Market Intelligence directed by Salami Abdullahi",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#0A1F44",
+  "theme_color": "#0A1F44",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["finance", "business", "education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "PSA Transcripts (07:00 WAT)",
+      "short_name": "Transcripts",
+      "description": "Read official daily pre-market intelligence and download Word transcripts",
+      "url": "/chronicle",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Upcoming Events & FMVA",
+      "short_name": "FMVA Masterclass",
+      "description": "Register for November 28 FMVA training and valuation workshops",
+      "url": "/events",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Research Library",
+      "short_name": "Research",
+      "description": "NGX equity reports and banking recapitalization models",
+      "url": "/research",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
