@@ -34,7 +34,8 @@ import {
   Terminal,
   ShieldAlert,
   Calendar,
-  DollarSign
+  DollarSign,
+  Sliders
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -42,6 +43,7 @@ import { Member, ResearchReport, LearningVideo, StorageFile, StaffMember, StaffR
 import { ChronicleAdminDesk } from '../components/ChronicleAdminDesk';
 import { AdminEventsDesk } from '../components/AdminEventsDesk';
 import { AdminAdsDesk } from '../components/AdminAdsDesk';
+import { AdminBrandingDesk } from '../components/AdminBrandingDesk';
 import {
   getSecurityAuditLogs,
   logSecurityEvent,
@@ -83,7 +85,7 @@ export const AdminPanel: React.FC = () => {
   } = useData();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'analytics' | 'chronicle' | 'events' | 'ads' | 'members' | 'staff' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile' | 'security'
+    'analytics' | 'chronicle' | 'events' | 'ads' | 'branding' | 'members' | 'staff' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile' | 'security'
   >('analytics');
 
   // Security & Injection Firewall state
@@ -275,6 +277,18 @@ export const AdminPanel: React.FC = () => {
         >
           <DollarSign className="w-4 h-4 text-amber-500" />
           <span>Google Ads Monetization</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('branding')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'branding'
+              ? 'bg-[#0A1F44] text-[#C9A84C]'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Sliders className="w-4 h-4 text-[#C9A84C]" />
+          <span>Branding & SEO Settings</span>
         </button>
 
         <button
@@ -519,6 +533,9 @@ export const AdminPanel: React.FC = () => {
 
       {/* Google Ads Monetization Tab */}
       {activeAdminTab === 'ads' && <AdminAdsDesk />}
+
+      {/* Platform Branding & SEO Settings Tab */}
+      {activeAdminTab === 'branding' && <AdminBrandingDesk />}
 
       {/* 2. Members Tab */}
       {activeAdminTab === 'members' && (

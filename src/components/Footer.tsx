@@ -4,10 +4,12 @@ import {
   Mail,
   Phone,
   MapPin,
-  ShieldCheck
+  ShieldCheck,
+  Calendar
 } from 'lucide-react';
 import { ViewTab } from '../types';
 import { YoutubeIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
+import { useData } from '../context/DataContext';
 
 interface FooterProps {
   setActiveTab: (tab: ViewTab) => void;
@@ -15,6 +17,8 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal }) => {
+  const { siteSettings } = useData();
+
   return (
     <footer className="bg-[#0A1F44] text-slate-300 pt-16 pb-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,11 +26,22 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal })
           {/* Col 1 & 2: Brand & Leadership */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#C9A84C] text-[#0A1F44] flex items-center justify-center font-bold shadow-md">
-                <LineChart className="w-6 h-6 stroke-[2.2]" />
+              <div className="w-10 h-10 rounded-xl bg-[#C9A84C] text-[#0A1F44] flex items-center justify-center font-bold shadow-md overflow-hidden">
+                {siteSettings?.logoUrl ? (
+                  <img src={siteSettings.logoUrl} alt={siteSettings.siteTitle} className="w-full h-full object-cover" />
+                ) : (
+                  <LineChart className="w-6 h-6 stroke-[2.2]" />
+                )}
               </div>
               <span className="font-serif font-black text-xl text-white tracking-tight">
-                PSA <span className="text-[#C9A84C]">INVESTMENT</span>
+                {siteSettings?.siteTitle ? (
+                  <>
+                    {siteSettings.siteTitle.split(' ')[0]}{' '}
+                    <span className="text-[#C9A84C]">{siteSettings.siteTitle.split(' ').slice(1).join(' ') || 'INVESTMENT'}</span>
+                  </>
+                ) : (
+                  <>PSA <span className="text-[#C9A84C]">INVESTMENT</span></>
+                )}
               </span>
             </div>
 
@@ -106,6 +121,28 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal })
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Home
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    setActiveTab('chronicle');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-white transition-colors cursor-pointer text-[#C9A84C] font-semibold"
+                >
+                  PSA Transcripts (07:00 WAT)
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    setActiveTab('events');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-white transition-colors cursor-pointer text-amber-300 font-semibold"
+                >
+                  Events & FMVA (Nov 28)
                 </button>
               </li>
               <li>
@@ -193,19 +230,19 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal })
                   <div>
                     <span className="text-[10px] text-[#C9A84C] uppercase font-bold block">Desk</span>
                     <a
-                      href="mailto:psainvestment.ng@gmail.com"
+                      href={`mailto:${siteSettings?.officialEmail || 'psainvestment.ng@gmail.com'}`}
                       className="hover:text-white font-mono transition-colors"
                     >
-                      psainvestment.ng@gmail.com
+                      {siteSettings?.officialEmail || 'psainvestment.ng@gmail.com'}
                     </a>
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase font-bold block">Founder / CEO</span>
                     <a
-                      href="mailto:salamiabdullahi257@gmail.com"
+                      href={`mailto:${siteSettings?.ceoEmail || 'salamiabdullahi257@gmail.com'}`}
                       className="hover:text-white font-mono transition-colors text-slate-300"
                     >
-                      salamiabdullahi257@gmail.com
+                      {siteSettings?.ceoEmail || 'salamiabdullahi257@gmail.com'}
                     </a>
                   </div>
                 </div>
@@ -213,10 +250,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal })
               <li className="flex items-center gap-2.5 text-slate-400">
                 <Phone className="w-4 h-4 text-[#C9A84C] shrink-0" />
                 <a
-                  href="tel:+2347068371292"
+                  href={`tel:${(siteSettings?.officialPhone || '+234 706 837 1292').replace(/[^0-9+]/g, '')}`}
                   className="hover:text-white font-mono transition-colors text-xs"
                 >
-                  +234 706 837 1292
+                  {siteSettings?.officialPhone || '+234 706 837 1292'}
                 </a>
               </li>
             </ul>

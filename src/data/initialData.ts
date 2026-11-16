@@ -11,7 +11,8 @@ import {
   EventProgram,
   EventRegistration,
   Announcement,
-  GoogleAdsConfig
+  GoogleAdsConfig,
+  SiteSettings
 } from '../types';
 
 export const INITIAL_SERVICES: ServiceItem[] = [
@@ -759,5 +760,25 @@ export const INITIAL_ADS_CONFIG: GoogleAdsConfig = {
   testMode: true,
   estimatedImpressions: 14820,
   estimatedCpm: 4.80
+};
+
+export const INITIAL_SITE_SETTINGS: SiteSettings = {
+  siteTitle: 'PSA Investment',
+  tagline: 'Independent Equity Research & Capital Advisory',
+  logoUrl: '',
+  faviconUrl: '',
+  ceoPhotoUrl: '/salami-abdullahi.jpg',
+  heroHeadline: 'Building Wealth Through Intelligent Investments',
+  heroSubheadline: 'Institutional-grade Nigerian equity research, valuation models, and capital advisory directed by Chief Analyst Salami Abdullahi.',
+  officialEmail: 'psainvestment.ng@gmail.com',
+  ceoEmail: 'salamiabdullahi257@gmail.com',
+  officialPhone: '+234 706 837 1292',
+  whatsappChannelUrl: 'https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R',
+  announcementTickerText: 'Vol. LIII Nigerian Capital Markets Daily Intelligence & Nov 28 FMVA Masterclass Registration Active',
+  showTicker: true,
+  showDailyChronicleHighlight: true,
+  showAdsenseOnHome: true,
+  metaDescription: 'Independent Nigerian equity research, NGX-listed security analysis, banking recapitalization models, and capital advisory directed by Chief Analyst Salami Abdullahi.',
+  metaKeywords: 'PSA Investment, Salami Abdullahi, Nigerian Exchange, NGX, equity research, banking recapitalization, Nigerian stocks, stock valuation, DCF model, GTCO, Zenith Bank, Seplat Energy, FUGAZ, financial intelligence Nigeria, Lagos capital advisory'
 };
 

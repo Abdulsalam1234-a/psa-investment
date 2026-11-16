@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ViewTab } from '../types';
 import { useData } from '../context/DataContext';
+import { GoogleAdSlot } from '../components/GoogleAdSlot';
 
 interface HomeProps {
   setActiveTab: (tab: ViewTab) => void;
@@ -33,7 +34,7 @@ export const Home: React.FC<HomeProps> = ({
   onOpenAuthModal,
   onSelectReport
 }) => {
-  const { services, reports, videos, chronicles, logChronicleDownload } = useData();
+  const { services, reports, videos, chronicles, siteSettings, logChronicleDownload } = useData();
   const latestChronicle = chronicles[0];
 
   const getServiceIcon = (iconName: string) => {
@@ -72,18 +73,21 @@ export const Home: React.FC<HomeProps> = ({
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-[#C9A84C]/30 text-white text-xs font-semibold backdrop-blur-xs">
                 <span className="w-2 h-2 rounded-full bg-[#C9A84C] animate-pulse" />
-                <span>Independent Nigerian Equity Research & Intelligence</span>
+                <span>{siteSettings?.tagline || 'Independent Nigerian Equity Research & Intelligence'}</span>
               </div>
 
               <h1 className="font-serif font-black text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-[1.12]">
-                Building Wealth Through{' '}
-                <span className="text-[#C9A84C] italic font-serif">Intelligent</span> Investments.
+                {siteSettings?.heroHeadline || (
+                  <>
+                    Building Wealth Through{' '}
+                    <span className="text-[#C9A84C] italic font-serif">Intelligent</span> Investments.
+                  </>
+                )}
               </h1>
 
               <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-                Institutional-grade equity research covering NGX-listed securities, disciplined
-                portfolio allocation, and capital advisory. We transform market noise into verified
-                capital compounding.
+                {siteSettings?.heroSubheadline ||
+                  'Institutional-grade equity research covering NGX-listed securities, disciplined portfolio allocation, and capital advisory. We transform market noise into verified capital compounding.'}
               </p>
 
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
@@ -186,6 +190,13 @@ export const Home: React.FC<HomeProps> = ({
           </div>
         </div>
       </section>
+
+      {/* Dynamic Google AdSense Placement */}
+      {siteSettings?.showAdsenseOnHome && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -my-6 relative z-20">
+          <GoogleAdSlot slotType="leaderboard" />
+        </div>
+      )}
 
       {/* 2. Executive Leadership Spotlight & Who We Are */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -33,7 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectReport
 }) => {
   const { currentUser, memberProfile, isAdmin, logout, switchDemoRole, demoRole } = useAuth();
-  const { reports, announcements } = useData();
+  const { reports, announcements, siteSettings } = useData();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -165,6 +165,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
+      {/* Optional Top Announcement Ticker */}
+      {siteSettings?.showTicker && siteSettings?.announcementTickerText && (
+        <div className="bg-[#C9A84C] text-[#0A1F44] text-[11px] font-bold px-4 py-1.5 flex items-center justify-between border-b border-[#b8973d] overflow-hidden">
+          <div className="flex items-center gap-2 overflow-hidden truncate">
+            <span className="bg-[#0A1F44] text-[#C9A84C] text-[9px] uppercase tracking-wider px-2 py-0.5 rounded font-mono font-bold shrink-0">
+              DISPATCH
+            </span>
+            <span className="truncate">{siteSettings.announcementTickerText}</span>
+          </div>
+          <button
+            onClick={() => setActiveTab('events')}
+            className="text-[10px] uppercase font-black tracking-wider underline hover:opacity-80 shrink-0 cursor-pointer ml-3 hidden sm:inline"
+          >
+            Explore Nov 28 &rarr;
+          </button>
+        </div>
+      )}
+
       {/* Main Navigation */}
       <header className="bg-white border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -177,15 +195,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="flex items-center gap-3 cursor-pointer group"
             >
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0A1F44] to-[#13306B] text-[#C9A84C] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                <LineChart className="w-6 h-6 stroke-[2.2]" />
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0A1F44] to-[#13306B] text-[#C9A84C] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform overflow-hidden">
+                {siteSettings?.logoUrl ? (
+                  <img src={siteSettings.logoUrl} alt={siteSettings.siteTitle} className="w-full h-full object-cover" />
+                ) : (
+                  <LineChart className="w-6 h-6 stroke-[2.2]" />
+                )}
               </div>
               <div className="leading-tight">
                 <span className="font-serif font-black text-xl text-[#0A1F44] tracking-tight block">
-                  PSA <span className="text-[#C9A84C]">INVESTMENT</span>
+                  {siteSettings?.siteTitle ? (
+                    <>
+                      {siteSettings.siteTitle.split(' ')[0]}{' '}
+                      <span className="text-[#C9A84C]">{siteSettings.siteTitle.split(' ').slice(1).join(' ') || 'INVESTMENT'}</span>
+                    </>
+                  ) : (
+                    <>PSA <span className="text-[#C9A84C]">INVESTMENT</span></>
+                  )}
                 </span>
-                <span className="text-[10px] tracking-wider font-semibold uppercase text-slate-500 block">
-                  Equity Research & Advisory
+                <span className="text-[10px] tracking-wider font-semibold uppercase text-slate-500 block truncate max-w-[200px]">
+                  {siteSettings?.tagline || 'Equity Research & Advisory'}
                 </span>
               </div>
             </div>

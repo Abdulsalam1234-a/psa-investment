@@ -337,3 +337,23 @@ export interface GoogleAdsConfig {
   estimatedCpm: number;
 }
 
+export interface SiteSettings {
+  siteTitle: string;
+  tagline: string;
+  logoUrl?: string; // Custom uploaded official logo URL or base64 data
+  faviconUrl?: string; // Custom favicon URL or base64
+  ceoPhotoUrl?: string;
+  heroHeadline: string;
+  heroSubheadline: string;
+  officialEmail: string;
+  ceoEmail: string;
+  officialPhone: string;
+  whatsappChannelUrl: string;
+  announcementTickerText: string;
+  showTicker: boolean;
+  showDailyChronicleHighlight: boolean;
+  showAdsenseOnHome: boolean;
+  metaDescription: string;
+  metaKeywords: string;
+}
+

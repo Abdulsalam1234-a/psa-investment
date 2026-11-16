@@ -16,7 +16,8 @@ import {
   EventProgram,
   EventRegistration,
   Announcement,
-  GoogleAdsConfig
+  GoogleAdsConfig,
+  SiteSettings
 } from '../types';
 import {
   INITIAL_SERVICES,
@@ -31,7 +32,8 @@ import {
   INITIAL_EVENTS,
   INITIAL_EVENT_REGISTRATIONS,
   INITIAL_ANNOUNCEMENTS,
-  INITIAL_ADS_CONFIG
+  INITIAL_ADS_CONFIG,
+  INITIAL_SITE_SETTINGS
 } from '../data/initialData';
 import { INITIAL_CHRONICLES } from '../data/initialChronicles';
 import { parseRawChronicle } from '../utils/chronicleParser';
@@ -59,6 +61,7 @@ interface DataContextType {
   eventRegistrations: EventRegistration[];
   announcements: Announcement[];
   googleAdsConfig: GoogleAdsConfig;
+  siteSettings: SiteSettings;
   loading: boolean;
   saveReport: (report: Partial<ResearchReport>) => Promise<ResearchReport>;
   deleteReport: (id: string) => Promise<void>;
@@ -114,6 +117,7 @@ interface DataContextType {
   updateGoogleAdsConfig: (config: Partial<GoogleAdsConfig>) => void;
   exportEventRegistrationsToCsv: (eventId: string) => void;
   triggerEventBroadcast: (eventId: string, channels: { email: boolean; whatsapp: boolean }) => Promise<{ emailsSent: number; whatsappUrl: string }>;
+  updateSiteSettings: (settings: Partial<SiteSettings>) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -197,6 +201,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : INITIAL_ADS_CONFIG;
   });
 
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
+    const saved = localStorage.getItem('psa_site_settings');
+    return saved ? { ...INITIAL_SITE_SETTINGS, ...JSON.parse(saved) } : INITIAL_SITE_SETTINGS;
+  });
+
   const [loading, setLoading] = useState<boolean>(false);
 
   // Sync state to local storage
@@ -259,6 +268,65 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('psa_google_ads_config', JSON.stringify(googleAdsConfig));
   }, [googleAdsConfig]);
+
+  // Sync siteSettings to localStorage and dynamic browser title & meta tags
+  useEffect(() => {
+    localStorage.setItem('psa_site_settings', JSON.stringify(siteSettings));
+
+    try {
+      if (typeof document !== 'undefined') {
+        // Dynamic Browser Title Tab
+        if (siteSettings.siteTitle) {
+          document.title = `${siteSettings.siteTitle} | ${siteSettings.tagline}`;
+        }
+
+        // Dynamic Favicon Update
+        if (siteSettings.faviconUrl || siteSettings.logoUrl) {
+          const iconUrl = siteSettings.faviconUrl || siteSettings.logoUrl;
+          const links = document.querySelectorAll("link[rel*='icon']");
+          if (links.length > 0) {
+            links.forEach(l => l.setAttribute('href', iconUrl!));
+          } else {
+            const link = document.createElement('link');
+            link.rel = 'icon';
+            link.href = iconUrl!;
+            document.head.appendChild(link);
+          }
+        }
+
+        // Dynamic Meta Description & OpenGraph Tags
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc && siteSettings.metaDescription) {
+          metaDesc.setAttribute('content', siteSettings.metaDescription);
+        }
+        const ogDesc = document.querySelector('meta[property="og:description"]');
+        if (ogDesc && siteSettings.metaDescription) {
+          ogDesc.setAttribute('content', siteSettings.metaDescription);
+        }
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle && siteSettings.siteTitle) {
+          ogTitle.setAttribute('content', `${siteSettings.siteTitle} | ${siteSettings.tagline}`);
+        }
+        const ogImg = document.querySelector('meta[property="og:image"]');
+        if (ogImg && (siteSettings.logoUrl || siteSettings.ceoPhotoUrl)) {
+          ogImg.setAttribute('content', siteSettings.logoUrl || siteSettings.ceoPhotoUrl || '');
+        }
+
+        // Google AdSense meta tag sync
+        if (googleAdsConfig?.publisherId) {
+          let adsMeta = document.querySelector('meta[name="google-adsense-account"]');
+          if (!adsMeta) {
+            adsMeta = document.createElement('meta');
+            adsMeta.setAttribute('name', 'google-adsense-account');
+            document.head.appendChild(adsMeta);
+          }
+          adsMeta.setAttribute('content', googleAdsConfig.publisherId);
+        }
+      }
+    } catch (e) {
+      console.warn('DOM SEO and favicon update notice:', e);
+    }
+  }, [siteSettings, googleAdsConfig]);
 
   const logDispatch = useCallback(
     (dispatch: Omit<EmailDispatch, 'id' | 'sentAt' | 'status'>) => {
@@ -1139,6 +1207,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { emailsSent, whatsappUrl };
   };
 
+  const updateSiteSettings = async (settings: Partial<SiteSettings>) => {
+    setSiteSettings(prev => {
+      const updated = { ...prev, ...settings };
+      localStorage.setItem('psa_site_settings', JSON.stringify(updated));
+      return updated;
+    });
+    logSecurityEvent(
+      'Site Branding & Settings Updated',
+      'Executive Admin Desk',
+      'admin_action',
+      `Updated site settings: title="${settings.siteTitle || siteSettings.siteTitle}", logoUpdated=${Boolean(settings.logoUrl || settings.faviconUrl)}`,
+      'low'
+    );
+  };
+
   const refreshData = async () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 300);
@@ -1195,6 +1278,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         eventRegistrations,
         announcements,
         googleAdsConfig,
+        siteSettings,
         saveEvent,
         deleteEvent,
         registerForEvent,
@@ -1202,6 +1286,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deleteAnnouncement,
         dismissAnnouncement,
         updateGoogleAdsConfig,
+        updateSiteSettings,
         exportEventRegistrationsToCsv,
         triggerEventBroadcast,
         refreshData
