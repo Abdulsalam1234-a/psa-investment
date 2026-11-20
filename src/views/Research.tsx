@@ -20,7 +20,7 @@ interface ResearchProps {
 }
 
 export const Research: React.FC<ResearchProps> = ({ onSelectReport, onOpenAuthModal }) => {
-  const { reports } = useData();
+  const { reports, getPublicDownloads } = useData();
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -194,7 +194,7 @@ export const Research: React.FC<ResearchProps> = ({ onSelectReport, onOpenAuthMo
                     </div>
                     <div className="flex items-center gap-1">
                       <Download className="w-3.5 h-3.5" />
-                      <span>{rep.downloadCount} Downloads</span>
+                      <span>{getPublicDownloads(rep.downloadCount)} Downloads</span>
                     </div>
                   </div>
                 </div>

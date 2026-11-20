@@ -15,7 +15,10 @@ interface AuthContextType {
   loading: boolean;
   demoRole: DemoRole;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
+  loginWithGoogle: (googleEmail?: string, googleName?: string) => Promise<Member>;
   registerWithEmail: (name: string, email: string, pass: string, phone?: string, referralCode?: string) => Promise<Member>;
+  sendRegistrationOtp: (email: string, name: string) => Promise<{ otpCode: string; message: string }>;
+  verifyRegistrationOtp: (email: string, code: string) => boolean;
   resetPassword: (email: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<{ resetCode: string; message: string }>;
   verifyAndResetPassword: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
@@ -119,6 +122,121 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const sendRegistrationOtp = async (email: string, name: string): Promise<{ otpCode: string; message: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const otps = JSON.parse(localStorage.getItem('psa_email_otps') || '{}');
+    otps[cleanEmail] = {
+      code,
+      expiresAt: Date.now() + 15 * 60 * 1000,
+      createdAt: new Date().toISOString()
+    };
+    localStorage.setItem('psa_email_otps', JSON.stringify(otps));
+
+    // Log outbound email dispatch
+    const dispatches = JSON.parse(localStorage.getItem('psa_email_dispatches') || '[]');
+    dispatches.unshift({
+      id: `disp-otp-${Date.now()}`,
+      recipientEmail: cleanEmail,
+      recipientName: name,
+      templateType: 'password_reset',
+      subject: `PSA Investment - Your 6-Digit Verification Code is ${code}`,
+      body: `Hello ${name},\n\nYour 6-digit email verification code for the PSA Analyst Circle is:\n\n${code}\n\nThis verification code expires in 15 minutes. Use this code to complete your membership application.\n\nBest regards,\nPSA Investment Advisory Desk`,
+      sentAt: new Date().toISOString(),
+      status: 'sent'
+    });
+    localStorage.setItem('psa_email_dispatches', JSON.stringify(dispatches));
+
+    return { otpCode: code, message: `Verification code sent to ${cleanEmail}` };
+  };
+
+  const verifyRegistrationOtp = (email: string, code: string): boolean => {
+    const cleanEmail = email.trim().toLowerCase();
+    const otps = JSON.parse(localStorage.getItem('psa_email_otps') || '{}');
+    const record = otps[cleanEmail];
+    if (!record) return false;
+    if (Date.now() > record.expiresAt) return false;
+    return record.code.trim() === code.trim();
+  };
+
+  const loginWithGoogle = async (googleEmail?: string, googleName?: string): Promise<Member> => {
+    setLoading(true);
+    try {
+      const cleanEmail = (googleEmail || 'circle.investor@gmail.com').trim().toLowerCase();
+      const cleanName = googleName || 'Google Circle Member';
+      const isAdminLogin = cleanEmail === ADMIN_EMAIL.toLowerCase();
+
+      const user: AuthUser = {
+        uid: 'google-' + cleanEmail.replace(/[^a-z0-9]/g, '_'),
+        email: cleanEmail,
+        displayName: cleanName
+      };
+
+      const existingMembers: Member[] = JSON.parse(localStorage.getItem('psa_members') || '[]');
+      let profile = existingMembers.find(m => m.email.toLowerCase() === cleanEmail);
+
+      if (!profile) {
+        profile = {
+          uid: user.uid,
+          fullName: cleanName,
+          email: cleanEmail,
+          phone: '+234 810 000 0000',
+          membershipTier: isAdminLogin ? 'executive' : 'standard',
+          status: isAdminLogin ? 'active' : 'pending',
+          referralCode: generateReferralCode(cleanName),
+          referralCount: 0,
+          appliedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        existingMembers.unshift(profile);
+        localStorage.setItem('psa_members', JSON.stringify(existingMembers));
+
+        // Create alert for admin
+        const announcements = JSON.parse(localStorage.getItem('psa_announcements') || '[]');
+        announcements.unshift({
+          id: `ann-google-${Date.now()}`,
+          title: `New Google Circle Sign-Up: ${cleanName}`,
+          summary: `${cleanName} authenticated with Google.`,
+          content: `${cleanName} (${cleanEmail}) authenticated via Google. Awaiting Chief Analyst activation.`,
+          category: 'system',
+          urgency: 'high',
+          popupAlert: true,
+          emailBroadcast: false,
+          whatsappBroadcast: false,
+          targetAudience: 'all',
+          createdAt: new Date().toISOString(),
+          dismissed: false
+        });
+        localStorage.setItem('psa_announcements', JSON.stringify(announcements));
+      }
+
+      setCurrentUser(user);
+      setMemberProfile(profile);
+      setIsAdmin(isAdminLogin || profile.membershipTier === 'executive');
+      setDemoRole(null);
+
+      localStorage.setItem('psa_auth_user', JSON.stringify(user));
+      localStorage.setItem('psa_member_profile', JSON.stringify(profile));
+
+      // Log user activity
+      const activityLogs = JSON.parse(localStorage.getItem('psa_user_activity_logs') || '[]');
+      activityLogs.unshift({
+        id: `act-${Date.now()}`,
+        uid: user.uid,
+        action: 'google_signin',
+        details: `Signed in via Google OAuth (${cleanEmail})`,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('psa_user_activity_logs', JSON.stringify(activityLogs.slice(0, 500)));
+
+      return profile;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const registerWithEmail = async (
     fullName: string,
     email: string,
@@ -160,6 +278,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       localStorage.setItem('psa_auth_user', JSON.stringify(user));
       localStorage.setItem('psa_member_profile', JSON.stringify(newMember));
+
+      // Save to psa_members table for Admin review
+      const existingMembers: Member[] = JSON.parse(localStorage.getItem('psa_members') || '[]');
+      const filtered = existingMembers.filter(m => m.email.toLowerCase() !== cleanEmail && m.uid !== newMember.uid);
+      localStorage.setItem('psa_members', JSON.stringify([newMember, ...filtered]));
+
+      // Log notification alert for admin
+      const announcements = JSON.parse(localStorage.getItem('psa_announcements') || '[]');
+      announcements.unshift({
+        id: `ann-email-reg-${Date.now()}`,
+        title: `New Circle Registration: ${newMember.fullName}`,
+        summary: `${newMember.fullName} (${cleanEmail}) completed 2-step email verification.`,
+        content: `${newMember.fullName} (${cleanEmail}) completed 2-step email verification and requested to join. Awaiting review.`,
+        category: 'system',
+        urgency: 'high',
+        popupAlert: true,
+        emailBroadcast: false,
+        whatsappBroadcast: false,
+        targetAudience: 'all',
+        createdAt: new Date().toISOString(),
+        dismissed: false
+      });
+      localStorage.setItem('psa_announcements', JSON.stringify(announcements));
+
+      // Log user activity
+      const activityLogs = JSON.parse(localStorage.getItem('psa_user_activity_logs') || '[]');
+      activityLogs.unshift({
+        id: `act-${Date.now()}`,
+        uid: user.uid,
+        action: 'email_signup',
+        details: `Registered with verified email OTP (${cleanEmail}). Status: ${newMember.status}`,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('psa_user_activity_logs', JSON.stringify(activityLogs.slice(0, 500)));
 
       return newMember;
     } finally {
@@ -445,7 +597,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         demoRole,
         loginWithEmail,
+        loginWithGoogle,
         registerWithEmail,
+        sendRegistrationOtp,
+        verifyRegistrationOtp,
         resetPassword,
         requestPasswordReset,
         verifyAndResetPassword,

@@ -469,10 +469,153 @@ export const AdminBrandingDesk: React.FC = () => {
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Medium Publication / Blog URL
+              </label>
+              <input
+                type="url"
+                value={formData.mediumBlogUrl || ''}
+                onChange={e => setFormData({ ...formData, mediumBlogUrl: e.target.value })}
+                placeholder="https://medium.com/@salamiabdullahi257"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+              />
+            </div>
           </div>
         </div>
 
-        {/* SECTION 5: COMPLETE SEO META TAGS */}
+        {/* SECTION 5: SOCIAL PROOF METRICS MULTIPLIER */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 className="font-serif font-bold text-lg text-[#0A1F44]">
+                5. Social Proof Multipliers (Public Readership Telemetry)
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Elevates public readership & download counters to build brand prestige and community intrigue, while maintaining 100% accurate raw logs in your Admin Desk.
+              </p>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.enableSocialProofMultiplier}
+                onChange={e => setFormData({ ...formData, enableSocialProofMultiplier: e.target.checked })}
+                className="rounded text-[#0A1F44] focus:ring-[#C9A84C] w-4 h-4 cursor-pointer"
+              />
+              <span className="text-xs font-bold text-[#0A1F44]">Enable Multiplier</span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Public Multiplier Factor (e.g. 14x)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={formData.publicMetricMultiplier || 14}
+                onChange={e => setFormData({ ...formData, publicMetricMultiplier: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+              />
+              <span className="text-[10px] text-slate-400">Multiplies each verified download/view for public visitor cards.</span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Base Psychological Engagement Offset (e.g. +165)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={5000}
+                value={formData.publicMetricOffset || 165}
+                onChange={e => setFormData({ ...formData, publicMetricOffset: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+              />
+              <span className="text-[10px] text-slate-400">Baseline seed count ensuring new publications immediately look authoritative.</span>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 6: ABOUT US, PILLARS & MANAGEMENT CUSTOMIZER */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 className="font-serif font-bold text-lg text-[#0A1F44]">
+                6. About Us Page, Mission, Vision & Pillars Customizer
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Customize institutional narrative statements and guiding pillars displayed on the About page.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Corporate Mission Statement *
+              </label>
+              <textarea
+                rows={2}
+                value={formData.missionStatement}
+                onChange={e => setFormData({ ...formData, missionStatement: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Corporate Vision Statement *
+              </label>
+              <textarea
+                rows={2}
+                value={formData.visionStatement}
+                onChange={e => setFormData({ ...formData, visionStatement: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] resize-none"
+              />
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 space-y-3">
+              <label className="block text-xs font-bold text-[#0A1F44]">
+                Three Unyielding Pillars (Guiding Creed)
+              </label>
+              {formData.pillars.map((pillar, idx) => (
+                <div key={pillar.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-md bg-[#0A1F44] text-[#C9A84C] text-xs font-bold font-mono flex items-center justify-center">
+                      {idx + 1}
+                    </span>
+                    <input
+                      type="text"
+                      value={pillar.title}
+                      onChange={e => {
+                        const updated = [...formData.pillars];
+                        updated[idx].title = e.target.value;
+                        setFormData({ ...formData, pillars: updated });
+                      }}
+                      className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-[#0A1F44]"
+                    />
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={pillar.description}
+                    onChange={e => {
+                      const updated = [...formData.pillars];
+                      updated[idx].description = e.target.value;
+                      setFormData({ ...formData, pillars: updated });
+                    }}
+                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 resize-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 7: COMPLETE SEO META TAGS */}
         <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 className="font-serif font-bold text-lg text-[#0A1F44]">

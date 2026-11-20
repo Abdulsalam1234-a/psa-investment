@@ -774,11 +774,83 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   ceoEmail: 'salamiabdullahi257@gmail.com',
   officialPhone: '+234 706 837 1292',
   whatsappChannelUrl: 'https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R',
+  mediumBlogUrl: 'https://medium.com/@salamiabdullahi257',
   announcementTickerText: 'Vol. LIII Nigerian Capital Markets Daily Intelligence & Nov 28 FMVA Masterclass Registration Active',
   showTicker: true,
   showDailyChronicleHighlight: true,
   showAdsenseOnHome: true,
   metaDescription: 'Independent Nigerian equity research, NGX-listed security analysis, banking recapitalization models, and capital advisory directed by Chief Analyst Salami Abdullahi.',
-  metaKeywords: 'PSA Investment, Salami Abdullahi, Nigerian Exchange, NGX, equity research, banking recapitalization, Nigerian stocks, stock valuation, DCF model, GTCO, Zenith Bank, Seplat Energy, FUGAZ, financial intelligence Nigeria, Lagos capital advisory'
+  metaKeywords: 'PSA Investment, Salami Abdullahi, Nigerian Exchange, NGX, equity research, banking recapitalization, Nigerian stocks, stock valuation, DCF model, GTCO, Zenith Bank, Seplat Energy, FUGAZ, financial intelligence Nigeria, Lagos capital advisory',
+  enableSocialProofMultiplier: true,
+  publicMetricMultiplier: 14,
+  publicMetricOffset: 165,
+  missionStatement: 'To democratize institutional-grade equity valuation, debunk speculative rumors in Nigerian capital markets, and provide actionable financial intelligence that outpaces inflation and currency volatility.',
+  visionStatement: "To stand as West Africa's foremost independent equity research authority, recognized internationally for analytical purity, innovative SME capital advisory, and transformative investor education.",
+  pillars: [
+    {
+      id: 'pillar-1',
+      number: '1',
+      title: 'Zero Compromise Independence',
+      description: 'We accept no brokerage kickbacks or paid corporate promotion. When an equity is overvalued or presents structural hazards, we declare an Underweight or Sell stance without hesitation.',
+      iconName: 'ShieldCheck'
+    },
+    {
+      id: 'pillar-2',
+      number: '2',
+      title: 'Empirical Rigor',
+      description: 'Every target price is grounded in empirical cash flow models, historical earnings cycles, and realistic cost of equity calculations tailored to Nigerian market dynamics.',
+      iconName: 'LineChart'
+    },
+    {
+      id: 'pillar-3',
+      number: '3',
+      title: 'Fiduciary Transparency',
+      description: 'Whether advising mid-market enterprises on solar installations or steering members through market consolidations, our allegiance remains solely with the long-term wealth of our clients.',
+      iconName: 'Award'
+    }
+  ],
+  managementTeam: [
+    {
+      id: 'mgmt-salami',
+      fullName: 'Salami Abdullahi',
+      roleTitle: 'Founder, CEO, COO, & Chief Analyst',
+      email: 'salamiabdullahi257@gmail.com',
+      phone: '+234 706 837 1292',
+      bio: "As Founder, CEO, COO, and Chief Analyst of PSA Investment, Salami Abdullahi directs both the institutional research framework and the overarching strategic expansion of the firm. Under his analytical leadership, PSA Investment has pioneered a distinct valuation paradigm for Nigerian equities incorporating sovereign spreads, domestic inflation buffers, and cash conversion cycles.",
+      photoUrl: '/salami-abdullahi.jpg',
+      order: 1,
+      socialLinks: {
+        twitter: 'https://x.com/salami_abdulslm',
+        instagram: 'https://www.instagram.com/salamiabdullahia',
+        youtube: 'https://youtube.com/@psa_investment'
+      }
+    }
+  ],
+  financialModels: [
+    {
+      id: 'model-brrm',
+      name: 'PSA Banking Recapitalization Risk Model (BRRM-3.0)',
+      category: 'Banking & Capital Adequacy',
+      description: 'Dynamic stress-testing matrix evaluating Tier-1 and Tier-2 Nigerian commercial banks against the CBN minimum capital thresholds, asset quality ratios, and CAR sensitivity.',
+      keyOutputs: ['CAR post-rights issue', 'Dilution impact', 'Dividend sustainability index'],
+      accessLevel: 'premium'
+    },
+    {
+      id: 'model-dcf',
+      name: 'NGX Equity Discounted Cash Flow (DCF) Engine',
+      category: 'Fundamental Valuation',
+      description: 'Multi-stage discounted cash flow model calibrated specifically for African emerging markets with sovereign risk premium (SRP) and FX volatility adjustments.',
+      keyOutputs: ['Intrinsic Target Price', 'Margin of Safety', 'Sensitivity Matrix'],
+      accessLevel: 'premium'
+    },
+    {
+      id: 'model-paas',
+      name: 'Commercial Solar Power-as-a-Service (PaaS) Model',
+      category: 'SME Infrastructure Advisory',
+      description: 'Project finance and amortized cash-flow model for commercial and industrial solar microgrids replacing diesel generation in Nigerian light manufacturing clusters.',
+      keyOutputs: ['Levelized Cost of Electricity (LCOE)', 'Payback Period', 'IRR & Debt Service Coverage'],
+      accessLevel: 'public'
+    }
+  ]
 };
 

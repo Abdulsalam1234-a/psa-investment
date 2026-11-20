@@ -337,6 +337,40 @@ export interface GoogleAdsConfig {
   estimatedCpm: number;
 }
 
+export interface ManagementMember {
+  id: string;
+  fullName: string;
+  roleTitle: string; // e.g. "Founder, CEO, COO, & Chief Analyst"
+  email: string;
+  phone?: string;
+  bio: string;
+  photoUrl: string;
+  order: number;
+  socialLinks?: {
+    twitter?: string;
+    linkedin?: string;
+    instagram?: string;
+    youtube?: string;
+  };
+}
+
+export interface CompanyPillar {
+  id: string;
+  number: string; // e.g. "1", "2", "3"
+  title: string;
+  description: string;
+  iconName?: string;
+}
+
+export interface FinancialModelShowcase {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  keyOutputs: string[];
+  accessLevel: 'public' | 'premium';
+}
+
 export interface SiteSettings {
   siteTitle: string;
   tagline: string;
@@ -349,11 +383,22 @@ export interface SiteSettings {
   ceoEmail: string;
   officialPhone: string;
   whatsappChannelUrl: string;
+  mediumBlogUrl: string; // Direct link to Medium publication
   announcementTickerText: string;
   showTicker: boolean;
   showDailyChronicleHighlight: boolean;
   showAdsenseOnHome: boolean;
   metaDescription: string;
   metaKeywords: string;
+  // Social Proof Multiplier for Public Engagement & Trust
+  enableSocialProofMultiplier: boolean;
+  publicMetricMultiplier: number;
+  publicMetricOffset: number;
+  // About Page Customizations
+  missionStatement: string;
+  visionStatement: string;
+  pillars: CompanyPillar[];
+  managementTeam: ManagementMember[];
+  financialModels: FinancialModelShowcase[];
 }
 

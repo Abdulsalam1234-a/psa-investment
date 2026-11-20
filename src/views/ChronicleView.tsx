@@ -23,7 +23,7 @@ interface ChronicleViewProps {
 }
 
 export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal }) => {
-  const { chronicles, logChronicleDownload } = useData();
+  const { chronicles, logChronicleDownload, getPublicDownloads } = useData();
   const [selectedChronicleId, setSelectedChronicleId] = useState<string>(
     chronicles[0]?.id || ''
   );
@@ -236,7 +236,7 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-center font-mono font-semibold text-slate-700">
-                      {chron.downloadCount}
+                      {getPublicDownloads(chron.downloadCount)}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">

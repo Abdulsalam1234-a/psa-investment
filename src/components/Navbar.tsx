@@ -9,12 +9,12 @@ import {
   User,
   LayoutDashboard,
   ExternalLink,
-  ChevronDown,
   Sparkles,
   Bell,
-  Smartphone
+  Phone,
+  Mail
 } from 'lucide-react';
-import { ViewTab, DemoRole } from '../types';
+import { ViewTab } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { NotificationPopup } from './NotificationPopup';
@@ -32,13 +32,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuthModal,
   onSelectReport
 }) => {
-  const { currentUser, memberProfile, isAdmin, logout, switchDemoRole, demoRole } = useAuth();
+  const { currentUser, memberProfile, isAdmin, logout } = useAuth();
   const { reports, announcements, siteSettings } = useData();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [personaDropdownOpen, setPersonaDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const unreadCount = announcements.filter(a => !a.dismissed).length;
@@ -66,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <div className="navbar-sticky-highest sticky top-0 z-[9999] w-full bg-white shadow-md">
-      {/* Demo Persona Bar */}
+      {/* Official Executive Header Top Bar (Replaces Demo Persona Switcher) */}
       <div className="bg-[#0A1F44] border-b border-slate-800 text-slate-300 text-xs px-4 py-1.5 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1 font-semibold text-[#C9A84C]">
@@ -79,89 +78,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 relative">
-          <span className="text-slate-400 hidden md:inline">Preview Persona:</span>
-          <div className="relative">
-            <button
-              onClick={() => setPersonaDropdownOpen(!personaDropdownOpen)}
-              className="bg-slate-800/90 hover:bg-slate-750 text-white font-medium px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1.5 cursor-pointer text-[11px]"
-            >
-              <span>
-                {demoRole === 'admin'
-                  ? 'Chief Analyst (Admin)'
-                  : demoRole === 'active_member'
-                  ? 'Active Circle Member'
-                  : demoRole === 'pending_member'
-                  ? 'Pending Applicant'
-                  : currentUser
-                  ? currentUser.displayName || currentUser.email
-                  : 'Public Visitor'}
-              </span>
-              <ChevronDown className="w-3 h-3 text-[#C9A84C]" />
-            </button>
-
-            {personaDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-56 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50 py-1 text-xs">
-                <div className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                  Switch Quick Demo Account
-                </div>
-                <button
-                  onClick={() => {
-                    switchDemoRole('admin');
-                    setPersonaDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-800 text-white flex items-center justify-between cursor-pointer"
-                >
-                  <div>
-                    <div className="font-semibold text-[#C9A84C]">Salami Abdullahi</div>
-                    <div className="text-[10px] text-slate-400">Chief Analyst & Admin</div>
-                  </div>
-                  <span className="text-[10px] bg-[#C9A84C]/20 text-[#C9A84C] px-1.5 py-0.5 rounded">
-                    Admin
-                  </span>
-                </button>
-                <button
-                  onClick={() => {
-                    switchDemoRole('active_member');
-                    setPersonaDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-800 text-white flex items-center justify-between cursor-pointer"
-                >
-                  <div>
-                    <div className="font-semibold">Chidinma Okonkwo</div>
-                    <div className="text-[10px] text-slate-400">Active Member (7 Refs)</div>
-                  </div>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">
-                    Active
-                  </span>
-                </button>
-                <button
-                  onClick={() => {
-                    switchDemoRole('pending_member');
-                    setPersonaDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-800 text-white flex items-center justify-between cursor-pointer"
-                >
-                  <div>
-                    <div className="font-semibold">Babatunde Adeleke</div>
-                    <div className="text-[10px] text-slate-400">Application Under Review</div>
-                  </div>
-                  <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">
-                    Pending
-                  </span>
-                </button>
-                <button
-                  onClick={() => {
-                    switchDemoRole('visitor');
-                    setPersonaDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2 hover:bg-slate-800 text-slate-300 border-t border-slate-800 cursor-pointer"
-                >
-                  Reset to Public Visitor State
-                </button>
-              </div>
-            )}
-          </div>
+        <div className="flex items-center gap-3 text-[11px]">
+          <a
+            href="mailto:psainvestment.ng@gmail.com"
+            className="hidden md:inline-flex items-center gap-1 text-slate-300 hover:text-[#C9A84C] transition-colors"
+          >
+            <Mail className="w-3 h-3 text-[#C9A84C]" />
+            <span>psainvestment.ng@gmail.com</span>
+          </a>
+          <span className="hidden md:inline text-slate-600">|</span>
+          <a
+            href="tel:+2347068371292"
+            className="inline-flex items-center gap-1 text-slate-300 hover:text-[#C9A84C] font-mono transition-colors"
+          >
+            <Phone className="w-3 h-3 text-[#C9A84C]" />
+            <span>+234 706 837 1292</span>
+          </a>
+          <span className="text-slate-600">|</span>
+          <button
+            onClick={() => setActiveTab('events')}
+            className="text-[#C9A84C] hover:underline font-bold text-[11px] cursor-pointer"
+          >
+            Nov 28 FMVA Summit &rarr;
+          </button>
         </div>
       </div>
 
@@ -184,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       )}
 
       {/* Main Navigation */}
-      <header className="bg-white border-b border-slate-200/80 shadow-xs">
+      <header className="bg-white border-b border-slate-200/80 shadow-xs relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
@@ -195,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
               className="flex items-center gap-3 cursor-pointer group"
             >
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0A1F44] to-[#13306B] text-[#C9A84C] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform overflow-hidden">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0A1F44] to-[#13306B] text-[#C9A84C] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform overflow-hidden shrink-0">
                 {siteSettings?.logoUrl ? (
                   <img src={siteSettings.logoUrl} alt={siteSettings.siteTitle} className="w-full h-full object-cover" />
                 ) : (
@@ -329,27 +268,37 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu & Search Buttons */}
             <div className="flex items-center gap-2 lg:hidden">
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
+                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer"
+                title="Search"
               >
                 <Search className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg text-slate-700 hover:bg-slate-100"
+                className="p-2 rounded-lg text-slate-700 hover:bg-slate-100 cursor-pointer"
+                title={mobileMenuOpen ? 'Close Menu' : 'Open Menu'}
               >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6 text-[#0A1F44]" />}
               </button>
             </div>
           </div>
         </div>
 
+        {/* Mobile Backdrop Overlay - Click outside to dismiss */}
+        {mobileMenuOpen && (
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 top-[120px] z-40 bg-slate-950/40 backdrop-blur-xs lg:hidden"
+          />
+        )}
+
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-2">
+          <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-2 relative z-50 shadow-2xl animate-in slide-in-from-top-2 duration-150">
             {navLinks.map(link => (
               <button
                 key={link.id}
@@ -358,7 +307,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setMobileMenuOpen(false);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold ${
+                className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer ${
                   activeTab === link.id
                     ? 'text-[#0A1F44] bg-[#C9A84C]/20 font-bold'
                     : 'text-slate-700 hover:bg-slate-50'
@@ -376,7 +325,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setActiveTab('admin-panel');
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-2.5 bg-[#0A1F44] text-[#C9A84C] rounded-xl font-bold text-sm"
+                    className="w-full py-2.5 bg-[#0A1F44] text-[#C9A84C] rounded-xl font-bold text-sm cursor-pointer"
                   >
                     Admin Command Backend
                   </button>
@@ -385,7 +334,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       logout();
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-2 text-rose-600 font-semibold text-sm"
+                    className="w-full py-2 text-rose-600 font-semibold text-sm cursor-pointer"
                   >
                     Sign Out
                   </button>
@@ -397,7 +346,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setActiveTab('member-portal');
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-2.5 bg-[#C9A84C] text-[#0A1F44] rounded-xl font-bold text-sm"
+                    className="w-full py-2.5 bg-[#C9A84C] text-[#0A1F44] rounded-xl font-bold text-sm cursor-pointer"
                   >
                     Open Member Portal
                   </button>
@@ -406,7 +355,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       logout();
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-2 text-rose-600 font-semibold text-sm"
+                    className="w-full py-2 text-rose-600 font-semibold text-sm cursor-pointer"
                   >
                     Sign Out
                   </button>
@@ -418,7 +367,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onOpenAuthModal('login');
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-2.5 border border-slate-200 text-[#0A1F44] rounded-xl font-bold text-sm"
+                    className="w-full py-2.5 border border-slate-200 text-[#0A1F44] rounded-xl font-bold text-sm cursor-pointer"
                   >
                     Sign In
                   </button>
@@ -427,7 +376,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onOpenAuthModal('signup');
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full py-2.5 bg-[#0A1F44] text-[#C9A84C] rounded-xl font-bold text-sm"
+                    className="w-full py-2.5 bg-[#0A1F44] text-[#C9A84C] rounded-xl font-bold text-sm cursor-pointer"
                   >
                     Join Circle
                   </button>
@@ -438,9 +387,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
       </header>
 
-      {/* Global Search Modal */}
+      {/* Global Search Modal - Click backdrop outside to dismiss */}
       {searchOpen && (
-        <div className="fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSearchOpen(false);
+          }}
+          className="fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-20 px-4"
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex items-center gap-3">
               <Search className="w-5 h-5 text-slate-400" />
@@ -457,7 +411,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setSearchOpen(false);
                   setSearchQuery('');
                 }}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -509,6 +463,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+
       {/* Notification Drawer & Alerts */}
       <NotificationPopup
         isOpenControlled={notificationsOpen}

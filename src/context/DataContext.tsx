@@ -118,6 +118,10 @@ interface DataContextType {
   exportEventRegistrationsToCsv: (eventId: string) => void;
   triggerEventBroadcast: (eventId: string, channels: { email: boolean; whatsapp: boolean }) => Promise<{ emailsSent: number; whatsappUrl: string }>;
   updateSiteSettings: (settings: Partial<SiteSettings>) => Promise<void>;
+  registerMemberDirectly: (member: Member) => Promise<void>;
+  getPublicViews: (rawViews: number) => number;
+  getPublicDownloads: (rawDownloads: number) => number;
+  logUserActivity: (uid: string, action: string, details?: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -1222,6 +1226,82 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const registerMemberDirectly = async (newMember: Member) => {
+    setMembers(prev => {
+      const exists = prev.some(m => m.uid === newMember.uid || m.email.toLowerCase() === newMember.email.toLowerCase());
+      if (exists) {
+        return prev.map(m => m.uid === newMember.uid ? newMember : m);
+      }
+      const updated = [newMember, ...prev];
+      localStorage.setItem('psa_members', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Create high-priority admin alert in Announcements
+    const regAlert: Announcement = {
+      id: `ann-reg-${Date.now()}`,
+      title: `New Circle Registration: ${newMember.fullName}`,
+      summary: `${newMember.fullName} (${newMember.email}) has registered and is awaiting Chief Analyst review.`,
+      content: `${newMember.fullName} (${newMember.email}) has completed 2-step verification and registered. Please review credentials and approve in the Member Desk.`,
+      category: 'system',
+      urgency: 'high',
+      popupAlert: true,
+      emailBroadcast: false,
+      whatsappBroadcast: false,
+      targetAudience: 'all',
+      createdAt: new Date().toISOString(),
+      dismissed: false
+    };
+    setAnnouncements(prev => [regAlert, ...prev]);
+
+    // Dispatch simulated outbound notification to Admin email
+    logDispatch({
+      recipientEmail: 'salamiabdullahi257@gmail.com',
+      recipientName: 'Salami Abdullahi',
+      templateType: 'membership_approved',
+      subject: `[PSA Alert] New Circle Application: ${newMember.fullName}`,
+      body: `Executive Notification:\n\nA new user has initiated registration on PSA Investment:\nFull Name: ${newMember.fullName}\nEmail: ${newMember.email}\nPhone: ${newMember.phone || 'N/A'}\nReferral Code: ${newMember.referralCode}\nStatus: ${newMember.status.toUpperCase()}\n\nPlease review and approve this member in the Admin Panel -> Member Desk.`
+    });
+
+    logSecurityEvent(
+      'New Circle Member Registered',
+      newMember.fullName,
+      'auth',
+      `Registered member ${newMember.email} with initial status: ${newMember.status}`,
+      'low'
+    );
+  };
+
+  const getPublicViews = (rawViews: number): number => {
+    if (!siteSettings?.enableSocialProofMultiplier) return rawViews;
+    const multiplier = siteSettings.publicMetricMultiplier || 14;
+    const offset = siteSettings.publicMetricOffset || 165;
+    return Math.max(rawViews * multiplier + offset, rawViews);
+  };
+
+  const getPublicDownloads = (rawDownloads: number): number => {
+    if (!siteSettings?.enableSocialProofMultiplier) return rawDownloads;
+    const multiplier = Math.max(Math.floor((siteSettings.publicMetricMultiplier || 14) * 0.7), 5);
+    const offset = Math.floor((siteSettings.publicMetricOffset || 165) * 0.45);
+    return Math.max(rawDownloads * multiplier + offset, rawDownloads);
+  };
+
+  const logUserActivity = async (uid: string, action: string, details?: string) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem('psa_user_activity_logs') || '[]');
+      existing.unshift({
+        id: `act-${Date.now()}`,
+        uid,
+        action,
+        details: details || '',
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('psa_user_activity_logs', JSON.stringify(existing.slice(0, 500)));
+    } catch (e) {
+      console.warn('Activity logging error:', e);
+    }
+  };
+
   const refreshData = async () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 300);
@@ -1287,6 +1367,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dismissAnnouncement,
         updateGoogleAdsConfig,
         updateSiteSettings,
+        registerMemberDirectly,
+        getPublicViews,
+        getPublicDownloads,
+        logUserActivity,
         exportEventRegistrationsToCsv,
         triggerEventBroadcast,
         refreshData

@@ -20,7 +20,24 @@ import { useAuth } from './context/AuthContext';
 import { useData } from './context/DataContext';
 
 export const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ViewTab>('home');
+  const resolveTabFromPath = (path: string): ViewTab => {
+    const clean = path.replace(/^\/+|\/+$/g, '').toLowerCase();
+    if (clean === 'about') return 'about';
+    if (clean === 'services') return 'services';
+    if (clean === 'research') return 'research';
+    if (clean === 'videos' || clean === 'psa-lens') return 'videos';
+    if (clean === 'events' || clean === 'programs' || clean === 'fmva' || clean === 'masterclass') return 'events';
+    if (clean === 'chronicle' || clean === 'transcripts' || clean === 'psa-transcripts' || clean === 'newspaper' || clean === 'daily-report') return 'chronicle';
+    if (clean === 'analyst-circle' || clean === 'circle') return 'analyst-circle';
+    if (clean === 'contact') return 'contact';
+    if (clean === 'member-portal' || clean === 'portal') return 'member-portal';
+    if (clean === 'admin-panel' || clean === 'admin') return 'admin-panel';
+    return 'home';
+  };
+
+  const [activeTab, setActiveTabState] = useState<ViewTab>(() => {
+    return resolveTabFromPath(window.location.pathname);
+  });
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot_password'>('login');
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -28,7 +45,23 @@ export const AppContent: React.FC = () => {
   const { currentUser } = useAuth();
   const { reports } = useData();
 
+  // Synchronize browser history and navigation tabs
+  const handleNavigateTab = (tab: ViewTab) => {
+    setActiveTabState(tab);
+    const targetPath = tab === 'home' ? '/' : `/${tab}`;
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ tab }, '', targetPath);
+    }
+  };
+
   useEffect(() => {
+    // Listen for browser Back/Forward popstate events
+    const handlePopState = () => {
+      setActiveTabState(resolveTabFromPath(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
     // Check referral query param
     const params = new URLSearchParams(window.location.search);
     if (params.get('ref') && !currentUser) {
@@ -36,17 +69,9 @@ export const AppContent: React.FC = () => {
       setAuthModalOpen(true);
     }
 
-    // Check direct path
-    const path = window.location.pathname.replace('/', '').toLowerCase();
-    if (path === 'admin' || path === 'admin-panel') {
-      setActiveTab('admin-panel');
-    } else if (path === 'portal' || path === 'member-portal') {
-      setActiveTab('member-portal');
-    } else if (path === 'chronicle' || path === 'transcripts' || path === 'psa-transcripts' || path === 'newspaper' || path === 'daily-report') {
-      setActiveTab('chronicle');
-    } else if (path === 'events' || path === 'programs' || path === 'fmva' || path === 'masterclass') {
-      setActiveTab('events');
-    }
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [currentUser]);
 
   const handleOpenAuth = (mode: 'login' | 'signup' | 'forgot_password') => {
@@ -65,7 +90,7 @@ export const AppContent: React.FC = () => {
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleNavigateTab}
         onOpenAuthModal={handleOpenAuth}
         onSelectReport={handleSelectReport}
       />
@@ -74,7 +99,7 @@ export const AppContent: React.FC = () => {
       <main className="flex-1">
         {activeTab === 'home' && (
           <Home
-            setActiveTab={setActiveTab}
+            setActiveTab={handleNavigateTab}
             onOpenAuthModal={handleOpenAuth}
             onSelectReport={handleSelectReport}
           />
@@ -86,10 +111,10 @@ export const AppContent: React.FC = () => {
           <Events onOpenAuthModal={handleOpenAuth} />
         )}
         {activeTab === 'about' && (
-          <About setActiveTab={setActiveTab} onOpenAuthModal={handleOpenAuth} />
+          <About setActiveTab={handleNavigateTab} onOpenAuthModal={handleOpenAuth} />
         )}
         {activeTab === 'services' && (
-          <Services setActiveTab={setActiveTab} onOpenAuthModal={handleOpenAuth} />
+          <Services setActiveTab={handleNavigateTab} onOpenAuthModal={handleOpenAuth} />
         )}
         {activeTab === 'research' && (
           <Research
@@ -100,7 +125,7 @@ export const AppContent: React.FC = () => {
         {activeTab === 'videos' && <Videos onOpenAuthModal={handleOpenAuth} />}
         {activeTab === 'analyst-circle' && (
           <AnalystCircle
-            setActiveTab={setActiveTab}
+            setActiveTab={handleNavigateTab}
             onOpenAuthModal={handleOpenAuth}
           />
         )}
@@ -126,11 +151,11 @@ export const AppContent: React.FC = () => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         initialMode={authMode}
-        onSuccess={() => setActiveTab('member-portal')}
+        onSuccess={() => handleNavigateTab('member-portal')}
       />
 
       {/* Footer */}
-      <Footer setActiveTab={setActiveTab} onOpenAuthModal={handleOpenAuth} />
+      <Footer setActiveTab={handleNavigateTab} onOpenAuthModal={handleOpenAuth} />
 
       {/* PWA Mobile Installation Prompt */}
       <PwaInstallBanner />

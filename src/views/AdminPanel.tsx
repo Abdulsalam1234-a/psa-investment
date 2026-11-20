@@ -44,6 +44,7 @@ import { ChronicleAdminDesk } from '../components/ChronicleAdminDesk';
 import { AdminEventsDesk } from '../components/AdminEventsDesk';
 import { AdminAdsDesk } from '../components/AdminAdsDesk';
 import { AdminBrandingDesk } from '../components/AdminBrandingDesk';
+import { AdminDatabaseDesk } from '../components/AdminDatabaseDesk';
 import {
   getSecurityAuditLogs,
   logSecurityEvent,
@@ -81,11 +82,13 @@ export const AdminPanel: React.FC = () => {
     addStorageFile,
     deleteStorageFile,
     logReportDownload,
+    getPublicDownloads,
+    getPublicViews,
     refreshData
   } = useData();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'analytics' | 'chronicle' | 'events' | 'ads' | 'branding' | 'members' | 'staff' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile' | 'security'
+    'analytics' | 'chronicle' | 'events' | 'ads' | 'branding' | 'database' | 'members' | 'staff' | 'reports' | 'videos' | 'contacts' | 'emails' | 'storage' | 'profile' | 'security'
   >('analytics');
 
   // Security & Injection Firewall state
@@ -289,6 +292,18 @@ export const AdminPanel: React.FC = () => {
         >
           <Sliders className="w-4 h-4 text-[#C9A84C]" />
           <span>Branding & SEO Settings</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminTab('database')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'database'
+              ? 'bg-[#0A1F44] text-[#C9A84C]'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <HardDrive className="w-4 h-4 text-emerald-500" />
+          <span>Free Cloud Database & Backup</span>
         </button>
 
         <button
@@ -536,6 +551,9 @@ export const AdminPanel: React.FC = () => {
 
       {/* Platform Branding & SEO Settings Tab */}
       {activeAdminTab === 'branding' && <AdminBrandingDesk />}
+
+      {/* Free Cloud Database & Backup Manager Tab */}
+      {activeAdminTab === 'database' && <AdminDatabaseDesk />}
 
       {/* 2. Members Tab */}
       {activeAdminTab === 'members' && (
@@ -1389,7 +1407,17 @@ export const AdminPanel: React.FC = () => {
                         {r.access}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-700">{r.downloadCount}</td>
+                    <td className="py-3.5 px-4">
+                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                        <span>{r.downloadCount}</span>
+                        <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                          Real
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        Public view: {getPublicDownloads(r.downloadCount)}
+                      </div>
+                    </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
