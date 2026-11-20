@@ -35,7 +35,8 @@ import {
   ShieldAlert,
   Calendar,
   DollarSign,
-  Sliders
+  Sliders,
+  Upload
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -76,6 +77,8 @@ export const AdminPanel: React.FC = () => {
     addStaffMember,
     updateStaffRole,
     updateStaffStatus,
+    updateStaffRecord,
+    toggleStaffAboutVisibility,
     deleteStaffMember,
     updateContactStatus,
     deleteContact,
@@ -110,6 +113,42 @@ export const AdminPanel: React.FC = () => {
   const [newStaffTitle, setNewStaffTitle] = useState('');
   const [newStaffDept, setNewStaffDept] = useState('');
   const [newStaffNotes, setNewStaffNotes] = useState('');
+  const [newStaffBio, setNewStaffBio] = useState('');
+  const [newStaffAvatarUrl, setNewStaffAvatarUrl] = useState('');
+  const [newStaffShowOnAbout, setNewStaffShowOnAbout] = useState(true);
+
+  // Edit Staff Modal State
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+  const [editStaffName, setEditStaffName] = useState('');
+  const [editStaffEmail, setEditStaffEmail] = useState('');
+  const [editStaffPhone, setEditStaffPhone] = useState('');
+  const [editStaffRole, setEditStaffRole] = useState<StaffRole>('analyst');
+  const [editStaffTitle, setEditStaffTitle] = useState('');
+  const [editStaffDept, setEditStaffDept] = useState('');
+  const [editStaffBio, setEditStaffBio] = useState('');
+  const [editStaffAvatarUrl, setEditStaffAvatarUrl] = useState('');
+  const [editStaffShowOnAbout, setEditStaffShowOnAbout] = useState(true);
+
+  const handleStaffImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'new' | 'edit') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) {
+        showToast('Image size should be less than 3MB for optimal rendering');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        if (target === 'new') {
+          setNewStaffAvatarUrl(base64);
+        } else {
+          setEditStaffAvatarUrl(base64);
+        }
+        showToast('Headshot image loaded successfully.');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Member filter & state
   const [memberFilter, setMemberFilter] = useState<string>('all');
@@ -824,6 +863,9 @@ export const AdminPanel: React.FC = () => {
                   setNewStaffTitle('Associate Equity Analyst');
                   setNewStaffDept('Research & Valuation');
                   setNewStaffNotes('');
+                  setNewStaffBio('');
+                  setNewStaffAvatarUrl('');
+                  setNewStaffShowOnAbout(true);
                   setIsAddStaffModalOpen(true);
                 }}
                 className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow cursor-pointer transition-all flex items-center gap-2 shrink-0"
@@ -964,6 +1006,7 @@ export const AdminPanel: React.FC = () => {
                     <th className="p-4">Contact Details</th>
                     <th className="p-4">Assigned Access Role</th>
                     <th className="p-4">Key Permissions</th>
+                    <th className="p-4 text-center">Show on About</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
@@ -985,16 +1028,29 @@ export const AdminPanel: React.FC = () => {
 
                       return (
                         <tr key={staff.id} className="hover:bg-slate-50/80 transition-colors">
-                          {/* Name & Title */}
+                          {/* Name, Headshot & Title */}
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-[#0A1F44] text-[#C9A84C] font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
-                                {staff.fullName
-                                  .split(' ')
-                                  .map(n => n[0])
-                                  .join('')
-                                  .toUpperCase()
-                                  .slice(0, 2)}
+                              <div className="w-10 h-10 rounded-xl overflow-hidden ring-1 ring-[#C9A84C]/50 shadow-xs bg-slate-900 shrink-0 border border-slate-200">
+                                {staff.avatarUrl ? (
+                                  <img
+                                    src={staff.avatarUrl}
+                                    alt={staff.fullName}
+                                    className="w-full h-full object-cover object-top"
+                                    onError={e => {
+                                      (e.target as HTMLElement).style.display = 'none';
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-[#0A1F44] text-[#C9A84C] font-black text-xs flex items-center justify-center">
+                                    {staff.fullName
+                                      .split(' ')
+                                      .map(n => n[0])
+                                      .join('')
+                                      .toUpperCase()
+                                      .slice(0, 2)}
+                                  </div>
+                                )}
                               </div>
                               <div>
                                 <div className="font-bold text-slate-900 flex items-center gap-1.5">
@@ -1066,12 +1122,45 @@ export const AdminPanel: React.FC = () => {
                             </div>
                           </td>
 
+                          {/* Show on About Page Checkbox */}
+                          <td className="p-4 text-center">
+                            {isCEO ? (
+                              <span className="text-[10px] text-[#C9A84C] font-bold bg-[#C9A84C]/10 px-2.5 py-1 rounded-full border border-[#C9A84C]/30">
+                                Flagship Profile
+                              </span>
+                            ) : (
+                              <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={!!staff.showOnAboutPage}
+                                  onChange={async e => {
+                                    const nextVal = e.target.checked;
+                                    await toggleStaffAboutVisibility(staff.id, nextVal);
+                                    showToast(
+                                      nextVal
+                                        ? `Featured ${staff.fullName} on About Us page.`
+                                        : `Hidden ${staff.fullName} from About Us page.`
+                                    );
+                                  }}
+                                  className="w-4 h-4 rounded text-[#0A1F44] focus:ring-[#C9A84C] cursor-pointer"
+                                />
+                                <span
+                                  className={`text-[11px] font-bold ${
+                                    staff.showOnAboutPage ? 'text-emerald-700' : 'text-slate-400'
+                                  }`}
+                                >
+                                  {staff.showOnAboutPage ? 'Featured' : 'Hidden'}
+                                </span>
+                              </label>
+                            )}
+                          </td>
+
                           {/* Status */}
                           <td className="p-4">
                             <span
                               className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
                                 staff.status === 'active'
-                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                                   : 'bg-rose-50 text-rose-800 border border-rose-200'
                               }`}
                             >
@@ -1086,41 +1175,62 @@ export const AdminPanel: React.FC = () => {
 
                           {/* Actions */}
                           <td className="p-4 text-right">
-                            {!isCEO && (
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => {
-                                    const nextStatus = staff.status === 'active' ? 'suspended' : 'active';
-                                    updateStaffStatus(staff.id, nextStatus);
-                                    showToast(
-                                      `${staff.fullName} credential ${
-                                        nextStatus === 'active' ? 'activated' : 'suspended'
-                                      }.`
-                                    );
-                                  }}
-                                  className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
-                                  title={staff.status === 'active' ? 'Suspend Access' : 'Activate Access'}
-                                >
-                                  {staff.status === 'active' ? (
-                                    <UserX className="w-3.5 h-3.5 text-amber-600" />
-                                  ) : (
-                                    <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (confirm(`Remove staff credential for ${staff.fullName}?`)) {
-                                      deleteStaffMember(staff.id);
-                                      showToast(`Removed staff member ${staff.fullName}.`);
-                                    }
-                                  }}
-                                  className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
-                                  title="Delete Staff Member"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            )}
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditingStaff(staff);
+                                  setEditStaffName(staff.fullName);
+                                  setEditStaffEmail(staff.email);
+                                  setEditStaffPhone(staff.phone || '');
+                                  setEditStaffRole(staff.role);
+                                  setEditStaffTitle(staff.title);
+                                  setEditStaffDept(staff.department);
+                                  setEditStaffBio(staff.bio || staff.notes || '');
+                                  setEditStaffAvatarUrl(staff.avatarUrl || '');
+                                  setEditStaffShowOnAbout(staff.showOnAboutPage ?? true);
+                                }}
+                                className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-[#0A1F44] hover:bg-slate-100 cursor-pointer transition-colors"
+                                title="Edit Profile, Bio & Photo"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+
+                              {!isCEO && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      const nextStatus = staff.status === 'active' ? 'suspended' : 'active';
+                                      updateStaffStatus(staff.id, nextStatus);
+                                      showToast(
+                                        `${staff.fullName} credential ${
+                                          nextStatus === 'active' ? 'activated' : 'suspended'
+                                        }.`
+                                      );
+                                    }}
+                                    className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                                    title={staff.status === 'active' ? 'Suspend Access' : 'Activate Access'}
+                                  >
+                                    {staff.status === 'active' ? (
+                                      <UserX className="w-3.5 h-3.5 text-amber-600" />
+                                    ) : (
+                                      <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Remove staff credential for ${staff.fullName}?`)) {
+                                        deleteStaffMember(staff.id);
+                                        showToast(`Removed staff member ${staff.fullName}.`);
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                    title="Delete Staff Member"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1133,7 +1243,7 @@ export const AdminPanel: React.FC = () => {
           {/* Add Staff Modal */}
           {isAddStaffModalOpen && (
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-              <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+              <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">
@@ -1164,6 +1274,9 @@ export const AdminPanel: React.FC = () => {
                       title: newStaffTitle.trim() || 'Staff Officer',
                       department: newStaffDept.trim() || 'General Operations',
                       status: 'active',
+                      avatarUrl: newStaffAvatarUrl.trim() || undefined,
+                      bio: newStaffBio.trim() || undefined,
+                      showOnAboutPage: newStaffShowOnAbout,
                       notes: newStaffNotes.trim() || undefined,
                       permissions: []
                     });
@@ -1313,6 +1426,92 @@ export const AdminPanel: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Headshot Photo Upload / URL */}
+                  <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <label className="block font-semibold text-slate-700 text-xs">
+                      Staff Headshot Image (Photo / Avatar)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-[#C9A84C]/50 shadow-xs bg-slate-900 shrink-0 border border-slate-200">
+                        {newStaffAvatarUrl ? (
+                          <img
+                            src={newStaffAvatarUrl}
+                            alt="Staff Preview"
+                            className="w-full h-full object-cover object-top"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-[#0A1F44] text-[#C9A84C] font-black flex items-center justify-center text-sm">
+                            {newStaffName ? newStaffName.slice(0, 2).toUpperCase() : 'PSA'}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Paste image URL (https://... or /image.jpg)"
+                          value={newStaffAvatarUrl}
+                          onChange={e => setNewStaffAvatarUrl(e.target.value)}
+                          className="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-mono text-[11px]"
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-[11px] cursor-pointer inline-flex items-center gap-1.5 shadow-2xs">
+                            <Upload className="w-3.5 h-3.5 text-[#C9A84C]" />
+                            <span>Upload Local Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={e => handleStaffImageUpload(e, 'new')}
+                            />
+                          </label>
+                          {newStaffAvatarUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setNewStaffAvatarUrl('')}
+                              className="text-[11px] text-rose-600 hover:underline cursor-pointer"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Public Write-up / Bio */}
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Public Profile Write-up / Bio (for About Us page)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={newStaffBio}
+                      onChange={e => setNewStaffBio(e.target.value)}
+                      placeholder="Brief write-up, core analytical focus, background, or achievements to feature on the About page card..."
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Checkbox for About Us Display */}
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between cursor-pointer select-none">
+                    <label htmlFor="new-show-about" className="cursor-pointer pr-3">
+                      <div className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-[#C9A84C]" />
+                        <span>Display on About Us Page</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        Feature this staff member with their headshot, title, and bio in the Team section of About Us.
+                      </div>
+                    </label>
+                    <input
+                      id="new-show-about"
+                      type="checkbox"
+                      checked={newStaffShowOnAbout}
+                      onChange={e => setNewStaffShowOnAbout(e.target.checked)}
+                      className="w-5 h-5 rounded text-[#0A1F44] focus:ring-[#C9A84C] cursor-pointer shrink-0"
+                    />
+                  </div>
+
                   <div>
                     <label className="block font-semibold text-slate-700 mb-1">
                       Internal Notes / Operational Scope
@@ -1321,7 +1520,7 @@ export const AdminPanel: React.FC = () => {
                       rows={2}
                       value={newStaffNotes}
                       onChange={e => setNewStaffNotes(e.target.value)}
-                      placeholder="Notes regarding specific coverage or advisory mandates..."
+                      placeholder="Internal administration notes regarding specific coverage or advisory mandates..."
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium resize-none"
                     />
                   </div>
@@ -1340,6 +1539,239 @@ export const AdminPanel: React.FC = () => {
                     >
                       <Check className="w-3.5 h-3.5" />
                       <span>Authorize & Deploy Access</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Staff Modal */}
+          {editingStaff && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+              <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">
+                      Staff Governance Desk
+                    </span>
+                    <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+                      Edit Staff Profile & Bio
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setEditingStaff(null)}
+                    className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={async e => {
+                    e.preventDefault();
+                    if (!editStaffName.trim() || !editStaffEmail.trim()) return;
+
+                    await updateStaffRecord(editingStaff.id, {
+                      fullName: editStaffName.trim(),
+                      email: editStaffEmail.trim().toLowerCase(),
+                      phone: editStaffPhone.trim() || undefined,
+                      role: editStaffRole,
+                      title: editStaffTitle.trim() || 'Staff Officer',
+                      department: editStaffDept.trim() || 'Operations',
+                      bio: editStaffBio.trim() || undefined,
+                      avatarUrl: editStaffAvatarUrl.trim() || undefined,
+                      showOnAboutPage: editStaffShowOnAbout
+                    });
+
+                    setEditingStaff(null);
+                    showToast(`Updated profile and settings for ${editStaffName}.`);
+                  }}
+                  className="space-y-4 text-xs"
+                >
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Full Legal / Professional Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editStaffName}
+                      onChange={e => setEditStaffName(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Corporate / Work Email *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={editStaffEmail}
+                        onChange={e => setEditStaffEmail(e.target.value)}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Direct Phone Line
+                      </label>
+                      <input
+                        type="tel"
+                        value={editStaffPhone}
+                        onChange={e => setEditStaffPhone(e.target.value)}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Role Selector */}
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Assigned Role
+                    </label>
+                    <select
+                      value={editStaffRole}
+                      onChange={e => setEditStaffRole(e.target.value as StaffRole)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium cursor-pointer"
+                    >
+                      <option value="management">Management</option>
+                      <option value="social_media_director">Social Media Director</option>
+                      <option value="analyst">Analyst</option>
+                      <option value="partners">Partners</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Executive Title / Designation
+                      </label>
+                      <input
+                        type="text"
+                        value={editStaffTitle}
+                        onChange={e => setEditStaffTitle(e.target.value)}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">
+                        Department
+                      </label>
+                      <input
+                        type="text"
+                        value={editStaffDept}
+                        onChange={e => setEditStaffDept(e.target.value)}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Headshot Photo Section */}
+                  <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+                    <label className="block font-semibold text-slate-700 text-xs">
+                      Staff Headshot Image (Photo / Avatar)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-[#C9A84C]/50 shadow-xs bg-slate-900 shrink-0 border border-slate-200">
+                        {editStaffAvatarUrl ? (
+                          <img
+                            src={editStaffAvatarUrl}
+                            alt="Staff Preview"
+                            className="w-full h-full object-cover object-top"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-[#0A1F44] text-[#C9A84C] font-black flex items-center justify-center text-sm">
+                            {editStaffName ? editStaffName.slice(0, 2).toUpperCase() : 'PSA'}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Paste image URL (https://... or /image.jpg)"
+                          value={editStaffAvatarUrl}
+                          onChange={e => setEditStaffAvatarUrl(e.target.value)}
+                          className="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-mono text-[11px]"
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-[11px] cursor-pointer inline-flex items-center gap-1.5 shadow-2xs">
+                            <Upload className="w-3.5 h-3.5 text-[#C9A84C]" />
+                            <span>Upload Local Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={e => handleStaffImageUpload(e, 'edit')}
+                            />
+                          </label>
+                          {editStaffAvatarUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setEditStaffAvatarUrl('')}
+                              className="text-[11px] text-rose-600 hover:underline cursor-pointer"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Public Write-up / Bio */}
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Public Profile Write-up / Bio (for About Us page)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={editStaffBio}
+                      onChange={e => setEditStaffBio(e.target.value)}
+                      placeholder="Brief write-up, core analytical focus, background, or achievements to feature on the About page card..."
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Checkbox for About Us Display */}
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between cursor-pointer select-none">
+                    <label htmlFor="edit-show-about" className="cursor-pointer pr-3">
+                      <div className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-[#C9A84C]" />
+                        <span>Display on About Us Page</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        Feature this staff member with their headshot, title, and bio in the Team section of About Us.
+                      </div>
+                    </label>
+                    <input
+                      id="edit-show-about"
+                      type="checkbox"
+                      checked={editStaffShowOnAbout}
+                      onChange={e => setEditStaffShowOnAbout(e.target.checked)}
+                      className="w-5 h-5 rounded text-[#0A1F44] focus:ring-[#C9A84C] cursor-pointer shrink-0"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setEditingStaff(null)}
+                      className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Save Changes</span>
                     </button>
                   </div>
                 </form>

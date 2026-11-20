@@ -341,6 +341,9 @@ export const INITIAL_STAFF: StaffMember[] = [
     department: 'Executive Directorate',
     status: 'active',
     assignedAt: '2026-01-15T08:00:00Z',
+    avatarUrl: '/salami-abdullahi.jpg',
+    showOnAboutPage: false,
+    bio: 'Founder, CEO, COO, and Chief Analyst directing all institutional equity valuation, capital strategy, macroeconomic forecasting, and Nigerian banking recapitalization research.',
     permissions: [
       'Full Executive Command',
       'Publish Research & DCF Models',
@@ -361,6 +364,9 @@ export const INITIAL_STAFF: StaffMember[] = [
     department: 'Executive Management',
     status: 'active',
     assignedAt: '2026-03-01T09:00:00Z',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+    showOnAboutPage: true,
+    bio: 'Oversees organizational governance, executive review workflows, and operational scaling. Leads client onboarding and institutional member compliance across West Africa.',
     permissions: [
       'Executive Oversight & Performance Tracking',
       'Member Review Workflow',
@@ -379,6 +385,9 @@ export const INITIAL_STAFF: StaffMember[] = [
     department: 'Media & Public Relations',
     status: 'active',
     assignedAt: '2026-04-10T10:30:00Z',
+    avatarUrl: 'https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=400&q=80',
+    showOnAboutPage: true,
+    bio: 'Heads digital media strategy, multi-channel investor education, and PSA Lens video broadcasts. Manages multimedia distribution across YouTube, X, and WhatsApp investor communities.',
     permissions: [
       'PSA Lens Masterclasses Management',
       'YouTube & Social Video Scheduling',
@@ -397,6 +406,9 @@ export const INITIAL_STAFF: StaffMember[] = [
     department: 'Research & Valuation',
     status: 'active',
     assignedAt: '2026-05-15T09:00:00Z',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    showOnAboutPage: true,
+    bio: 'Specializes in quantitative equity research, NGX banking recapitalization sensitivities, and daily financial market dispatches. Calibrates proprietary DCF models and order-flow barometers.',
     permissions: [
       'Draft Equity Research Reports',
       'DCF & Multiple Valuation Modeling',
@@ -415,6 +427,9 @@ export const INITIAL_STAFF: StaffMember[] = [
     department: 'Strategic Partnerships',
     status: 'active',
     assignedAt: '2026-06-01T11:00:00Z',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+    showOnAboutPage: true,
+    bio: 'Directs strategic capital partnerships, commercial solar Power-as-a-Service (PaaS) financing, and SME balance-sheet syndication across key Nigerian manufacturing clusters.',
     permissions: [
       'Commercial Solar PaaS Financing',
       'Institutional Deal Structuring',

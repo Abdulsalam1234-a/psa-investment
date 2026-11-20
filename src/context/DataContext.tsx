@@ -78,6 +78,8 @@ interface DataContextType {
   addStaffMember: (data: Omit<StaffMember, 'id' | 'assignedAt'>) => Promise<StaffMember>;
   updateStaffRole: (id: string, role: StaffRole, title?: string, permissions?: string[]) => Promise<void>;
   updateStaffStatus: (id: string, status: 'active' | 'suspended') => Promise<void>;
+  updateStaffRecord: (id: string, data: Partial<StaffMember>) => Promise<void>;
+  toggleStaffAboutVisibility: (id: string, show: boolean) => Promise<void>;
   deleteStaffMember: (id: string) => Promise<void>;
   addComment: (data: Omit<ResourceComment, 'id' | 'createdAt' | 'likes'>) => Promise<ResourceComment>;
   deleteComment: (id: string) => Promise<void>;
@@ -177,7 +179,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {
     const saved = localStorage.getItem('psa_staff_members');
-    return saved ? JSON.parse(saved) : INITIAL_STAFF;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge missing properties from INITIAL_STAFF (e.g. showOnAboutPage, bio, avatarUrl)
+          return parsed.map((m: any) => {
+            const init = INITIAL_STAFF.find(is => is.id === m.id);
+            return {
+              ...init,
+              ...m,
+              showOnAboutPage: m.showOnAboutPage !== undefined ? m.showOnAboutPage : (init?.showOnAboutPage ?? false),
+              bio: m.bio || init?.bio || m.notes || '',
+              avatarUrl: m.avatarUrl || init?.avatarUrl || ''
+            };
+          });
+        }
+      } catch (e) {
+        console.error('Failed to parse psa_staff_members', e);
+      }
+    }
+    return INITIAL_STAFF;
   });
 
   const [comments, setComments] = useState<ResourceComment[]>(() => {
@@ -577,6 +599,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...data,
       id: `staff-${data.role}-${Date.now()}`,
       assignedAt: new Date().toISOString(),
+      showOnAboutPage: data.showOnAboutPage ?? true,
+      bio: data.bio || data.notes || '',
       permissions:
         data.permissions && data.permissions.length > 0
           ? data.permissions
@@ -608,6 +632,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateStaffStatus = async (id: string, status: 'active' | 'suspended') => {
     setStaffMembers(prev =>
       prev.map(s => (s.id === id ? { ...s, status } : s))
+    );
+  };
+
+  const updateStaffRecord = async (id: string, data: Partial<StaffMember>) => {
+    setStaffMembers(prev =>
+      prev.map(s => (s.id === id ? { ...s, ...data } : s))
+    );
+  };
+
+  const toggleStaffAboutVisibility = async (id: string, show: boolean) => {
+    setStaffMembers(prev =>
+      prev.map(s => (s.id === id ? { ...s, showOnAboutPage: show } : s))
     );
   };
 
@@ -1338,6 +1374,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addStaffMember,
         updateStaffRole,
         updateStaffStatus,
+        updateStaffRecord,
+        toggleStaffAboutVisibility,
         deleteStaffMember,
         addComment,
         deleteComment,

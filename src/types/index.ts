@@ -201,6 +201,13 @@ export interface StaffMember {
   avatarUrl?: string;
   notes?: string;
   permissions: string[];
+  showOnAboutPage?: boolean;
+  bio?: string;
+  displayOrder?: number;
+  socialLinks?: {
+    linkedin?: string;
+    twitter?: string;
+  };
 }
 
 export type ResourceType = 'report' | 'chronicle' | 'video';

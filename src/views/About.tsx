@@ -22,13 +22,32 @@ interface AboutProps {
 }
 
 export const About: React.FC<AboutProps> = ({ setActiveTab, onOpenAuthModal }) => {
-  const { siteSettings } = useData();
+  const { siteSettings, staffMembers } = useData();
 
   const mission = siteSettings?.missionStatement || 'To democratize institutional-grade equity valuation, debunk speculative rumors in Nigerian capital markets, and provide actionable financial intelligence that outpaces inflation and currency volatility.';
   const vision = siteSettings?.visionStatement || "To stand as West Africa's foremost independent equity research authority, recognized internationally for analytical purity, innovative SME capital advisory, and transformative investor education.";
   const pillars = siteSettings?.pillars || [];
   const management = siteSettings?.managementTeam || [];
   const models = siteSettings?.financialModels || [];
+
+  const featuredStaff = (staffMembers || []).filter(
+    s => s.showOnAboutPage && s.id !== 'staff-ceo-001' && s.email !== 'salamiabdullahi257@gmail.com'
+  );
+
+  const getStaffRoleBadge = (role: string) => {
+    switch (role) {
+      case 'management':
+        return { label: 'Executive Management', className: 'bg-purple-50 text-purple-900 border-purple-200' };
+      case 'social_media_director':
+        return { label: 'Social Media & Communications', className: 'bg-rose-50 text-rose-900 border-rose-200' };
+      case 'analyst':
+        return { label: 'Equity Research Analyst', className: 'bg-emerald-50 text-emerald-900 border-emerald-200' };
+      case 'partners':
+        return { label: 'Strategic Partner', className: 'bg-amber-50 text-amber-900 border-amber-200' };
+      default:
+        return { label: 'Executive Staff', className: 'bg-slate-100 text-slate-800 border-slate-200' };
+    }
+  };
 
   return (
     <div className="space-y-20 pb-20">
@@ -242,6 +261,133 @@ export const About: React.FC<AboutProps> = ({ setActiveTab, onOpenAuthModal }) =
             </div>
           ))}
         </div>
+
+        {/* Featured Staff Members (Smaller Cards Section) */}
+        {featuredStaff.length > 0 && (
+          <div className="pt-10 space-y-8">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C]">
+                Executive Directorate & Analytical Desk
+              </span>
+              <h3 className="font-serif font-black text-2xl sm:text-3xl text-[#0A1F44]">
+                Research, Operations & Advisory Team
+              </h3>
+              <p className="text-xs text-slate-500">
+                The multidisciplinary team executing quantitative equity research, media communications, operational excellence, and institutional capital alliances.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredStaff.map(staff => {
+                const roleBadge = getStaffRoleBadge(staff.role);
+
+                return (
+                  <div
+                    key={staff.id}
+                    className="bg-white rounded-3xl p-6 border border-slate-200/90 hover:border-[#C9A84C]/60 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                  >
+                    <div className="space-y-4">
+                      {/* Top Row: Headshot + Role Badge */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-2xl overflow-hidden ring-2 ring-[#C9A84C]/50 shadow-md bg-slate-900 border border-slate-200 shrink-0">
+                            {staff.avatarUrl ? (
+                              <img
+                                src={staff.avatarUrl}
+                                alt={staff.fullName}
+                                className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                                onError={e => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-[#0A1F44] text-[#C9A84C] font-serif font-black text-xl flex items-center justify-center">
+                                {staff.fullName
+                                  .split(' ')
+                                  .map(n => n[0])
+                                  .join('')
+                                  .toUpperCase()
+                                  .slice(0, 2)}
+                              </div>
+                            )}
+                          </div>
+                          <span
+                            className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"
+                            title="Active Verified Staff"
+                          />
+                        </div>
+
+                        <div className="text-right flex flex-col items-end gap-1.5">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${roleBadge.className}`}
+                          >
+                            {roleBadge.label}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {staff.department}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Name & Title */}
+                      <div className="space-y-1">
+                        <h4 className="font-serif font-black text-lg text-[#0A1F44] group-hover:text-[#C9A84C] transition-colors">
+                          {staff.fullName}
+                        </h4>
+                        <div className="text-xs font-semibold text-slate-600">
+                          {staff.title}
+                        </div>
+                      </div>
+
+                      {/* Brief Write-up / Bio */}
+                      <p className="text-xs text-slate-600 leading-relaxed pt-2 border-t border-slate-100 line-clamp-4">
+                        {staff.bio ||
+                          staff.notes ||
+                          'Key team member executing institutional operations and research advisory.'}
+                      </p>
+
+                      {/* Key Permissions / Specializations */}
+                      {staff.permissions && staff.permissions.length > 0 && (
+                        <div className="pt-2 flex flex-wrap gap-1">
+                          {staff.permissions.slice(0, 2).map((perm, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200/80 text-slate-600 font-medium"
+                            >
+                              {perm}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer Contact */}
+                    <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <a
+                        href={`mailto:${staff.email}`}
+                        className="text-slate-600 hover:text-[#0A1F44] font-mono text-[11px] inline-flex items-center gap-1.5 truncate max-w-[170px]"
+                        title={staff.email}
+                      >
+                        <Mail className="w-3.5 h-3.5 text-[#C9A84C] shrink-0" />
+                        <span className="truncate">{staff.email}</span>
+                      </a>
+                      {staff.phone && (
+                        <a
+                          href={`tel:${staff.phone.replace(/\s+/g, '')}`}
+                          className="text-[#0A1F44] hover:text-[#C9A84C] font-mono text-[11px] font-semibold inline-flex items-center gap-1 shrink-0"
+                          title={staff.phone}
+                        >
+                          <Phone className="w-3.5 h-3.5 text-[#C9A84C] shrink-0" />
+                          <span>Call</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* 3 Core Pillars */}
