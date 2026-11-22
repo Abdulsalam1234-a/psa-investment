@@ -33,20 +33,29 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const [downloading, setDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
-  // Lock background scrolling when report modal is open
+  // Lock background scrolling and attach Escape key listener when report modal is open
   useEffect(() => {
     if (report) {
       document.body.classList.add('modal-open');
       document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
     }
-    return () => {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-    };
-  }, [report]);
+  }, [report, onClose]);
 
   if (!report) return null;
 

@@ -20,24 +20,43 @@ import { useAuth } from './context/AuthContext';
 import { useData } from './context/DataContext';
 
 export const AppContent: React.FC = () => {
-  const resolveTabFromPath = (path: string): ViewTab => {
+  const resolveRouteFromPath = (path: string): { tab: ViewTab; eventSlug?: string } => {
     const clean = path.replace(/^\/+|\/+$/g, '').toLowerCase();
-    if (clean === 'about') return 'about';
-    if (clean === 'services') return 'services';
-    if (clean === 'research') return 'research';
-    if (clean === 'videos' || clean === 'psa-lens') return 'videos';
-    if (clean === 'events' || clean === 'programs' || clean === 'fmva' || clean === 'masterclass') return 'events';
-    if (clean === 'chronicle' || clean === 'transcripts' || clean === 'psa-transcripts' || clean === 'newspaper' || clean === 'daily-report') return 'chronicle';
-    if (clean === 'analyst-circle' || clean === 'circle') return 'analyst-circle';
-    if (clean === 'contact') return 'contact';
-    if (clean === 'member-portal' || clean === 'portal') return 'member-portal';
-    if (clean === 'admin-panel' || clean === 'admin') return 'admin-panel';
-    return 'home';
+    const parts = clean.split('/');
+    const firstPart = parts[0] || '';
+    const secondPart = parts.length > 1 ? parts.slice(1).join('/') : undefined;
+
+    if (firstPart === 'events' || firstPart === 'programs') {
+      return { tab: 'events', eventSlug: secondPart };
+    }
+    if (firstPart === 'fmva' || firstPart === 'masterclass') {
+      return {
+        tab: 'events',
+        eventSlug: 'financial-modeling-valuation-analysis-masterclass-nov-2026'
+      };
+    }
+    if (firstPart === 'about') return { tab: 'about' };
+    if (firstPart === 'services') return { tab: 'services' };
+    if (firstPart === 'research') return { tab: 'research' };
+    if (firstPart === 'videos' || firstPart === 'psa-lens') return { tab: 'videos' };
+    if (
+      firstPart === 'chronicle' ||
+      firstPart === 'transcripts' ||
+      firstPart === 'psa-transcripts' ||
+      firstPart === 'newspaper' ||
+      firstPart === 'daily-report'
+    )
+      return { tab: 'chronicle' };
+    if (firstPart === 'analyst-circle' || firstPart === 'circle') return { tab: 'analyst-circle' };
+    if (firstPart === 'contact') return { tab: 'contact' };
+    if (firstPart === 'member-portal' || firstPart === 'portal') return { tab: 'member-portal' };
+    if (firstPart === 'admin-panel' || firstPart === 'admin') return { tab: 'admin-panel' };
+    return { tab: 'home' };
   };
 
-  const [activeTab, setActiveTabState] = useState<ViewTab>(() => {
-    return resolveTabFromPath(window.location.pathname);
-  });
+  const initialRoute = resolveRouteFromPath(window.location.pathname);
+  const [activeTab, setActiveTabState] = useState<ViewTab>(initialRoute.tab);
+  const [activeEventSlug, setActiveEventSlug] = useState<string | undefined>(initialRoute.eventSlug);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot_password'>('login');
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -46,18 +65,24 @@ export const AppContent: React.FC = () => {
   const { reports } = useData();
 
   // Synchronize browser history and navigation tabs
-  const handleNavigateTab = (tab: ViewTab) => {
+  const handleNavigateTab = (tab: ViewTab, eventSlug?: string) => {
     setActiveTabState(tab);
-    const targetPath = tab === 'home' ? '/' : `/${tab}`;
+    setActiveEventSlug(eventSlug);
+    let targetPath = tab === 'home' ? '/' : `/${tab}`;
+    if (tab === 'events' && eventSlug) {
+      targetPath = `/events/${eventSlug}`;
+    }
     if (window.location.pathname !== targetPath) {
-      window.history.pushState({ tab }, '', targetPath);
+      window.history.pushState({ tab, eventSlug }, '', targetPath);
     }
   };
 
   useEffect(() => {
     // Listen for browser Back/Forward popstate events
     const handlePopState = () => {
-      setActiveTabState(resolveTabFromPath(window.location.pathname));
+      const route = resolveRouteFromPath(window.location.pathname);
+      setActiveTabState(route.tab);
+      setActiveEventSlug(route.eventSlug);
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -108,7 +133,11 @@ export const AppContent: React.FC = () => {
           <ChronicleView onOpenAuthModal={handleOpenAuth} />
         )}
         {activeTab === 'events' && (
-          <Events onOpenAuthModal={handleOpenAuth} />
+          <Events
+            activeEventSlug={activeEventSlug}
+            onNavigateEvent={(slug?: string) => handleNavigateTab('events', slug)}
+            onOpenAuthModal={handleOpenAuth}
+          />
         )}
         {activeTab === 'about' && (
           <About setActiveTab={handleNavigateTab} onOpenAuthModal={handleOpenAuth} />

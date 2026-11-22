@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LineChart,
   ShieldCheck,
@@ -39,6 +39,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  // Close search and mobile menu on Escape key press
+  useEffect(() => {
+    if (searchOpen || mobileMenuOpen) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (searchOpen) {
+            setSearchOpen(false);
+            setSearchQuery('');
+          }
+          if (mobileMenuOpen) {
+            setMobileMenuOpen(false);
+          }
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [searchOpen, mobileMenuOpen]);
 
   const unreadCount = announcements.filter(a => !a.dismissed).length;
 

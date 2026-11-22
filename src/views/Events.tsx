@@ -17,10 +17,15 @@ import {
   UserCheck,
   Tag,
   ArrowRight,
+  ArrowLeft,
+  Copy,
+  X,
   MessageCircle,
   AlertCircle,
   ExternalLink,
-  Laptop
+  Laptop,
+  ShieldCheck,
+  FileText
 } from 'lucide-react';
 import { EventProgram, EventCategory, EventRegistration, FormFieldDefinition } from '../types';
 import { useData } from '../context/DataContext';
@@ -28,10 +33,16 @@ import { useAuth } from '../context/AuthContext';
 import { GoogleAdSlot } from '../components/GoogleAdSlot';
 
 interface EventsProps {
+  activeEventSlug?: string;
+  onNavigateEvent?: (slug?: string) => void;
   onOpenAuthModal?: (mode: 'login' | 'signup' | 'forgot_password') => void;
 }
 
-export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
+export const Events: React.FC<EventsProps> = ({
+  activeEventSlug,
+  onNavigateEvent,
+  onOpenAuthModal
+}) => {
   const { events, registerForEvent } = useData();
   const { currentUser, memberProfile } = useAuth();
 
@@ -39,6 +50,7 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedEventForDetail, setSelectedEventForDetail] = useState<EventProgram | null>(null);
   const [selectedEventForRegister, setSelectedEventForRegister] = useState<EventProgram | null>(null);
+  const [copyToast, setCopyToast] = useState<boolean>(false);
 
   // Registration Form State
   const [regFullName, setRegFullName] = useState<string>('');
@@ -51,6 +63,26 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
   const [regSuccess, setRegSuccess] = useState<EventRegistration | null>(null);
   const [regError, setRegError] = useState<string | null>(null);
 
+  // Check if viewing single event via unique URL
+  const currentEvent = useMemo(() => {
+    if (!activeEventSlug) return null;
+    const cleanSlug = activeEventSlug.toLowerCase().trim();
+    return (
+      events.find(
+        e => e.slug.toLowerCase() === cleanSlug || e.id.toLowerCase() === cleanSlug
+      ) || null
+    );
+  }, [events, activeEventSlug]);
+
+  // Dynamic Browser Page Title
+  useEffect(() => {
+    if (currentEvent) {
+      document.title = `${currentEvent.title} | PSA Investment Academy`;
+    } else {
+      document.title = 'Executive Events & Masterclasses | PSA Investment';
+    }
+  }, [currentEvent]);
+
   // Autofill user credentials if logged in
   useEffect(() => {
     if (memberProfile) {
@@ -61,13 +93,14 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
       setRegFullName(currentUser.displayName || '');
       setRegEmail(currentUser.email || '');
     }
-  }, [memberProfile, currentUser, selectedEventForRegister]);
+  }, [memberProfile, currentUser, selectedEventForRegister, currentEvent]);
 
-  // Reset dynamic form when selected event changes
+  // Reset dynamic form when active event changes
   useEffect(() => {
-    if (selectedEventForRegister) {
+    const targetEvent = selectedEventForRegister || currentEvent;
+    if (targetEvent) {
       const initialResp: Record<string, any> = {};
-      selectedEventForRegister.customFormFields.forEach(f => {
+      (targetEvent.customFormFields || []).forEach(f => {
         if (f.type === 'checkbox') {
           initialResp[f.id] = false;
         } else {
@@ -78,7 +111,34 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
       setRegError(null);
       setRegSuccess(null);
     }
-  }, [selectedEventForRegister]);
+  }, [selectedEventForRegister, currentEvent]);
+
+  // Modal toggleability: Lock body scroll & listen for Escape key
+  useEffect(() => {
+    const isAnyModalOpen = !!selectedEventForDetail || !!selectedEventForRegister;
+    if (isAnyModalOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedEventForDetail(null);
+        setSelectedEventForRegister(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedEventForDetail, selectedEventForRegister]);
 
   // Countdown timer to Nov 28, 2026 FMVA Masterclass
   const targetDate = useMemo(() => new Date('2026-11-28T09:00:00+01:00').getTime(), []);
@@ -130,9 +190,10 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
   };
 
   // Handle Registration Submit
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent, eventToRegister?: EventProgram) => {
     e.preventDefault();
-    if (!selectedEventForRegister) return;
+    const target = eventToRegister || selectedEventForRegister || currentEvent;
+    if (!target) return;
 
     setRegError(null);
     setIsSubmitting(true);
@@ -143,7 +204,7 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
       }
 
       // Check required custom fields
-      for (const field of selectedEventForRegister.customFormFields) {
+      for (const field of target.customFormFields || []) {
         if (field.required) {
           const val = dynamicResponses[field.id];
           if (val === undefined || val === null || val === '' || val === false) {
@@ -152,7 +213,7 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
         }
       }
 
-      const registration = await registerForEvent(selectedEventForRegister.id, {
+      const registration = await registerForEvent(target.id, {
         fullName: regFullName.trim(),
         email: regEmail.trim(),
         phone: regPhone.trim(),
@@ -180,7 +241,7 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
       'METHOD:PUBLISH',
       'BEGIN:VEVENT',
       `SUMMARY:${event.title}`,
-      `DESCRIPTION:${event.description.replace(/\n/g, ' ')} | Instructor: ${event.instructor}`,
+      `DESCRIPTION:${event.description.replace(/\n/g, '\\n')}`,
       `LOCATION:${event.venue}`,
       `DTSTART:${startDateClean}T090000Z`,
       `DTEND:${startDateClean}T150000Z`,
@@ -200,12 +261,554 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
     URL.revokeObjectURL(url);
   };
 
+  // Render Custom Dynamic Form Fields
+  const renderCustomField = (field: FormFieldDefinition) => {
+    return (
+      <div key={field.id} className="space-y-1">
+        <label className="block text-xs font-semibold text-slate-700">
+          {field.label} {field.required && <span className="text-rose-500">*</span>}
+        </label>
+
+        {/* TEXT / EMAIL / PHONE INPUT */}
+        {(field.type === 'text' || field.type === 'email' || field.type === 'phone') && (
+          <input
+            type={field.type}
+            required={field.required}
+            placeholder={field.placeholder || ''}
+            value={dynamicResponses[field.id] || ''}
+            onChange={e => handleDynamicChange(field.id, e.target.value)}
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+          />
+        )}
+
+        {/* NUMBER INPUT */}
+        {field.type === 'number' && (
+          <input
+            type="number"
+            required={field.required}
+            placeholder={field.placeholder || ''}
+            value={dynamicResponses[field.id] || ''}
+            onChange={e => handleDynamicChange(field.id, e.target.value)}
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+          />
+        )}
+
+        {/* SELECT DROPDOWN */}
+        {field.type === 'select' && (
+          <select
+            required={field.required}
+            value={dynamicResponses[field.id] || ''}
+            onChange={e => handleDynamicChange(field.id, e.target.value)}
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium cursor-pointer"
+          >
+            <option value="">-- Select an option --</option>
+            {field.options?.map((opt, idx) => (
+              <option key={idx} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* RADIO BUTTONS */}
+        {field.type === 'radio' && (
+          <div className="space-y-1.5 pt-1">
+            {field.options?.map((opt, idx) => (
+              <label
+                key={idx}
+                className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name={field.id}
+                  required={field.required}
+                  value={opt}
+                  checked={dynamicResponses[field.id] === opt}
+                  onChange={() => handleDynamicChange(field.id, opt)}
+                  className="text-[#0A1F44] focus:ring-[#C9A84C]"
+                />
+                <span>{opt}</span>
+              </label>
+            ))}
+          </div>
+        )}
+
+        {/* TEXTAREA */}
+        {field.type === 'textarea' && (
+          <textarea
+            required={field.required}
+            rows={3}
+            placeholder={field.placeholder || ''}
+            value={dynamicResponses[field.id] || ''}
+            onChange={e => handleDynamicChange(field.id, e.target.value)}
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium resize-none"
+          />
+        )}
+
+        {/* CHECKBOX */}
+        {field.type === 'checkbox' && (
+          <label className="flex items-start gap-2 text-xs text-slate-700 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              required={field.required}
+              checked={Boolean(dynamicResponses[field.id])}
+              onChange={e => handleDynamicChange(field.id, e.target.checked)}
+              className="mt-0.5 rounded text-[#0A1F44] focus:ring-[#C9A84C]"
+            />
+            <span>{field.placeholder || field.label}</span>
+          </label>
+        )}
+      </div>
+    );
+  };
+
+  // =========================================================================
+  // CASE 1: DEDICATED INDIVIDUAL EVENT PAGE (UNIQUE URL e.g. /events/:slug)
+  // =========================================================================
+  if (currentEvent) {
+    return (
+      <div className="bg-[#F8F9FA] min-h-screen pb-24 animate-in fade-in duration-200">
+        {/* Navigation Breadcrumb & Direct Action Bar */}
+        <div className="bg-white border-b border-slate-200 sticky top-16 z-30 shadow-2xs">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <button
+              onClick={() => {
+                if (onNavigateEvent) onNavigateEvent(undefined);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#0A1F44] hover:text-[#C9A84C] transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to All Masterclasses & Events</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  setCopyToast(true);
+                  setTimeout(() => setCopyToast(false), 2500);
+                }}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors"
+                title="Copy Direct Link to this Event"
+              >
+                {copyToast ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Link Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Copy URL</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => downloadIcs(currentEvent)}
+                className="px-3.5 py-1.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+              >
+                <Calendar className="w-3.5 h-3.5 text-[#C9A84C]" />
+                <span className="hidden sm:inline">Add to Calendar (.ics)</span>
+              </button>
+
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  `Check out this PSA Investment Masterclass: ${currentEvent.title}\n${window.location.href}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl flex items-center justify-center cursor-pointer transition-colors"
+                title="Share on WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Hero Section */}
+        <div className="bg-[#0A1F44] text-white py-12 sm:py-16 relative overflow-hidden border-b border-slate-800">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#C9A84C_1px,transparent_1px)] [background-size:16px_16px]" />
+          <div className="max-w-6xl mx-auto px-4 relative z-10 space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="bg-[#C9A84C] text-[#0A1F44] text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                {currentEvent.category.toUpperCase()}
+              </span>
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                REGISTRATIONS OPEN
+              </span>
+              <span className="bg-white/10 text-slate-200 text-xs font-mono font-semibold px-3 py-1 rounded-full">
+                {currentEvent.price || 'Free Admission'}
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black tracking-tight text-white leading-tight max-w-4xl">
+              {currentEvent.title}
+            </h1>
+
+            <p className="text-slate-300 text-sm sm:text-base max-w-3xl leading-relaxed">
+              {currentEvent.description}
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-800/80 text-xs">
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Date</span>
+                <span className="font-semibold text-white">{currentEvent.startDate}</span>
+              </div>
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Time</span>
+                <span className="font-semibold text-white">{currentEvent.startTime} - {currentEvent.endTime}</span>
+              </div>
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Venue / Platform</span>
+                <span className="font-semibold text-white truncate block">{currentEvent.venue}</span>
+              </div>
+              <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Lead Faculty</span>
+                <span className="font-semibold text-white truncate block">{currentEvent.instructor}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Two-Column Responsive Layout */}
+        <div className="max-w-6xl mx-auto px-4 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Syllabus, Modules, Instructor, Details */}
+            <div className="lg:col-span-7 space-y-8">
+              {/* Syllabus & Modules */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+                    Comprehensive Syllabus & Learning Objectives
+                  </h3>
+                  <span className="text-[11px] font-bold text-[#C9A84C] font-mono">
+                    {currentEvent.learningObjectives.length} Core Modules
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {currentEvent.learningObjectives.map((obj, i) => (
+                    <div
+                      key={i}
+                      className="p-4 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-2xl flex items-start gap-3 transition-colors"
+                    >
+                      <span className="w-6 h-6 rounded-full bg-[#0A1F44] text-[#C9A84C] font-mono text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        {i + 1}
+                      </span>
+                      <div className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+                        {obj}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Target Audience Card */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-3">
+                <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+                  Target Audience & Who Should Attend
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  {currentEvent.targetAudience}
+                </p>
+                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A84C] shrink-0" />
+                    <span>Equity Analysts & Treasurers</span>
+                  </div>
+                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A84C] shrink-0" />
+                    <span>Finance Students & Graduates</span>
+                  </div>
+                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A84C] shrink-0" />
+                    <span>Portfolio & Fund Managers</span>
+                  </div>
+                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#C9A84C] shrink-0" />
+                    <span>Active NGX Retail Investors</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lead Faculty Card */}
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-4">
+                <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+                  Lead Instructor & Faculty
+                </h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-[#C9A84C] bg-slate-900 shrink-0">
+                    <img
+                      src={currentEvent.instructorPhoto || '/salami-abdullahi.jpg'}
+                      alt={currentEvent.instructor}
+                      className="w-full h-full object-cover object-top"
+                      onError={e => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="font-serif font-black text-base text-[#0A1F44] flex items-center gap-2">
+                      <span>{currentEvent.instructor}</span>
+                      <span className="text-[10px] font-mono bg-[#C9A84C]/20 text-[#0A1F44] px-2 py-0.5 rounded uppercase font-bold">
+                        Chief Analyst
+                      </span>
+                    </div>
+                    <div className="text-xs text-[#C9A84C] font-semibold">{currentEvent.instructorTitle}</div>
+                    <div className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      Leading Nigerian capital markets authority directing DCF valuation models, NGX banking recapitalization stress-testing, and institutional research memos.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Dedicated Registration / Enrollment Desk */}
+            <div className="lg:col-span-5 sticky top-28 space-y-6">
+              <div className="bg-white rounded-3xl border-2 border-[#C9A84C]/80 shadow-xl overflow-hidden">
+                <div className="bg-[#0A1F44] p-5 text-white">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#C9A84C]">
+                    Official Enrollment Desk
+                  </span>
+                  <h3 className="font-serif font-black text-xl text-white mt-0.5">
+                    Register for this Program
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    {currentEvent.startDate} • {currentEvent.startTime} ({currentEvent.venue})
+                  </p>
+                </div>
+
+                <div className="p-6">
+                  {regError && (
+                    <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{regError}</span>
+                    </div>
+                  )}
+
+                  {regSuccess ? (
+                    /* Registration Success Screen */
+                    <div className="text-center py-4 space-y-4">
+                      <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                        <CheckCircle2 className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h4 className="font-serif font-black text-xl text-[#0A1F44]">Registration Confirmed!</h4>
+                        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                          Thank you, <strong className="text-slate-800">{regSuccess.fullName}</strong>. Your seat for the{' '}
+                          <strong>{regSuccess.eventTitle}</strong> has been secured. A confirmation email and calendar link have been logged.
+                        </p>
+                      </div>
+
+                      {/* Ticket Card */}
+                      <div className="p-4 bg-gradient-to-br from-slate-50 to-amber-50/40 border border-[#C9A84C]/60 rounded-2xl text-left space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                          <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Official Ticket Code</span>
+                          <span className="font-mono font-black text-sm text-[#0A1F44] bg-white px-2 py-0.5 rounded border border-slate-200">
+                            {regSuccess.ticketCode}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <div className="text-slate-400 text-[10px]">Attendee Name</div>
+                            <div className="font-semibold text-slate-800">{regSuccess.fullName}</div>
+                          </div>
+                          <div>
+                            <div className="text-slate-400 text-[10px]">Email Address</div>
+                            <div className="font-semibold text-slate-800 truncate">{regSuccess.email}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="space-y-2 pt-2">
+                        <button
+                          onClick={() => downloadIcs(currentEvent)}
+                          className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                        >
+                          <Download className="w-4 h-4 text-[#C9A84C]" />
+                          <span>Download Calendar Invite (.ics)</span>
+                        </button>
+
+                        <a
+                          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                            `I just registered for the ${regSuccess.eventTitle}! Ticket Code: ${regSuccess.ticketCode}`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span>Share on WhatsApp Community</span>
+                        </a>
+
+                        <button
+                          onClick={() => {
+                            setRegSuccess(null);
+                            setDynamicResponses({});
+                          }}
+                          className="w-full py-2 text-slate-500 hover:text-slate-800 font-semibold text-xs cursor-pointer"
+                        >
+                          Register Another Participant
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Registration Form */
+                    <form onSubmit={e => handleRegisterSubmit(e, currentEvent)} className="space-y-4">
+                      <div className="text-xs font-bold text-[#0A1F44] uppercase tracking-wider pb-1 border-b border-slate-100">
+                        Primary Attendee Information
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Full Legal Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Babatunde Adeleke"
+                          value={regFullName}
+                          onChange={e => setRegFullName(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Email Address *
+                          </label>
+                          <input
+                            type="email"
+                            required
+                            placeholder="name@organization.com"
+                            value={regEmail}
+                            onChange={e => setRegEmail(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Phone (WhatsApp) *
+                          </label>
+                          <input
+                            type="tel"
+                            required
+                            placeholder="+234 803 123 4567"
+                            value={regPhone}
+                            onChange={e => setRegPhone(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Organization / University
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Zenith Bank / UNILAG"
+                            value={regOrg}
+                            onChange={e => setRegOrg(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Job Title / Student Level
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Credit Analyst / Final Year"
+                            value={regTitle}
+                            onChange={e => setRegTitle(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      {/* ADMIN DYNAMIC CUSTOM FORM FIELDS */}
+                      {currentEvent.customFormFields && currentEvent.customFormFields.length > 0 && (
+                        <div className="pt-3 border-t border-slate-100 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs font-bold text-[#0A1F44] uppercase tracking-wider">
+                              Program Specific Questions
+                            </div>
+                            <span className="text-[10px] text-slate-400">Institutional Questionnaire</span>
+                          </div>
+
+                          {currentEvent.customFormFields.map((field: FormFieldDefinition) =>
+                            renderCustomField(field)
+                          )}
+                        </div>
+                      )}
+
+                      <div className="pt-2">
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full py-3 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-md cursor-pointer transition-all hover:scale-101 flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <span>{isSubmitting ? 'Securing Seat...' : 'Confirm Program Registration'}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                        <p className="text-[10px] text-slate-400 text-center mt-2">
+                          By registering, you agree to receive session links and course materials via email and WhatsApp.
+                        </p>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // CASE 2: PROGRAM NOT FOUND (INVALID SLUG)
+  // =========================================================================
+  if (activeEventSlug && !currentEvent) {
+    return (
+      <div className="bg-[#F8F9FA] min-h-screen py-20 px-4 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200 text-center space-y-4 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="font-serif font-black text-2xl text-[#0A1F44]">Program Not Found</h2>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            The program or masterclass you requested (<code>{activeEventSlug}</code>) could not be located or may have been concluded.
+          </p>
+          <button
+            onClick={() => {
+              if (onNavigateEvent) onNavigateEvent(undefined);
+            }}
+            className="px-6 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow cursor-pointer transition-colors"
+          >
+            Explore Active Masterclasses &rarr;
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // CASE 3: ALL EVENTS DIRECTORY / LISTING VIEW
+  // =========================================================================
   return (
     <div className="bg-[#F8F9FA] min-h-screen pb-20">
       {/* HERO SECTION */}
       <div className="bg-[#0A1F44] text-white py-14 sm:py-20 relative overflow-hidden border-b border-slate-800">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#C9A84C_1px,transparent_1px)] [background-size:16px_16px]" />
-        
+
         <div className="max-w-6xl mx-auto px-4 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C9A84C]/20 border border-[#C9A84C]/40 text-[#C9A84C] text-xs font-bold uppercase tracking-wider mb-4">
             <Sparkles className="w-3.5 h-3.5" />
@@ -278,7 +881,11 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
                 <button
                   onClick={() => {
                     const fmva = events.find(e => e.id === 'evt-fmva-2026') || events[0];
-                    setSelectedEventForRegister(fmva);
+                    if (onNavigateEvent && fmva) {
+                      onNavigateEvent(fmva.slug || fmva.id);
+                    } else {
+                      setSelectedEventForRegister(fmva);
+                    }
                   }}
                   className="w-full sm:w-auto px-6 py-3.5 bg-[#C9A84C] hover:bg-[#d9b657] text-[#0A1F44] font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-transform hover:scale-102 flex items-center justify-center gap-2 cursor-pointer font-sans"
                 >
@@ -363,7 +970,13 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
                       </span>
                     </div>
 
-                    <h3 className="font-serif font-black text-xl text-white tracking-tight mb-2">
+                    <h3
+                      onClick={() => {
+                        if (onNavigateEvent) onNavigateEvent(event.slug || event.id);
+                        else setSelectedEventForRegister(event);
+                      }}
+                      className="font-serif font-black text-xl text-white tracking-tight mb-2 hover:text-[#C9A84C] transition-colors cursor-pointer"
+                    >
                       {event.title}
                     </h3>
 
@@ -442,10 +1055,13 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
                       <Calendar className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => setSelectedEventForRegister(event)}
+                      onClick={() => {
+                        if (onNavigateEvent) onNavigateEvent(event.slug || event.id);
+                        else setSelectedEventForRegister(event);
+                      }}
                       className="px-4 py-2 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span>Register Now</span>
+                      <span>Register & Apply</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -456,16 +1072,22 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
         )}
       </div>
 
-      {/* SYLLABUS & PROGRAM DETAILS MODAL */}
+      {/* SYLLABUS & PROGRAM DETAILS MODAL (FULLY TOGGLEABLE) */}
       {selectedEventForDetail && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden relative max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div
+          onClick={e => {
+            if (e.target === e.currentTarget) setSelectedEventForDetail(null);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 overflow-hidden relative max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 my-auto">
             <div className="bg-[#0A1F44] p-6 text-white relative shrink-0">
               <button
                 onClick={() => setSelectedEventForDetail(null)}
+                aria-label="Close modal"
                 className="absolute top-4 right-4 p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
               <span className="bg-[#C9A84C] text-[#0A1F44] text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded">
                 {selectedEventForDetail.category.toUpperCase()}
@@ -515,7 +1137,7 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
               <button
                 onClick={() => downloadIcs(selectedEventForDetail)}
                 className="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
@@ -524,26 +1146,46 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
                 <span>Save to Calendar (.ics)</span>
               </button>
 
-              <button
-                onClick={() => {
-                  const ev = selectedEventForDetail;
-                  setSelectedEventForDetail(null);
-                  setSelectedEventForRegister(ev);
-                }}
-                className="px-6 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5"
-              >
-                <span>Proceed to Registration</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const slug = selectedEventForDetail.slug || selectedEventForDetail.id;
+                    setSelectedEventForDetail(null);
+                    if (onNavigateEvent) onNavigateEvent(slug);
+                  }}
+                  className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  View Full Page
+                </button>
+                <button
+                  onClick={() => {
+                    const ev = selectedEventForDetail;
+                    setSelectedEventForDetail(null);
+                    setSelectedEventForRegister(ev);
+                  }}
+                  className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>Register Now</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* DYNAMIC REGISTRATION MODAL WITH CUSTOM FORM BUILDER */}
+      {/* DYNAMIC REGISTRATION MODAL WITH CUSTOM FORM BUILDER (FULLY TOGGLEABLE) */}
       {selectedEventForRegister && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden relative max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div
+          onClick={e => {
+            if (e.target === e.currentTarget) {
+              setSelectedEventForRegister(null);
+              setRegSuccess(null);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden relative max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95 duration-200 my-auto">
             {/* Header */}
             <div className="bg-[#0A1F44] p-5 text-white relative shrink-0">
               <button
@@ -551,9 +1193,10 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
                   setSelectedEventForRegister(null);
                   setRegSuccess(null);
                 }}
+                aria-label="Close modal"
                 className="absolute top-4 right-4 p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
               <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#C9A84C]">
                 Official Program Registration
@@ -621,7 +1264,7 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
 
                     <a
                       href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                        `I just registered for the PSA Financial Modeling & Valuation Analysis Masterclass with Salami Abdullahi! Ticket: ${regSuccess.ticketCode}`
+                        `I just registered for the ${regSuccess.eventTitle}! Ticket Code: ${regSuccess.ticketCode}`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -644,7 +1287,7 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
                 </div>
               ) : (
                 /* Registration Form with Dynamic Custom Fields */
-                <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                <form onSubmit={e => handleRegisterSubmit(e, selectedEventForRegister)} className="space-y-4">
                   <div className="text-xs font-bold text-[#0A1F44] uppercase tracking-wider pb-1 border-b border-slate-100">
                     Primary Attendee Information
                   </div>
@@ -730,103 +1373,9 @@ export const Events: React.FC<EventsProps> = ({ onOpenAuthModal }) => {
                           <span className="text-[10px] text-slate-400">Customized by Executive Admin</span>
                         </div>
 
-                        {selectedEventForRegister.customFormFields.map((field: FormFieldDefinition) => (
-                          <div key={field.id} className="space-y-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              {field.label} {field.required && <span className="text-rose-500">*</span>}
-                            </label>
-
-                            {/* TEXT / EMAIL / PHONE INPUT */}
-                            {(field.type === 'text' || field.type === 'email' || field.type === 'phone') && (
-                              <input
-                                type={field.type}
-                                required={field.required}
-                                placeholder={field.placeholder || ''}
-                                value={dynamicResponses[field.id] || ''}
-                                onChange={e => handleDynamicChange(field.id, e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
-                              />
-                            )}
-
-                            {/* NUMBER INPUT */}
-                            {field.type === 'number' && (
-                              <input
-                                type="number"
-                                required={field.required}
-                                placeholder={field.placeholder || ''}
-                                value={dynamicResponses[field.id] || ''}
-                                onChange={e => handleDynamicChange(field.id, e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
-                              />
-                            )}
-
-                            {/* SELECT DROPDOWN */}
-                            {field.type === 'select' && (
-                              <select
-                                required={field.required}
-                                value={dynamicResponses[field.id] || ''}
-                                onChange={e => handleDynamicChange(field.id, e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium cursor-pointer"
-                              >
-                                <option value="">-- Select an option --</option>
-                                {field.options?.map((opt, idx) => (
-                                  <option key={idx} value={opt}>
-                                    {opt}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
-
-                            {/* RADIO BUTTONS */}
-                            {field.type === 'radio' && (
-                              <div className="space-y-1.5 pt-1">
-                                {field.options?.map((opt, idx) => (
-                                  <label
-                                    key={idx}
-                                    className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer"
-                                  >
-                                    <input
-                                      type="radio"
-                                      name={field.id}
-                                      required={field.required}
-                                      value={opt}
-                                      checked={dynamicResponses[field.id] === opt}
-                                      onChange={() => handleDynamicChange(field.id, opt)}
-                                      className="text-[#0A1F44] focus:ring-[#C9A84C]"
-                                    />
-                                    <span>{opt}</span>
-                                  </label>
-                                ))}
-                              </div>
-                            )}
-
-                            {/* TEXTAREA */}
-                            {field.type === 'textarea' && (
-                              <textarea
-                                required={field.required}
-                                rows={3}
-                                placeholder={field.placeholder || ''}
-                                value={dynamicResponses[field.id] || ''}
-                                onChange={e => handleDynamicChange(field.id, e.target.value)}
-                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium resize-none"
-                              />
-                            )}
-
-                            {/* CHECKBOX */}
-                            {field.type === 'checkbox' && (
-                              <label className="flex items-start gap-2 text-xs text-slate-700 cursor-pointer pt-1">
-                                <input
-                                  type="checkbox"
-                                  required={field.required}
-                                  checked={Boolean(dynamicResponses[field.id])}
-                                  onChange={e => handleDynamicChange(field.id, e.target.checked)}
-                                  className="mt-0.5 rounded text-[#0A1F44] focus:ring-[#C9A84C]"
-                                />
-                                <span>{field.placeholder || field.label}</span>
-                              </label>
-                            )}
-                          </div>
-                        ))}
+                        {selectedEventForRegister.customFormFields.map((field: FormFieldDefinition) =>
+                          renderCustomField(field)
+                        )}
                       </div>
                     )}
 

@@ -65,20 +65,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submittedMember, setSubmittedMember] = useState<{ name: string; refCode: string } | null>(null);
 
-  // Prevent background page scrolling when modal is active
+  // Prevent background page scrolling and attach Escape key listener when modal is active
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add('modal-open');
       document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
     }
-    return () => {
-      document.body.classList.remove('modal-open');
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     setMode(initialMode);

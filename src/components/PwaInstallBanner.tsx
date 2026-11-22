@@ -57,6 +57,30 @@ export const PwaInstallBanner: React.FC = () => {
     };
   }, []);
 
+  // Lock background scrolling and attach Escape key listener when iOS guide modal is open
+  useEffect(() => {
+    if (showIosGuide) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setShowIosGuide(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+  }, [showIosGuide]);
+
   const handleInstallClick = async () => {
     if (isIos) {
       setShowIosGuide(true);
@@ -131,7 +155,12 @@ export const PwaInstallBanner: React.FC = () => {
 
       {/* iOS Safari Installation Guide Modal */}
       {showIosGuide && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowIosGuide(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
           <div className="bg-white text-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

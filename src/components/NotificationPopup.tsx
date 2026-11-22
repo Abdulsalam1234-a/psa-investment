@@ -51,6 +51,25 @@ export const NotificationPopup: React.FC<NotificationPopupProps> = ({
     }
   }, [announcements]);
 
+  // Escape key listener for active announcement or notification drawer
+  useEffect(() => {
+    if (activeAnnouncement || showDrawer) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (activeAnnouncement) {
+            handleDismissAlert(activeAnnouncement.id);
+          }
+          if (showDrawer) {
+            setShowDrawer(false);
+            if (onCloseControlled) onCloseControlled();
+          }
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [activeAnnouncement, showDrawer, onCloseControlled]);
+
   const handleDismissAlert = (id: string) => {
     dismissAnnouncement(id);
     setActiveAnnouncement(null);
@@ -69,7 +88,12 @@ export const NotificationPopup: React.FC<NotificationPopupProps> = ({
     <>
       {/* HIGH PRIORITY POPUP ALERT MODAL */}
       {activeAnnouncement && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleDismissAlert(activeAnnouncement.id);
+          }}
+          className="fixed inset-0 z-[10000] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 overflow-hidden relative animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="bg-[#0A1F44] p-5 text-white relative">
@@ -130,7 +154,15 @@ export const NotificationPopup: React.FC<NotificationPopupProps> = ({
 
       {/* NOTIFICATIONS DRAWER / FLYOUT */}
       {showDrawer && (
-        <div className="fixed inset-0 z-[9998] bg-slate-950/40 backdrop-blur-xs flex justify-end">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDrawer(false);
+              if (onCloseControlled) onCloseControlled();
+            }
+          }}
+          className="fixed inset-0 z-[9998] bg-slate-950/40 backdrop-blur-xs flex justify-end"
+        >
           <div className="bg-white w-full max-w-sm h-full shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
             <div className="p-4 bg-[#0A1F44] text-white flex items-center justify-between border-b border-slate-800">

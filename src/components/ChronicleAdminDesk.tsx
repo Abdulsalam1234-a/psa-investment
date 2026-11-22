@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Upload,
   Sparkles,
@@ -17,7 +17,8 @@ import {
   Check,
   RefreshCw,
   Download,
-  FileUp
+  FileUp,
+  X
 } from 'lucide-react';
 import mammoth from 'mammoth';
 import { useData } from '../context/DataContext';
@@ -51,6 +52,30 @@ export const ChronicleAdminDesk: React.FC = () => {
   const [customVolume, setCustomVolume] = useState('VOL. XXX');
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Lock background scrolling and add Escape key listener when broadsheet preview modal is open
+  useEffect(() => {
+    if (previewModalOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setPreviewModalOpen(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+  }, [previewModalOpen]);
 
   // Gemini Automated API state
   const [geminiApiKey, setGeminiApiKey] = useState(
@@ -893,18 +918,32 @@ LAGOS (PSA INVESTMENT DESK) — Trading on the Nigerian Exchange Limited (NGX) c
 
       {/* Broadsheet Preview Modal */}
       {previewModalOpen && parsedPreview && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPreviewModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
           <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <h3 className="font-serif font-black text-xl text-[#0A1F44]">
                 Broadsheet Layout Preview: {parsedPreview.volume}
               </h3>
-              <button
-                onClick={() => setPreviewModalOpen(false)}
-                className="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 cursor-pointer"
-              >
-                Close Preview
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPreviewModalOpen(false)}
+                  className="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Close Preview
+                </button>
+                <button
+                  onClick={() => setPreviewModalOpen(false)}
+                  aria-label="Close modal"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <ChronicleReader chronicle={parsedPreview as ChronicleEdition} />

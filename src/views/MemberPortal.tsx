@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User,
   ShieldCheck,
@@ -16,7 +16,8 @@ import {
   Sparkles,
   ArrowRight,
   TrendingUp,
-  FolderOpen
+  FolderOpen,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -45,6 +46,30 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   const [editName, setEditName] = useState(memberProfile?.fullName || '');
   const [editPhone, setEditPhone] = useState(memberProfile?.phone || '');
   const [profileSaved, setProfileSaved] = useState(false);
+
+  // Lock background scrolling and add Escape key listener when edit profile modal is open
+  useEffect(() => {
+    if (editProfileOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setEditProfileOpen(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+  }, [editProfileOpen]);
 
   // 1. Unauthenticated State
   if (!currentUser && !memberProfile) {
@@ -347,9 +372,21 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
 
       {/* Edit Profile Modal */}
       {editProfileOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4">
-            <h3 className="font-serif font-black text-xl text-[#0A1F44]">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditProfileOpen(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4 relative animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setEditProfileOpen(false)}
+              aria-label="Close modal"
+              className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-serif font-black text-xl text-[#0A1F44] pr-8">
               Update Member Information
             </h3>
             <form onSubmit={handleSaveProfile} className="space-y-4">

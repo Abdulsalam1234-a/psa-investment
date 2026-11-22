@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -36,7 +36,8 @@ import {
   Calendar,
   DollarSign,
   Sliders,
-  Upload
+  Upload,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -188,6 +189,54 @@ export const AdminPanel: React.FC = () => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Global modal escape key listener and scroll locking
+  useEffect(() => {
+    const isAnyModalOpen = Boolean(
+      rejectModalMember ||
+      editMemberModal ||
+      isAddStaffModalOpen ||
+      editingStaff ||
+      reportModalOpen ||
+      videoModalOpen ||
+      fileModalOpen
+    );
+
+    if (isAnyModalOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (rejectModalMember) setRejectModalMember(null);
+          if (editMemberModal) setEditMemberModal(null);
+          if (isAddStaffModalOpen) setIsAddStaffModalOpen(false);
+          if (editingStaff) setEditingStaff(null);
+          if (reportModalOpen) setReportModalOpen(false);
+          if (videoModalOpen) setVideoModalOpen(false);
+          if (fileModalOpen) setFileModalOpen(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+  }, [
+    rejectModalMember,
+    editMemberModal,
+    isAddStaffModalOpen,
+    editingStaff,
+    reportModalOpen,
+    videoModalOpen,
+    fileModalOpen
+  ]);
 
   if (!isAdmin) {
     return (
@@ -727,9 +776,21 @@ export const AdminPanel: React.FC = () => {
 
       {/* Reject Modal */}
       {rejectModalMember && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4">
-            <h4 className="font-serif font-black text-lg text-rose-700">Reject Application</h4>
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setRejectModalMember(null);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setRejectModalMember(null)}
+              aria-label="Close modal"
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <h4 className="font-serif font-black text-lg text-rose-700 pr-8">Reject Application</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
               Are you sure you want to decline membership for{' '}
               <strong className="text-slate-800">{rejectModalMember.fullName}</strong>?
@@ -770,9 +831,21 @@ export const AdminPanel: React.FC = () => {
 
       {/* Edit Member Modal */}
       {editMemberModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4">
-            <h4 className="font-serif font-black text-lg text-[#0A1F44]">Edit Member Record</h4>
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEditMemberModal(null);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setEditMemberModal(null)}
+              aria-label="Close modal"
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <h4 className="font-serif font-black text-lg text-[#0A1F44] pr-8">Edit Member Record</h4>
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -1242,7 +1315,12 @@ export const AdminPanel: React.FC = () => {
 
           {/* Add Staff Modal */}
           {isAddStaffModalOpen && (
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setIsAddStaffModalOpen(false);
+              }}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto"
+            >
               <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div>
@@ -1255,9 +1333,10 @@ export const AdminPanel: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setIsAddStaffModalOpen(false)}
-                    className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 cursor-pointer"
+                    aria-label="Close modal"
+                    className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors"
                   >
-                    ✕
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
@@ -1548,7 +1627,12 @@ export const AdminPanel: React.FC = () => {
 
           {/* Edit Staff Modal */}
           {editingStaff && (
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setEditingStaff(null);
+              }}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in overflow-y-auto"
+            >
               <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div>
@@ -1561,9 +1645,10 @@ export const AdminPanel: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setEditingStaff(null)}
-                    className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 cursor-pointer"
+                    aria-label="Close modal"
+                    className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors"
                   >
-                    ✕
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
@@ -1884,9 +1969,21 @@ export const AdminPanel: React.FC = () => {
 
       {/* Report Modal Editor */}
       {reportModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4">
-            <h4 className="font-serif font-black text-xl text-[#0A1F44]">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setReportModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setReportModalOpen(false)}
+              aria-label="Close modal"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h4 className="font-serif font-black text-xl text-[#0A1F44] pr-10">
               {editingReport.id ? 'Edit Research Report' : 'Create Research Report'}
             </h4>
             <div className="space-y-3">
@@ -2092,9 +2189,21 @@ export const AdminPanel: React.FC = () => {
 
       {/* Video Modal Editor */}
       {videoModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4">
-            <h4 className="font-serif font-black text-xl text-[#0A1F44]">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setVideoModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setVideoModalOpen(false)}
+              aria-label="Close modal"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h4 className="font-serif font-black text-xl text-[#0A1F44] pr-10">
               {editingVideo.id ? 'Edit Video Lesson' : 'Add New Video Lesson'}
             </h4>
             <div className="space-y-3">
@@ -2342,9 +2451,21 @@ export const AdminPanel: React.FC = () => {
 
       {/* File Upload Modal */}
       {fileModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4">
-            <h4 className="font-serif font-black text-lg text-[#0A1F44]">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFileModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 relative shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setFileModalOpen(false)}
+              aria-label="Close modal"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h4 className="font-serif font-black text-lg text-[#0A1F44] pr-10">
               Register Storage File
             </h4>
             <div className="space-y-3">

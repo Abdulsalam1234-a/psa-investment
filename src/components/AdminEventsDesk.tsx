@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -49,6 +49,30 @@ export const AdminEventsDesk: React.FC = () => {
   // Modal states
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Partial<EventProgram> | null>(null);
+
+  // Lock background scrolling and add Escape key listener when editor modal is open
+  useEffect(() => {
+    if (isEditorOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsEditorOpen(false);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+  }, [isEditorOpen]);
   
   // Custom Form Builder state inside modal
   const [formFields, setFormFields] = useState<FormFieldDefinition[]>([]);
@@ -516,7 +540,12 @@ export const AdminEventsDesk: React.FC = () => {
 
       {/* EVENT CREATION & CUSTOM FORM BUILDER MODAL */}
       {isEditorOpen && editingEvent && (
-        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEditorOpen(false);
+          }}
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full border border-slate-200 overflow-hidden relative max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="bg-[#0A1F44] p-5 text-white flex items-center justify-between shrink-0">
