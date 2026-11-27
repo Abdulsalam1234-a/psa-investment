@@ -30,8 +30,18 @@ export const MarketBriefings: React.FC<MarketBriefingsProps> = ({
   const { marketBriefings } = useData();
   const [search, setSearch] = useState('');
   const [copiedTeaserSlug, setCopiedTeaserSlug] = useState<string | null>(null);
+  const [isArchiveCollapsed, setIsArchiveCollapsed] = useState(false);
 
-  const filteredBriefings = marketBriefings.filter(b => {
+  // Always sort briefings descending: latest publication first
+  const sortedBriefings = React.useMemo(() => {
+    return [...marketBriefings].sort(
+      (a, b) => new Date(b.publishedAt || b.date).getTime() - new Date(a.publishedAt || a.date).getTime()
+    );
+  }, [marketBriefings]);
+
+  const latestBriefing = sortedBriefings[0];
+
+  const filteredBriefings = sortedBriefings.filter(b => {
     const q = search.toLowerCase();
     return (
       b.title.toLowerCase().includes(q) ||
@@ -87,22 +97,31 @@ export const MarketBriefings: React.FC<MarketBriefingsProps> = ({
       <section className="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
         <div className="flex items-center justify-between text-xs text-slate-500 font-semibold px-2">
           <span>Official Chronological Feed ({filteredBriefings.length} Editions)</span>
-          <span className="font-mono text-[11px] text-[#0A1F44]">Daily 07:45 AM Publish-First Archive</span>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[11px] text-[#0A1F44] hidden sm:inline">Daily 07:45 AM Publish-First Archive</span>
+            <button
+              onClick={() => setIsArchiveCollapsed(prev => !prev)}
+              className="text-xs font-bold text-[#0A1F44] hover:text-[#C9A84C] cursor-pointer"
+            >
+              {isArchiveCollapsed ? 'Show Archive ▼' : 'Collapse Archive ▲'}
+            </button>
+          </div>
         </div>
 
-        {filteredBriefings.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 text-slate-500 space-y-3">
-            <FileText className="w-10 h-10 text-slate-300 mx-auto" />
-            <h4 className="font-bold text-slate-700">No briefings found matching your search.</h4>
-            <p className="text-xs">Try searching by year or month (e.g. 2026-11) or clearing the field.</p>
-          </div>
-        ) : (
-          filteredBriefings.map((briefing, index) => (
-            <article
-              key={briefing.id}
-              onClick={() => onNavigate('market-briefings', briefing.slug)}
-              className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs hover:shadow-xl transition-all cursor-pointer group space-y-5"
-            >
+        {!isArchiveCollapsed && (
+          filteredBriefings.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 text-slate-500 space-y-3">
+              <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="font-bold text-slate-700">No briefings found matching your search.</h4>
+              <p className="text-xs">Try searching by year or month (e.g. 2026-11) or clearing the field.</p>
+            </div>
+          ) : (
+            filteredBriefings.map((briefing, index) => (
+              <article
+                key={briefing.id}
+                onClick={() => onNavigate('market-briefings', briefing.slug)}
+                className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs hover:shadow-xl transition-all cursor-pointer group space-y-5"
+              >
               {/* Card Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
@@ -187,7 +206,7 @@ export const MarketBriefings: React.FC<MarketBriefingsProps> = ({
               </div>
             </article>
           ))
-        )}
+        ))}
       </section>
     </div>
   );

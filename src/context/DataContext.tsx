@@ -43,6 +43,11 @@ import { INITIAL_EQUITY_DOSSIERS } from '../data/dossiersData';
 import { INITIAL_MARKET_BRIEFINGS } from '../data/briefingsData';
 import { parseRawChronicle } from '../utils/chronicleParser';
 import {
+  fetchTableFromCloud,
+  syncRecordToCloud,
+  deleteRecordFromCloud
+} from '../utils/cloudDatabase';
+import {
   sanitizeText,
   checkSqlSafety,
   logSecurityEvent,
@@ -457,19 +462,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setEquityDossiers(prev => {
       const idx = prev.findIndex(d => d.id === newDossier.id || d.slug === newDossier.slug);
+      let updated: EquityDossier[];
       if (idx >= 0) {
-        const updated = [...prev];
+        updated = [...prev];
         updated[idx] = newDossier;
-        return updated;
+      } else {
+        updated = [newDossier, ...prev];
       }
-      return [newDossier, ...prev];
+      return updated.sort((a, b) => new Date(b.publishedAt || b.updatedAt).getTime() - new Date(a.publishedAt || a.updatedAt).getTime());
     });
+
+    // Cloud Database Upsert in Background
+    syncRecordToCloud('psa_equity_dossiers', newDossier).catch(e => console.warn(e));
 
     return newDossier;
   };
 
   const deleteEquityDossier = async (id: string): Promise<void> => {
     setEquityDossiers(prev => prev.filter(d => d.id !== id && d.slug !== id));
+    deleteRecordFromCloud('psa_equity_dossiers', id).catch(e => console.warn(e));
   };
 
   const getDossierBySlug = useCallback(
@@ -512,19 +523,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setMarketBriefings(prev => {
       const idx = prev.findIndex(b => b.id === newBriefing.id || b.slug === newBriefing.slug);
+      let updated: MarketBriefing[];
       if (idx >= 0) {
-        const updated = [...prev];
+        updated = [...prev];
         updated[idx] = newBriefing;
-        return updated;
+      } else {
+        updated = [newBriefing, ...prev];
       }
-      return [newBriefing, ...prev];
+      return updated.sort((a, b) => new Date(b.publishedAt || b.date).getTime() - new Date(a.publishedAt || a.date).getTime());
     });
+
+    // Cloud Database Upsert in Background
+    syncRecordToCloud('psa_market_briefings', newBriefing).catch(e => console.warn(e));
 
     return newBriefing;
   };
 
   const deleteMarketBriefing = async (id: string): Promise<void> => {
     setMarketBriefings(prev => prev.filter(b => b.id !== id && b.slug !== id));
+    deleteRecordFromCloud('psa_market_briefings', id).catch(e => console.warn(e));
   };
 
   const getBriefingBySlug = useCallback(
@@ -1005,13 +1022,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         publishedAt: now
       };
       result = newChronicle;
-      setChronicles(prev => [newChronicle, ...prev]);
+      setChronicles(prev => {
+        const next = [newChronicle, ...prev];
+        return next.sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
+      });
+      syncRecordToCloud('psa_chronicles', newChronicle).catch(e => console.warn(e));
     }
     return result!;
   };
 
   const deleteChronicle = async (id: string) => {
     setChronicles(prev => prev.filter(c => c.id !== id));
+    deleteRecordFromCloud('psa_chronicles', id).catch(e => console.warn(e));
   };
 
   const incrementChronicleView = async (id: string) => {
@@ -1068,7 +1090,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: now,
       publishedAt: now
     };
-    setChronicles(prev => [newChronicle, ...prev]);
+    setChronicles(prev => {
+      const next = [newChronicle, ...prev];
+      return next.sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
+    });
+    syncRecordToCloud('psa_chronicles', newChronicle).catch(e => console.warn(e));
     return newChronicle;
   };
 
@@ -1138,7 +1164,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       `Published ${data.docxFileName} (${(data.fileSizeBytes / 1024).toFixed(1)} KB) with verified formatting.`,
       'low'
     );
-    setChronicles(prev => [newChronicle, ...prev]);
+    setChronicles(prev => {
+      const next = [newChronicle, ...prev];
+      return next.sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
+    });
+    syncRecordToCloud('psa_chronicles', newChronicle).catch(e => console.warn(e));
     return newChronicle;
   };
 
@@ -1201,11 +1231,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       `Event "${result!.title}" configured with ${result!.customFormFields?.length || 0} custom registration fields.`,
       'low'
     );
+    syncRecordToCloud('psa_events', result!).catch(e => console.warn(e));
     return result!;
   };
 
   const deleteEvent = async (id: string) => {
     setEvents(prev => prev.filter(e => e.id !== id));
+    deleteRecordFromCloud('psa_events', id).catch(e => console.warn(e));
     logSecurityEvent(
       'Event Program Removed',
       'Executive Admin Desk',
@@ -1275,6 +1307,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       `Registered for ${event.title} with ticket ${ticketCode}`,
       'low'
     );
+    syncRecordToCloud('psa_event_registrations', newReg).catch(e => console.warn(e));
 
     return newReg;
   };
@@ -1473,6 +1506,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dismissed: false
     };
     setAnnouncements(prev => [regAlert, ...prev]);
+    syncRecordToCloud('psa_members', newMember).catch(e => console.warn(e));
 
     // Dispatch simulated outbound notification to Admin email
     logDispatch({
@@ -1524,8 +1558,82 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshData = async () => {
     setLoading(true);
-    setTimeout(() => setLoading(false), 300);
+    try {
+      const [
+        cloudChronicles,
+        cloudDossiers,
+        cloudBriefings,
+        cloudEvents,
+        cloudMembers
+      ] = await Promise.allSettled([
+        fetchTableFromCloud<ChronicleEdition>('psa_chronicles'),
+        fetchTableFromCloud<EquityDossier>('psa_equity_dossiers'),
+        fetchTableFromCloud<MarketBriefing>('psa_market_briefings'),
+        fetchTableFromCloud<EventProgram>('psa_events'),
+        fetchTableFromCloud<Member>('psa_members')
+      ]);
+
+      if (cloudChronicles.status === 'fulfilled' && cloudChronicles.value && cloudChronicles.value.length > 0) {
+        setChronicles(prev => {
+          const map = new Map<string, ChronicleEdition>();
+          prev.forEach(c => map.set(c.id, c));
+          cloudChronicles.value!.forEach(c => map.set(c.id, c));
+          return Array.from(map.values()).sort(
+            (a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime()
+          );
+        });
+      }
+
+      if (cloudDossiers.status === 'fulfilled' && cloudDossiers.value && cloudDossiers.value.length > 0) {
+        setEquityDossiers(prev => {
+          const map = new Map<string, EquityDossier>();
+          prev.forEach(d => map.set(d.id, d));
+          cloudDossiers.value!.forEach(d => map.set(d.id, d));
+          return Array.from(map.values()).sort(
+            (a, b) => new Date(b.publishedAt || b.updatedAt).getTime() - new Date(a.publishedAt || a.updatedAt).getTime()
+          );
+        });
+      }
+
+      if (cloudBriefings.status === 'fulfilled' && cloudBriefings.value && cloudBriefings.value.length > 0) {
+        setMarketBriefings(prev => {
+          const map = new Map<string, MarketBriefing>();
+          prev.forEach(b => map.set(b.id, b));
+          cloudBriefings.value!.forEach(b => map.set(b.id, b));
+          return Array.from(map.values()).sort(
+            (a, b) => new Date(b.publishedAt || b.date).getTime() - new Date(a.publishedAt || a.date).getTime()
+          );
+        });
+      }
+
+      if (cloudEvents.status === 'fulfilled' && cloudEvents.value && cloudEvents.value.length > 0) {
+        setEvents(prev => {
+          const map = new Map<string, EventProgram>();
+          prev.forEach(e => map.set(e.id, e));
+          cloudEvents.value!.forEach(e => map.set(e.id, e));
+          return Array.from(map.values());
+        });
+      }
+
+      if (cloudMembers.status === 'fulfilled' && cloudMembers.value && cloudMembers.value.length > 0) {
+        setMembers(prev => {
+          const map = new Map<string, Member>();
+          prev.forEach(m => map.set(m.uid, m));
+          cloudMembers.value!.forEach(m => map.set(m.uid, m));
+          return Array.from(map.values());
+        });
+      }
+    } catch (e) {
+      console.warn('Database cloud synchronization error:', e);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Initial cloud sync on mount
+  useEffect(() => {
+    refreshData();
+  }, []);
 
   return (
     <DataContext.Provider

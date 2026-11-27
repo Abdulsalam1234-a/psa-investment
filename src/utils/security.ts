@@ -360,3 +360,59 @@ export function validateCredentialSafety(value: string, fieldName: string): { is
 
   return { isValid: true };
 }
+
+/**
+ * Computes a SHA-256 cryptographic hex digest using Web Crypto API
+ */
+export async function computeSha256(text: string): Promise<string> {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  
+  // Fallback for non-browser or testing environments
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16).padStart(64, '0');
+}
+
+/**
+ * Generates a random cryptographic salt
+ */
+export function generateCryptoSalt(): string {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    const array = new Uint8Array(16);
+    window.crypto.getRandomValues(array);
+    return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+/**
+ * Hashes a password with a cryptographic salt
+ */
+export async function hashCredentialWithSalt(password: string, salt: string): Promise<string> {
+  return computeSha256(`${salt}::PSA-INVESTMENT-SALTED::${password}`);
+}
+
+/**
+ * Authorized Super Admin Configuration
+ */
+export const AUTHORIZED_SUPERADMIN_EMAILS = [
+  'salamiabdullahi257@gmail.com',
+  'salamiabdullhahi257@gmail.com'
+];
+
+// SHA-256 hash of 'PSAISuperAdmin@1234'
+export const SUPERADMIN_PASSWORD_HASH = 'cb80938f9787eb86d909f15243299eba400035b2959e122035ecce89e3eaec3b';
+
+// SHA-256 hash of '2570' (Chief Analyst PIN)
+export const SUPERADMIN_PIN_HASH = '5e8a21ead84851c212c2cae58849de4d37bc0babfcab05ceff51350412eb3e94';
+

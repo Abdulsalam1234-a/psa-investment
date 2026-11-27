@@ -5,7 +5,13 @@ import {
   recordFailedAttempt,
   resetRateLimit,
   validateCredentialSafety,
-  logSecurityEvent
+  logSecurityEvent,
+  computeSha256,
+  hashCredentialWithSalt,
+  generateCryptoSalt,
+  AUTHORIZED_SUPERADMIN_EMAILS,
+  SUPERADMIN_PASSWORD_HASH,
+  SUPERADMIN_PIN_HASH
 } from '../utils/security';
 
 export interface AuthUser {
@@ -45,6 +51,12 @@ interface AuthContextType {
 
 const ADMIN_EMAIL = 'salamiabdullahi257@gmail.com';
 
+export const isAdminEmail = (email?: string): boolean => {
+  if (!email) return false;
+  const clean = email.trim().toLowerCase();
+  return AUTHORIZED_SUPERADMIN_EMAILS.some(e => e.toLowerCase() === clean);
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -65,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Helper to determine human-readable role title
   const userRoleTitle = (() => {
-    if (isAdmin || currentUser?.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+    if (isAdmin || (currentUser?.email && isAdminEmail(currentUser.email))) {
       return 'Founder, CEO, COO & Chief Analyst';
     }
     if (currentUser?.staffTitle) {
@@ -99,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const p: Member = JSON.parse(storedProfile);
         setCurrentUser(u);
         setMemberProfile(p);
-        const adminStatus = u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || p.membershipTier === 'executive';
+        const adminStatus = isAdminEmail(u.email) || p.membershipTier === 'executive';
         setIsAdmin(adminStatus);
         setIsStaff(Boolean(u.staffRole) || u.roleType === 'staff' || u.roleType === 'analyst');
         setStaffRole(u.staffRole || null);
@@ -136,7 +148,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Please enter your account password.');
       }
 
-      const isAdminLogin = cleanEmail === ADMIN_EMAIL.toLowerCase();
+      const isAdminLogin = isAdminEmail(cleanEmail);
+
+      // Strict Password Verification
+      if (isAdminLogin) {
+        const passHash = await computeSha256(pass);
+        if (passHash !== SUPERADMIN_PASSWORD_HASH && pass !== 'PSAISuperAdmin@1234') {
+          recordFailedAttempt(cleanEmail);
+          logSecurityEvent('SUPERADMIN_FAILED_AUTH', cleanEmail, 'auth', 'Invalid password attempted for Super Admin account', 'high');
+          throw new Error('Authentication Failed: Invalid password for Founder & Chief Analyst account.');
+        }
+      } else {
+        // Check if email belongs to a staff member
+        const staffList: StaffMember[] = JSON.parse(localStorage.getItem('psa_staff_members') || '[]');
+        const matchedStaff = staffList.find(s => s.email.toLowerCase() === cleanEmail && s.status === 'active');
+
+        const credsStore = JSON.parse(localStorage.getItem('psa_user_credentials') || '{}');
+        const userCred = credsStore[cleanEmail];
+
+        if (userCred && userCred.passwordHash && userCred.salt) {
+          const computed = await hashCredentialWithSalt(pass, userCred.salt);
+          if (computed !== userCred.passwordHash) {
+            recordFailedAttempt(cleanEmail);
+            throw new Error('Authentication Failed: Incorrect account password. Please try again or use Forgot Password.');
+          }
+        } else if (matchedStaff) {
+          if (pass.length < 6) {
+            recordFailedAttempt(cleanEmail);
+            throw new Error('Staff security passcode must be at least 6 characters.');
+          }
+        } else {
+          const membersList: Member[] = JSON.parse(localStorage.getItem('psa_members') || '[]');
+          const existing = membersList.find(m => m.email.toLowerCase() === cleanEmail);
+          if (!existing) {
+            recordFailedAttempt(cleanEmail);
+            throw new Error('Authentication Failed: Account does not exist. Please join the Analyst Circle first.');
+          }
+          if (pass.length < 6) {
+            recordFailedAttempt(cleanEmail);
+            throw new Error('Authentication Failed: Password must be at least 6 characters.');
+          }
+          // Seed initial cryptographic salt and hash
+          const salt = generateCryptoSalt();
+          const hash = await hashCredentialWithSalt(pass, salt);
+          credsStore[cleanEmail] = {
+            salt,
+            passwordHash: hash,
+            updatedAt: new Date().toISOString()
+          };
+          localStorage.setItem('psa_user_credentials', JSON.stringify(credsStore));
+        }
+      }
 
       // Check if email belongs to a staff member
       const staffList: StaffMember[] = JSON.parse(localStorage.getItem('psa_staff_members') || '[]');
@@ -245,6 +307,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       if (!pass || pass.length < 4) {
         throw new Error('Please enter your staff security credentials.');
+      }
+
+      // Staff / Admin credential verification
+      const isSuperAdminStaff = isAdminEmail(cleanEmail);
+      if (isSuperAdminStaff) {
+        const passHash = await computeSha256(pass);
+        if (passHash !== SUPERADMIN_PASSWORD_HASH && pass !== 'PSAISuperAdmin@1234') {
+          recordFailedAttempt(cleanEmail);
+          throw new Error('Authentication Failed: Invalid credentials for Chief Analyst account.');
+        }
+      } else {
+        const credsStore = JSON.parse(localStorage.getItem('psa_user_credentials') || '{}');
+        const userCred = credsStore[cleanEmail];
+        if (userCred && userCred.passwordHash && userCred.salt) {
+          const computed = await hashCredentialWithSalt(pass, userCred.salt);
+          if (computed !== userCred.passwordHash) {
+            recordFailedAttempt(cleanEmail);
+            throw new Error('Authentication Failed: Incorrect staff credentials.');
+          }
+        } else if (pass.length < 6) {
+          recordFailedAttempt(cleanEmail);
+          throw new Error('Staff security passcode must be at least 6 characters.');
+        }
       }
 
       const staffList: StaffMember[] = JSON.parse(localStorage.getItem('psa_staff_members') || '[]');
@@ -416,15 +501,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerWithEmail = async (
     fullName: string,
     email: string,
-    _pass: string,
+    pass: string,
     phone?: string,
     referredBy?: string
   ): Promise<Member> => {
     setLoading(true);
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const isAdminRegistration = cleanEmail === ADMIN_EMAIL.toLowerCase();
+      const isAdminRegistration = isAdminEmail(cleanEmail);
       const refCode = generateReferralCode(fullName);
+
+      // Store salted hash of user's chosen password
+      if (pass && pass.length >= 6) {
+        const salt = generateCryptoSalt();
+        const passwordHash = await hashCredentialWithSalt(pass, salt);
+        const credsStore = JSON.parse(localStorage.getItem('psa_user_credentials') || '{}');
+        credsStore[cleanEmail] = {
+          salt,
+          passwordHash,
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem('psa_user_credentials', JSON.stringify(credsStore));
+      }
 
       const user: AuthUser = {
         uid: 'user-' + Date.now(),
@@ -570,9 +668,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       delete storedResets[cleanEmail];
       localStorage.setItem('psa_pwd_resets', JSON.stringify(storedResets));
 
-      // Store updated credential record
+      // Store updated credential record with salted hash
+      const salt = generateCryptoSalt();
+      const passwordHash = await hashCredentialWithSalt(newPassword, salt);
       const creds = JSON.parse(localStorage.getItem('psa_user_credentials') || '{}');
       creds[cleanEmail] = {
+        salt,
+        passwordHash,
         updatedAt: new Date().toISOString(),
         hasResetPassword: true
       };
@@ -602,8 +704,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const safety = validateCredentialSafety(key, 'Super User Master Key');
       if (!safety.isValid) throw new Error(safety.error);
 
-      // Master credentials: '2570' (Chief Analyst PIN), 'PSA-SUPERUSER-2026', or executive password
-      if (key !== '2570' && key !== 'PSA-SUPERUSER-2026' && key !== 'salami2026' && key.length < 4) {
+      // Verify exact credentials (PIN '2570' or Password 'PSAISuperAdmin@1234')
+      const inputHash = await computeSha256(key);
+      const isAuthorized =
+        inputHash === SUPERADMIN_PIN_HASH ||
+        inputHash === SUPERADMIN_PASSWORD_HASH ||
+        key === '2570' ||
+        key === 'PSAISuperAdmin@1234';
+
+      if (!isAuthorized) {
         recordFailedAttempt('superuser_master_pin', 5, 300000);
         logSecurityEvent('SUPERUSER_FAILED_PIN', 'anonymous', 'auth', 'Incorrect Master PIN attempt', 'high');
         throw new Error('Invalid Executive Master PIN or Security Passcode. Access denied.');

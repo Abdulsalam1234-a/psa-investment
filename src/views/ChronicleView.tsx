@@ -24,13 +24,34 @@ interface ChronicleViewProps {
 
 export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal }) => {
   const { chronicles, logChronicleDownload, getPublicDownloads } = useData();
+  
+  // Sort chronicles descending: latest publication date first
+  const sortedChronicles = React.useMemo(() => {
+    return [...chronicles].sort(
+      (a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime()
+    );
+  }, [chronicles]);
+
+  const latestChronicle = sortedChronicles[0];
+
   const [selectedChronicleId, setSelectedChronicleId] = useState<string>(
-    chronicles[0]?.id || ''
+    latestChronicle?.id || ''
   );
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Keep selectedChronicle in sync with latest if none explicitly selected
   const currentChronicle =
-    chronicles.find(c => c.id === selectedChronicleId) || chronicles[0];
+    sortedChronicles.find(c => c.id === selectedChronicleId) || latestChronicle;
+
+  const isViewingLatest = currentChronicle?.id === latestChronicle?.id;
+
+  const handleSelectEdition = (id: string) => {
+    setSelectedChronicleId(id);
+    const element = document.getElementById('chronicle-reader-desk');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const handleDownloadDocx = (chron: ChronicleEdition) => {
     logChronicleDownload(chron.id);
@@ -48,7 +69,7 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
     document.body.removeChild(link);
   };
 
-  const filteredChronicles = chronicles.filter(c => {
+  const filteredChronicles = sortedChronicles.filter(c => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -140,13 +161,13 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
 
           {/* Edition Select pills / dropdown */}
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            {chronicles.slice(0, 4).map(chron => (
+            {sortedChronicles.slice(0, 5).map(chron => (
               <button
                 key={chron.id}
-                onClick={() => setSelectedChronicleId(chron.id)}
+                onClick={() => handleSelectEdition(chron.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   currentChronicle?.id === chron.id
-                    ? 'bg-[#0A1F44] text-[#C9A84C] shadow-xs'
+                    ? 'bg-[#0A1F44] text-[#C9A84C] shadow-xs ring-2 ring-[#C9A84C]'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
               >
@@ -154,6 +175,11 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
                 <span className="text-[10px] font-normal opacity-80 hidden sm:inline">
                   ({chron.editionDate.split(',')[1]?.trim() || chron.editionDate})
                 </span>
+                {chron.id === latestChronicle?.id && (
+                  <span className="text-[9px] bg-emerald-500 text-white px-1 rounded uppercase font-mono font-bold">
+                    Latest
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -169,6 +195,33 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
               className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-[#C9A84C] focus:bg-white transition-all"
             />
           </div>
+        </div>
+
+        {/* Selected Broadsheet Indicator & Anchor */}
+        <div id="chronicle-reader-desk" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            {isViewingLatest ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Latest Published Edition Preview (Today's Official Dispatch)
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 text-xs font-bold">
+                <Archive className="w-3.5 h-3.5" />
+                Viewing Archived Edition: {currentChronicle?.volume} ({currentChronicle?.editionDate})
+              </span>
+            )}
+          </div>
+
+          {!isViewingLatest && (
+            <button
+              onClick={() => handleSelectEdition(latestChronicle?.id || '')}
+              className="text-xs font-bold text-[#0A1F44] hover:text-[#C9A84C] flex items-center gap-1.5 cursor-pointer underline underline-offset-4"
+            >
+              <span>Switch to Latest Published Edition</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Selected Broadsheet Reader */}
@@ -241,23 +294,22 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onOpenAuthModal })
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => {
-                            setSelectedChronicleId(chron.id);
-                            window.scrollTo({ top: 350, behavior: 'smooth' });
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#0A1F44] font-bold text-[11px] transition-colors cursor-pointer"
+                          onClick={() => handleSelectEdition(chron.id)}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-colors cursor-pointer ${
+                            currentChronicle?.id === chron.id
+                              ? 'bg-[#0A1F44] text-[#C9A84C]'
+                              : 'bg-slate-100 hover:bg-slate-200 text-[#0A1F44]'
+                          }`}
                         >
-                          Read Broadsheet
+                          {currentChronicle?.id === chron.id ? 'Currently Previewed' : 'Preview Broadsheet'}
                         </button>
                         <button
-                          onClick={() => {
-                            logChronicleDownload(chron.id);
-                            window.print();
-                          }}
-                          className="p-1.5 rounded-lg bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] transition-colors cursor-pointer"
-                          title="Download PDF"
+                          onClick={() => handleDownloadDocx(chron)}
+                          className="px-2.5 py-1.5 rounded-lg bg-[#2B579A] hover:bg-[#1E3E6D] text-white font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1.5"
+                          title="Download Word Document (.docx)"
                         >
-                          <Download className="w-3.5 h-3.5" />
+                          <FileText className="w-3.5 h-3.5 text-[#C9A84C]" />
+                          <span>.DOCX</span>
                         </button>
                       </div>
                     </td>

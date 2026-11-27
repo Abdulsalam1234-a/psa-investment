@@ -144,6 +144,99 @@ export const syncTableToCloud = async (
 };
 
 /**
+ * Fetch a table from the cloud database
+ */
+export const fetchTableFromCloud = async <T = any>(
+  tableName: string
+): Promise<T[] | null> => {
+  const config = getCloudDbConfig();
+  if (config.provider === 'local_fallback' || !config.projectUrl || !config.apiKey) {
+    return null;
+  }
+
+  try {
+    const cleanUrl = config.projectUrl.replace(/\/+$/, '');
+    const res = await fetch(`${cleanUrl}/rest/v1/${tableName}?select=*`, {
+      method: 'GET',
+      headers: {
+        apikey: config.apiKey,
+        Authorization: `Bearer ${config.apiKey}`
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return data as T[];
+      }
+    }
+    return null;
+  } catch (e) {
+    console.warn(`Cloud fetch error for ${tableName}:`, e);
+    return null;
+  }
+};
+
+/**
+ * Sync a single record (upsert) to the cloud database
+ */
+export const syncRecordToCloud = async (
+  tableName: string,
+  record: any
+): Promise<boolean> => {
+  const config = getCloudDbConfig();
+  if (config.provider === 'local_fallback' || !config.projectUrl || !config.apiKey) {
+    return true;
+  }
+
+  try {
+    const cleanUrl = config.projectUrl.replace(/\/+$/, '');
+    const res = await fetch(`${cleanUrl}/rest/v1/${tableName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: config.apiKey,
+        Authorization: `Bearer ${config.apiKey}`,
+        Prefer: 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(record)
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn(`Cloud upsert error for ${tableName}:`, e);
+    return false;
+  }
+};
+
+/**
+ * Delete a single record from the cloud database
+ */
+export const deleteRecordFromCloud = async (
+  tableName: string,
+  id: string
+): Promise<boolean> => {
+  const config = getCloudDbConfig();
+  if (config.provider === 'local_fallback' || !config.projectUrl || !config.apiKey) {
+    return true;
+  }
+
+  try {
+    const cleanUrl = config.projectUrl.replace(/\/+$/, '');
+    const res = await fetch(`${cleanUrl}/rest/v1/${tableName}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: config.apiKey,
+        Authorization: `Bearer ${config.apiKey}`
+      }
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn(`Cloud delete error for ${tableName}:`, e);
+    return false;
+  }
+};
+
+/**
  * Generate complete JSON database snapshot for zero-data-loss export
  */
 export const exportCompleteDatabaseJson = (): string => {
