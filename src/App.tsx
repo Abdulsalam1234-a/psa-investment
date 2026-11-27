@@ -19,6 +19,9 @@ import { ResearchDossierView } from './views/ResearchDossierView';
 import { MarketBriefings } from './views/MarketBriefings';
 import { MarketBriefingDetailView } from './views/MarketBriefingDetailView';
 import { AdminPublish } from './views/AdminPublish';
+import { PrivacyPolicy } from './views/PrivacyPolicy';
+import { TermsOfService } from './views/TermsOfService';
+import { CookieConsent } from './components/CookieConsent';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { useAuth } from './context/AuthContext';
 import { useData } from './context/DataContext';
@@ -66,6 +69,8 @@ export const AppContent: React.FC = () => {
       return { tab: 'chronicle' };
     if (firstPart === 'analyst-circle' || firstPart === 'circle') return { tab: 'analyst-circle' };
     if (firstPart === 'contact') return { tab: 'contact' };
+    if (firstPart === 'privacy' || firstPart === 'privacy-policy') return { tab: 'privacy' };
+    if (firstPart === 'terms' || firstPart === 'terms-of-service') return { tab: 'terms' };
     if (firstPart === 'member-portal' || firstPart === 'portal') return { tab: 'member-portal' };
     if (firstPart === 'admin-panel' || firstPart === 'admin') return { tab: 'admin-panel' };
     return { tab: 'home' };
@@ -227,6 +232,8 @@ export const AppContent: React.FC = () => {
           />
         )}
         {activeTab === 'admin-panel' && <AdminPanel />}
+        {activeTab === 'privacy' && <PrivacyPolicy onNavigate={handleNavigateTab} />}
+        {activeTab === 'terms' && <TermsOfService onNavigate={handleNavigateTab} />}
       </main>
 
       {/* Report Reader / Download Modal */}
@@ -246,6 +253,9 @@ export const AppContent: React.FC = () => {
 
       {/* Footer */}
       <Footer setActiveTab={handleNavigateTab} onOpenAuthModal={handleOpenAuth} />
+
+      {/* Cookie & Data Protection Consent Banner */}
+      <CookieConsent onNavigatePrivacy={() => handleNavigateTab('privacy')} />
 
       {/* PWA Mobile Installation Prompt */}
       <PwaInstallBanner />

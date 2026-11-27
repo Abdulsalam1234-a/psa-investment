@@ -273,11 +273,35 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal })
         {/* Disclaimer & Bottom Bar */}
         <div className="pt-8 border-t border-slate-800 text-xs text-slate-500 space-y-3">
           <p className="leading-relaxed">
-            <strong className="text-slate-400">Disclaimer:</strong> Research dispatches, valuation models,
-            and commentaries published by PSA Investment and Salami Abdullahi are prepared strictly for
-            independent financial intelligence and educational reference. They do not constitute personalized
-            investment advice. Historical performance is not indicative of future returns on the Nigerian Exchange.
+            <strong className="text-slate-400">Statutory Regulatory Disclaimer:</strong> Research dispatches, valuation models,
+            daily market barometers, and commentaries published by PSA Investment and Founder &amp; Chief Analyst Salami Abdullahi are prepared strictly for
+            independent financial intelligence and educational reference. PSA Investment is an independent market intelligence publisher and is not a registered
+            broker-dealer, investment adviser, or asset manager registered with the Securities and Exchange Commission (SEC Nigeria) under the Investments and Securities Act (ISA 2007).
+            Nothing herein constitutes personalized investment advice or an endorsement to buy or sell securities. Historical performance is not indicative of future returns on the Nigerian Exchange.
           </p>
+
+          <div className="flex flex-wrap items-center gap-4 text-xs pt-1 border-t border-slate-800/80">
+            <button
+              onClick={() => {
+                setActiveTab('privacy');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="text-[#C9A84C] hover:text-white transition-colors cursor-pointer"
+            >
+              Privacy Policy (NDPA 2023)
+            </button>
+            <span className="text-slate-700">•</span>
+            <button
+              onClick={() => {
+                setActiveTab('terms');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="text-[#C9A84C] hover:text-white transition-colors cursor-pointer"
+            >
+              Terms of Service &amp; SEC Regulatory Notice
+            </button>
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2">
             <div>© 2026 PSA Investment. All rights reserved.</div>
             <div className="flex items-center gap-4 text-slate-400">

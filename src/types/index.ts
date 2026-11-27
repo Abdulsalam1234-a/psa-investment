@@ -239,7 +239,9 @@ export type ViewTab =
   | 'contact'
   | 'member-portal'
   | 'admin-panel'
-  | 'admin-publish';
+  | 'admin-publish'
+  | 'privacy'
+  | 'terms';
 
 export type DemoRole = 'visitor' | 'pending_member' | 'active_member' | 'admin' | null;
 

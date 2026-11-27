@@ -655,6 +655,22 @@ const CORE_PAGES = [
     ogImage: '/og/default.png',
     heading: 'PSA Investment Fast-Publishing CMS',
     subheading: 'Publish-First, WhatsApp-Second Workflow for Pre-Market Intelligence'
+  },
+  {
+    route: '/privacy',
+    title: 'Privacy Policy & Data Protection Charter | NDPA 2023 | PSA Investment',
+    description: 'PSA Investment data protection policy and privacy charter fully compliant with the Nigeria Data Protection Act (NDPA 2023) and NDPC statutory guidelines.',
+    ogImage: '/og/default.png',
+    heading: 'Privacy Policy & Data Protection Charter',
+    subheading: 'Compliance with the Nigeria Data Protection Act (NDPA 2023) and global security safeguards.'
+  },
+  {
+    route: '/terms',
+    title: 'Terms of Service & Regulatory Disclosures | SEC Nigeria | PSA Investment',
+    description: 'PSA Investment terms of service, statutory capital market research disclosures under SEC Nigeria and ISA 2007, intellectual property and licensing.',
+    ogImage: '/og/default.png',
+    heading: 'Terms of Service & Regulatory Disclosures',
+    subheading: 'Institutional terms of use, intellectual property licensing, and statutory capital market disclosures.'
   }
 ];
 
