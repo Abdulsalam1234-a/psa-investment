@@ -12,9 +12,19 @@ import {
   AlertCircle,
   KeyRound,
   Crown,
-  RefreshCw
+  RefreshCw,
+  TrendingUp,
+  Briefcase,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { StaffRole } from '../types';
+import {
+  checkRateLimit,
+  recordFailedAttempt,
+  resetRateLimit,
+  validateCredentialSafety
+} from '../utils/security';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -31,6 +41,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const {
     loginWithEmail,
+    loginStaff,
     loginWithGoogle,
     registerWithEmail,
     sendRegistrationOtp,
@@ -42,12 +53,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   } = useAuth();
 
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot_password' | 'superuser'>(initialMode);
+  const [loginRole, setLoginRole] = useState<'member' | 'analyst' | 'staff' | 'superuser'>('member');
+
+  // Input states strictly initialized to empty strings (zero pre-population)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [superPin, setSuperPin] = useState('');
+  const [selectedStaffRole, setSelectedStaffRole] = useState<StaffRole>('analyst');
   
   // 2-Step Signup Verification state
   const [signupStep, setSignupStep] = useState<1 | 2>(1);
@@ -90,7 +105,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }, [isOpen, onClose]);
 
   useEffect(() => {
-    setMode(initialMode);
+    setMode(initialMode === 'superuser' ? 'login' : initialMode);
+    if (initialMode === 'superuser') {
+      setLoginRole('superuser');
+    }
     setError(null);
     setSuccessMessage(null);
     setSubmittedMember(null);
@@ -102,6 +120,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setNewPassword('');
     setConfirmPassword('');
     setDemoOtpHint(null);
+    setEmail('');
+    setPassword('');
+    setSuperPin('');
+    setFullName('');
+    setPhone('');
 
     // Check URL parameters for referral code
     const urlParams = new URLSearchParams(window.location.search);
@@ -116,10 +139,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleGoogleAuth = async () => {
     setError(null);
     try {
-      // In web app, prompt for or use connected Google account
-      const googleEmail = prompt('Enter your Google Account email address (or click OK for default):', 'investor@gmail.com');
-      if (googleEmail === null) return; // User cancelled
-      const cleanEmail = googleEmail.trim() || 'investor@gmail.com';
+      const googleEmail = prompt('Enter your Google Account email address:');
+      if (!googleEmail || !googleEmail.trim()) return;
+
+      const cleanEmail = googleEmail.trim().toLowerCase();
+      const safety = validateCredentialSafety(cleanEmail, 'Google Email');
+      if (!safety.isValid) throw new Error(safety.error);
+
       const cleanName = cleanEmail.split('@')[0].replace(/[._]/g, ' ').toUpperCase();
       
       const member = await loginWithGoogle(cleanEmail, cleanName);
@@ -136,11 +162,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleSendSignupOtp = async () => {
     setError(null);
-    if (!fullName.trim() || !email.trim() || !password) {
+    const cleanName = fullName.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Credential security checks
+    const nameSafety = validateCredentialSafety(cleanName, 'Full Name');
+    if (!nameSafety.isValid) {
+      setError(nameSafety.error || 'Invalid name input.');
+      return;
+    }
+    const emailSafety = validateCredentialSafety(cleanEmail, 'Email');
+    if (!emailSafety.isValid) {
+      setError(emailSafety.error || 'Invalid email input.');
+      return;
+    }
+
+    if (!cleanName || !cleanEmail || !password) {
       setError('Please provide your full legal name, email, and a secure password.');
       return;
     }
-    if (!email.includes('@') || !email.includes('.')) {
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
       setError('Please enter a valid email address.');
       return;
     }
@@ -149,11 +190,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
+    // Rate limit check
+    const rate = checkRateLimit(cleanEmail);
+    if (!rate.allowed) {
+      setError(`Too many requests. Please wait ${rate.retryAfterSeconds}s.`);
+      return;
+    }
+
     try {
-      const res = await sendRegistrationOtp(email, fullName);
+      const res = await sendRegistrationOtp(cleanEmail, cleanName);
       setSignupOtpHint(res.otpCode);
       setSignupStep(2);
-      setSuccessMessage(`A 6-digit verification code has been dispatched to ${email.trim()}.`);
+      setSuccessMessage(`A 6-digit verification code has been dispatched to ${cleanEmail}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to dispatch verification code.');
     }
@@ -166,12 +214,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       if (mode === 'login') {
-        if (!email.trim() || !password) {
-          throw new Error('Please enter both your email address and password.');
+        if (loginRole === 'superuser') {
+          if (!superPin.trim()) {
+            throw new Error('Please enter the Executive Master PIN or Security Passcode.');
+          }
+          const pinSafety = validateCredentialSafety(superPin, 'Master PIN');
+          if (!pinSafety.isValid) throw new Error(pinSafety.error);
+
+          await loginSuperUser(superPin);
+          onClose();
+          if (onSuccess) onSuccess();
+        } else if (loginRole === 'analyst') {
+          if (!email.trim() || !password) {
+            throw new Error('Please enter your analyst email and credentials.');
+          }
+          await loginStaff(email, password, 'analyst');
+          onClose();
+          if (onSuccess) onSuccess();
+        } else if (loginRole === 'staff') {
+          if (!email.trim() || !password) {
+            throw new Error('Please enter your staff email and password.');
+          }
+          await loginStaff(email, password, selectedStaffRole);
+          onClose();
+          if (onSuccess) onSuccess();
+        } else {
+          // Normal public / Circle member
+          if (!email.trim() || !password) {
+            throw new Error('Please enter both your email address and password.');
+          }
+          await loginWithEmail(email, password);
+          onClose();
+          if (onSuccess) onSuccess();
         }
-        await loginWithEmail(email, password);
-        onClose();
-        if (onSuccess) onSuccess();
       } else if (mode === 'signup') {
         if (signupStep === 1) {
           await handleSendSignupOtp();
@@ -191,6 +266,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           if (!email.trim() || !email.includes('@')) {
             throw new Error('Please enter a valid email address.');
           }
+          const emailSafety = validateCredentialSafety(email, 'Email Address');
+          if (!emailSafety.isValid) throw new Error(emailSafety.error);
+
           const res = await requestPasswordReset(email);
           setResetStep(2);
           setDemoOtpHint(res.resetCode);
@@ -213,13 +291,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             setResetStep(1);
           }, 1800);
         }
-      } else if (mode === 'superuser') {
-        if (!superPin.trim()) {
-          throw new Error('Please enter the Executive Master PIN or Security Passcode.');
-        }
-        await loginSuperUser(superPin);
-        onClose();
-        if (onSuccess) onSuccess();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An authentication error occurred.');
@@ -243,19 +314,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header */}
+        {/* Modal Header */}
         <div className={`p-6 text-white text-center transition-colors ${
-          mode === 'superuser'
+          mode === 'login' && loginRole === 'superuser'
             ? 'bg-gradient-to-b from-[#1c1808] via-[#0A1F44] to-[#07152E] border-b border-[#C9A84C]/40'
             : 'bg-gradient-to-b from-[#0A1F44] to-[#07152E]'
         }`}>
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 border ${
-            mode === 'superuser'
+            mode === 'login' && loginRole === 'superuser'
               ? 'bg-[#C9A84C]/30 border-[#C9A84C] text-[#C9A84C]'
               : 'bg-[#C9A84C]/20 border-[#C9A84C]/40 text-[#C9A84C]'
           }`}>
-            {mode === 'superuser' ? (
-              <Crown className="w-6 h-6 stroke-[2.2]" />
+            {mode === 'login' ? (
+              loginRole === 'superuser' ? (
+                <Crown className="w-6 h-6 stroke-[2.2]" />
+              ) : loginRole === 'analyst' ? (
+                <TrendingUp className="w-6 h-6 stroke-[2.2]" />
+              ) : loginRole === 'staff' ? (
+                <Briefcase className="w-6 h-6 stroke-[2.2]" />
+              ) : (
+                <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
+              )
             ) : mode === 'forgot_password' ? (
               <KeyRound className="w-6 h-6 stroke-[2.2]" />
             ) : (
@@ -265,11 +344,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <h3 className="font-serif font-black text-xl tracking-tight">
             {mode === 'login'
-              ? 'Analyst Portal Sign In'
+              ? loginRole === 'superuser'
+                ? 'Chief Analyst & Super Admin'
+                : loginRole === 'analyst'
+                ? 'Equity Research Analyst'
+                : loginRole === 'staff'
+                ? 'Staff & Management Console'
+                : 'Analyst Circle Sign In'
               : mode === 'signup'
-              ? signupStep === 1 ? 'Join the PSA Analyst Circle' : 'Verify Your Email Address'
-              : mode === 'superuser'
-              ? 'Executive Super User Mode'
+              ? signupStep === 1
+                ? 'Join the PSA Analyst Circle'
+                : 'Verify Your Email Address'
               : resetStep === 1
               ? 'Password Recovery Request'
               : 'Set New Account Password'}
@@ -277,13 +362,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <p className="text-xs text-slate-300 mt-1 max-w-xs mx-auto">
             {mode === 'login'
-              ? 'Access institutional intelligence, valuation models, and research memos'
+              ? loginRole === 'superuser'
+                ? 'Executive command access for Founder & Chief Analyst Salami Abdullahi'
+                : loginRole === 'analyst'
+                ? 'Accredited access for fundamental equity analysts and modelers'
+                : loginRole === 'staff'
+                ? 'Role-based access for management, social media directors & partners'
+                : 'Public investors and members accessing Nigerian equity intelligence'
               : mode === 'signup'
-              ? signupStep === 1 ? 'Free membership application, vetted and approved by Chief Analyst' : `Enter the 6-digit code sent to ${email}`
-              : mode === 'superuser'
-              ? 'Chief Analyst & Executive Director elevation credentials'
+              ? signupStep === 1
+                ? 'Free membership application, reviewed by Chief Analyst'
+                : `Enter the 6-digit verification code sent to ${email}`
               : resetStep === 1
-              ? 'Enter registered email to receive a 6-digit OTP verification code'
+              ? 'Enter registered email to receive a 6-digit verification code'
               : 'Enter verification OTP code and choose your new password'}
           </p>
         </div>
@@ -309,7 +400,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 )}
                 {demoOtpHint && mode === 'forgot_password' && resetStep === 2 && (
                   <div className="mt-1 font-mono font-bold text-[11px] text-emerald-900 bg-emerald-100/70 px-2 py-0.5 rounded inline-block">
-                    Demo OTP Code: {demoOtpHint}
+                    Recovery OTP Code: {demoOtpHint}
                   </div>
                 )}
               </div>
@@ -349,8 +440,82 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           ) : (
             <div>
-              {/* GOOGLE SIGN IN BUTTON */}
-              {(mode === 'login' || (mode === 'signup' && signupStep === 1)) && (
+              {/* Role Selection Tabs for Login Mode */}
+              {mode === 'login' && (
+                <div className="mb-5">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Select Your Sign-In Category
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginRole('member');
+                        setError(null);
+                      }}
+                      className={`py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        loginRole === 'member'
+                          ? 'bg-[#0A1F44] text-[#C9A84C] shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      <span>Public / Member</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginRole('analyst');
+                        setError(null);
+                      }}
+                      className={`py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        loginRole === 'analyst'
+                          ? 'bg-[#0A1F44] text-[#C9A84C] shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>Analyst</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginRole('staff');
+                        setError(null);
+                      }}
+                      className={`py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        loginRole === 'staff'
+                          ? 'bg-[#0A1F44] text-[#C9A84C] shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      <Briefcase className="w-3.5 h-3.5" />
+                      <span>Staff &amp; Mgmt</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginRole('superuser');
+                        setError(null);
+                      }}
+                      className={`py-2 px-2.5 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        loginRole === 'superuser'
+                          ? 'bg-amber-700 text-amber-100 shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      <Crown className="w-3.5 h-3.5" />
+                      <span>Super Admin</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* GOOGLE SIGN IN BUTTON for Public Member */}
+              {mode === 'login' && loginRole === 'member' && (
                 <div className="mb-4">
                   <button
                     type="button"
@@ -363,13 +528,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                     </svg>
-                    <span>{mode === 'login' ? 'Continue with Google' : 'Sign up with Google'}</span>
+                    <span>Continue with Google</span>
                   </button>
 
                   <div className="flex items-center my-3.5">
                     <div className="flex-1 border-t border-slate-200"></div>
                     <span className="px-2 text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                      Or with email
+                      Or with email credentials
                     </span>
                     <div className="flex-1 border-t border-slate-200"></div>
                   </div>
@@ -377,17 +542,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* SUPER USER MODE */}
-                {mode === 'superuser' && (
+                {/* 1. SUPER USER LOGIN */}
+                {mode === 'login' && loginRole === 'superuser' && (
                   <div className="space-y-3">
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-relaxed">
-                      <strong>Executive Mode Notice:</strong> Direct elevation for Salami Abdullahi
-                      (<span className="font-mono">salamiabdullahi257@gmail.com</span>). Enter executive master PIN to assume full super administrative control.
+                      <strong>Executive Security Check:</strong> Direct elevation for Founder &amp; Chief Analyst Salami Abdullahi. Enter your Master PIN or security key to assume super user command.
                     </div>
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Executive Master PIN / Security Passcode *
+                        Executive Master PIN or Security Passcode *
                       </label>
                       <div className="relative">
                         <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -395,24 +559,165 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                           type="password"
                           required
                           autoFocus
-                          placeholder="Master PIN (e.g. 2570)"
+                          placeholder="Enter Master PIN"
                           value={superPin}
                           onChange={e => setSuperPin(e.target.value)}
                           className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-mono font-bold"
                         />
                       </div>
-                      <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
-                        <span>CEO Master PIN: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono font-bold text-[#0A1F44]">2570</code></span>
-                        <button
-                          type="button"
-                          onClick={() => setSuperPin('2570')}
-                          className="text-[#0A1F44] hover:text-[#C9A84C] font-bold underline cursor-pointer"
-                        >
-                          Auto-fill
-                        </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. RESEARCH ANALYST LOGIN */}
+                {mode === 'login' && loginRole === 'analyst' && (
+                  <div className="space-y-3">
+                    <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-900">
+                      <strong>Research Analyst Authentication:</strong> Access institutional valuation models, draft memos, and Analyst Circle discussion feeds.
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Analyst Work Email Address *
+                      </label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="email"
+                          required
+                          placeholder="analyst@psainvestment.com"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Analyst Security Password *
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                        />
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* 3. STAFF & MANAGEMENT LOGIN */}
+                {mode === 'login' && loginRole === 'staff' && (
+                  <div className="space-y-3">
+                    <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900">
+                      <strong>Staff Management Access:</strong> Authenticate operational staff, department heads, and institutional partners.
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Staff Official Email Address *
+                      </label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="email"
+                          required
+                          placeholder="staff@organization.com"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Operational Role / Department *
+                      </label>
+                      <select
+                        value={selectedStaffRole}
+                        onChange={e => setSelectedStaffRole(e.target.value as StaffRole)}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium cursor-pointer"
+                      >
+                        <option value="management">Executive Management</option>
+                        <option value="analyst">Senior Research Analyst</option>
+                        <option value="social_media_director">Social Media &amp; Communications Director</option>
+                        <option value="partners">Institutional Capital Partner</option>
+                        <option value="admin">Operations Administrator</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Security Password *
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. PUBLIC / MEMBER LOGIN */}
+                {mode === 'login' && loginRole === 'member' && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Registered Email Address *
+                      </label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="email"
+                          required
+                          placeholder="name@organization.com"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          Password *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setMode('forgot_password')}
+                          className="text-[11px] text-[#0A1F44] hover:text-[#C9A84C] font-medium cursor-pointer"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
+                        />
+                      </div>
+                    </div>
+                  </>
                 )}
 
                 {/* SIGNUP STEP 1: BASIC DETAILS */}
@@ -427,7 +732,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Babatunde Adeleke"
+                          placeholder="Enter your full name"
                           value={fullName}
                           onChange={e => setFullName(e.target.value)}
                           className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
@@ -548,67 +853,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
                 )}
 
-                {/* LOGIN EMAIL & PASSWORD */}
-                {mode === 'login' && (
-                  <>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Email Address *
-                      </label>
-                      <div className="relative">
-                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                        <input
-                          type="email"
-                          required
-                          placeholder="name@organization.com"
-                          value={email}
-                          onChange={e => setEmail(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
-                        />
-                      </div>
-                      <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
-                        <span>CEO Account: <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[#0A1F44]">salamiabdullahi257@gmail.com</code></span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEmail('salamiabdullahi257@gmail.com');
-                            setPassword('admin1234');
-                          }}
-                          className="text-[#0A1F44] hover:text-[#C9A84C] font-bold underline cursor-pointer"
-                        >
-                          Auto-fill
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-semibold text-slate-700">
-                          Password *
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setMode('forgot_password')}
-                          className="text-[11px] text-[#0A1F44] hover:text-[#C9A84C] font-medium cursor-pointer"
-                        >
-                          Forgot password?
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                        <input
-                          type="password"
-                          required
-                          placeholder="••••••••"
-                          value={password}
-                          onChange={e => setPassword(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all font-medium"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
                 {/* FORGOT PASSWORD STEP 1 */}
                 {mode === 'forgot_password' && resetStep === 1 && (
                   <div>
@@ -652,15 +896,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                           className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold tracking-widest text-slate-800 outline-none focus:border-[#C9A84C] focus:bg-white transition-all"
                         />
                       </div>
-                      {demoOtpHint && (
-                        <button
-                          type="button"
-                          onClick={() => setOtpCode(demoOtpHint)}
-                          className="mt-1 text-[10px] text-[#0A1F44] hover:text-[#C9A84C] font-semibold underline cursor-pointer"
-                        >
-                          Insert generated OTP ({demoOtpHint})
-                        </button>
-                      )}
                     </div>
 
                     <div>
@@ -703,22 +938,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="submit"
                   disabled={loading}
                   className={`w-full mt-2 py-3 text-xs font-bold rounded-xl shadow-md cursor-pointer transition-all hover:scale-101 flex items-center justify-center gap-2 disabled:opacity-50 ${
-                    mode === 'superuser'
+                    mode === 'login' && loginRole === 'superuser'
                       ? 'bg-gradient-to-r from-amber-600 to-[#0A1F44] text-white hover:opacity-95'
                       : 'bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C]'
                   }`}
                 >
                   <span>
                     {loading
-                      ? 'Processing...'
+                      ? 'Authenticating...'
                       : mode === 'login'
-                      ? 'Sign In to Member Portal'
+                      ? loginRole === 'superuser'
+                        ? 'Authenticate as Super User'
+                        : loginRole === 'analyst'
+                        ? 'Sign In as Research Analyst'
+                        : loginRole === 'staff'
+                        ? 'Sign In to Staff Console'
+                        : 'Sign In to Member Portal'
                       : mode === 'signup'
                       ? signupStep === 1
                         ? 'Send Email Verification OTP'
                         : 'Verify OTP & Complete Application'
-                      : mode === 'superuser'
-                      ? 'Authenticate as Super User'
                       : resetStep === 1
                       ? 'Dispatch Recovery Code'
                       : 'Confirm & Reset Password'}
@@ -733,29 +972,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {!submittedMember && (
             <div className="mt-5 pt-4 border-t border-slate-100 text-center text-xs text-slate-500 space-y-2.5">
               {mode === 'login' && (
-                <>
-                  <div>
-                    Need access to the research vault?{' '}
-                    <button
-                      onClick={() => {
-                        setMode('signup');
-                        setSignupStep(1);
-                      }}
-                      className="font-bold text-[#0A1F44] hover:text-[#C9A84C] cursor-pointer"
-                    >
-                      Apply to Join Circle
-                    </button>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => setMode('superuser')}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 font-semibold border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer text-[11px]"
-                    >
-                      <Crown className="w-3.5 h-3.5 text-amber-700" />
-                      Executive Super User Login
-                    </button>
-                  </div>
-                </>
+                <div>
+                  Need access to the institutional research vault?{' '}
+                  <button
+                    onClick={() => {
+                      setMode('signup');
+                      setSignupStep(1);
+                    }}
+                    className="font-bold text-[#0A1F44] hover:text-[#C9A84C] cursor-pointer"
+                  >
+                    Apply to Join Circle
+                  </button>
+                </div>
               )}
 
               {mode === 'signup' && (
@@ -786,18 +1014,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     className="font-bold text-[#0A1F44] hover:text-[#C9A84C] cursor-pointer"
                   >
                     Return to Sign In
-                  </button>
-                </div>
-              )}
-
-              {mode === 'superuser' && (
-                <div>
-                  Return to normal sign in?{' '}
-                  <button
-                    onClick={() => setMode('login')}
-                    className="font-bold text-[#0A1F44] hover:text-[#C9A84C] cursor-pointer"
-                  >
-                    Member & Analyst Login
                   </button>
                 </div>
               )}

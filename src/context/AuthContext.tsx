@@ -1,10 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Member, DemoRole } from '../types';
+import { Member, DemoRole, StaffRole, StaffMember } from '../types';
+import {
+  checkRateLimit,
+  recordFailedAttempt,
+  resetRateLimit,
+  validateCredentialSafety,
+  logSecurityEvent
+} from '../utils/security';
 
-interface AuthUser {
+export interface AuthUser {
   uid: string;
   email: string;
   displayName?: string;
+  roleType?: 'super_admin' | 'admin' | 'staff' | 'analyst' | 'member' | 'public';
+  staffRole?: StaffRole;
+  staffTitle?: string;
 }
 
 interface AuthContextType {
@@ -12,9 +22,13 @@ interface AuthContextType {
   memberProfile: Member | null;
   isAdmin: boolean;
   isSuperUser: boolean;
+  isStaff: boolean;
+  staffRole: StaffRole | null;
+  userRoleTitle: string;
   loading: boolean;
   demoRole: DemoRole;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
+  loginStaff: (email: string, pass: string, role?: StaffRole) => Promise<void>;
   loginWithGoogle: (googleEmail?: string, googleName?: string) => Promise<Member>;
   registerWithEmail: (name: string, email: string, pass: string, phone?: string, referralCode?: string) => Promise<Member>;
   sendRegistrationOtp: (email: string, name: string) => Promise<{ otpCode: string; message: string }>;
@@ -37,6 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [memberProfile, setMemberProfile] = useState<Member | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isStaff, setIsStaff] = useState<boolean>(false);
+  const [staffRole, setStaffRole] = useState<StaffRole | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [demoRole, setDemoRole] = useState<DemoRole>(null);
 
@@ -47,33 +63,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return `PSA-${prefix}${suffix}`;
   };
 
+  // Helper to determine human-readable role title
+  const userRoleTitle = (() => {
+    if (isAdmin || currentUser?.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+      return 'Founder, CEO, COO & Chief Analyst';
+    }
+    if (currentUser?.staffTitle) {
+      return currentUser.staffTitle;
+    }
+    if (staffRole === 'analyst' || currentUser?.roleType === 'analyst') {
+      return 'Equity Research Analyst';
+    }
+    if (staffRole === 'management') {
+      return 'Executive Management';
+    }
+    if (staffRole === 'social_media_director') {
+      return 'Social Media & Communications Director';
+    }
+    if (staffRole === 'partners') {
+      return 'Strategic Capital Partner';
+    }
+    if (memberProfile) {
+      return memberProfile.status === 'active' ? 'Analyst Circle Member' : 'Circle Applicant (Pending)';
+    }
+    return 'Public Visitor';
+  })();
+
   // Check stored session
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('psa_auth_user');
       const storedProfile = localStorage.getItem('psa_member_profile');
       if (storedUser && storedProfile) {
-        const u = JSON.parse(storedUser);
-        const p = JSON.parse(storedProfile);
+        const u: AuthUser = JSON.parse(storedUser);
+        const p: Member = JSON.parse(storedProfile);
         setCurrentUser(u);
         setMemberProfile(p);
-        setIsAdmin(u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || p.membershipTier === 'executive');
+        const adminStatus = u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() || p.membershipTier === 'executive';
+        setIsAdmin(adminStatus);
+        setIsStaff(Boolean(u.staffRole) || u.roleType === 'staff' || u.roleType === 'analyst');
+        setStaffRole(u.staffRole || null);
       }
     } catch (e) {
       console.warn('Auth restoration error:', e);
     }
   }, []);
 
-  const loginWithEmail = async (email: string, _pass: string) => {
+  const loginWithEmail = async (email: string, pass: string) => {
     setLoading(true);
     try {
       const cleanEmail = email.trim().toLowerCase();
+      
+      // 1. Rate Limit Defense
+      const rateCheck = checkRateLimit(cleanEmail);
+      if (!rateCheck.allowed) {
+        throw new Error(`Too many failed login attempts. For security, please wait ${rateCheck.retryAfterSeconds} seconds before retrying.`);
+      }
+
+      // 2. SQL & XSS Injection Protection
+      const emailSafety = validateCredentialSafety(cleanEmail, 'Email Address');
+      if (!emailSafety.isValid) throw new Error(emailSafety.error);
+
+      const passSafety = validateCredentialSafety(pass, 'Password');
+      if (!passSafety.isValid) throw new Error(passSafety.error);
+
+      if (!cleanEmail || !cleanEmail.includes('@')) {
+        recordFailedAttempt(cleanEmail);
+        throw new Error('Please enter a valid email address.');
+      }
+      if (!pass || pass.length < 4) {
+        recordFailedAttempt(cleanEmail);
+        throw new Error('Please enter your account password.');
+      }
+
       const isAdminLogin = cleanEmail === ADMIN_EMAIL.toLowerCase();
 
+      // Check if email belongs to a staff member
+      const staffList: StaffMember[] = JSON.parse(localStorage.getItem('psa_staff_members') || '[]');
+      const matchedStaff = staffList.find(s => s.email.toLowerCase() === cleanEmail && s.status === 'active');
+
       const user: AuthUser = {
-        uid: isAdminLogin ? 'admin-uid-ceo' : 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '_'),
+        uid: isAdminLogin ? 'admin-uid-ceo' : matchedStaff ? matchedStaff.id : 'user-' + cleanEmail.replace(/[^a-z0-9]/g, '_'),
         email: cleanEmail,
-        displayName: isAdminLogin ? 'Salami Abdullahi' : cleanEmail.split('@')[0]
+        displayName: isAdminLogin ? 'Salami Abdullahi' : matchedStaff ? matchedStaff.fullName : cleanEmail.split('@')[0],
+        roleType: isAdminLogin ? 'super_admin' : matchedStaff ? (matchedStaff.role === 'analyst' ? 'analyst' : 'staff') : 'member',
+        staffRole: matchedStaff ? matchedStaff.role : undefined,
+        staffTitle: matchedStaff ? matchedStaff.title : undefined
       };
 
       let profile: Member;
@@ -92,9 +167,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: '2026-08-01T00:00:00Z',
           updatedAt: new Date().toISOString()
         };
+      } else if (matchedStaff) {
+        profile = {
+          uid: user.uid,
+          fullName: matchedStaff.fullName,
+          email: cleanEmail,
+          phone: matchedStaff.phone || '+234 812 000 0000',
+          membershipTier: 'executive',
+          status: 'active',
+          referralCode: generateReferralCode(matchedStaff.fullName),
+          referralCount: 5,
+          appliedAt: matchedStaff.assignedAt,
+          approvedAt: matchedStaff.assignedAt,
+          createdAt: matchedStaff.assignedAt,
+          updatedAt: new Date().toISOString()
+        };
       } else {
         // Retrieve or generate member profile
-        profile = {
+        const membersList: Member[] = JSON.parse(localStorage.getItem('psa_members') || '[]');
+        const existing = membersList.find(m => m.email.toLowerCase() === cleanEmail);
+        profile = existing || {
           uid: user.uid,
           fullName: user.displayName || 'Circle Member',
           email: cleanEmail,
@@ -102,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           membershipTier: 'standard',
           status: 'active',
           referralCode: generateReferralCode(user.displayName || 'PSA'),
-          referralCount: 2,
+          referralCount: 0,
           appliedAt: new Date().toISOString(),
           approvedAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
@@ -112,11 +204,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setCurrentUser(user);
       setMemberProfile(profile);
-      setIsAdmin(isAdminLogin);
+      setIsAdmin(isAdminLogin || profile.membershipTier === 'executive');
+      setIsStaff(Boolean(matchedStaff));
+      setStaffRole(matchedStaff ? matchedStaff.role : null);
       setDemoRole(null);
 
       localStorage.setItem('psa_auth_user', JSON.stringify(user));
       localStorage.setItem('psa_member_profile', JSON.stringify(profile));
+
+      resetRateLimit(cleanEmail);
+      logSecurityEvent('USER_LOGIN_SUCCESS', cleanEmail, 'auth', `Authenticated as ${user.roleType}`, 'low');
+    } catch (err) {
+      recordFailedAttempt(email);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginStaff = async (email: string, pass: string, designatedRole?: StaffRole) => {
+    setLoading(true);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+
+      // Rate limit check
+      const rateCheck = checkRateLimit(cleanEmail);
+      if (!rateCheck.allowed) {
+        throw new Error(`Too many failed attempts. Please wait ${rateCheck.retryAfterSeconds} seconds.`);
+      }
+
+      // Security check
+      const emailSafety = validateCredentialSafety(cleanEmail, 'Staff Email');
+      if (!emailSafety.isValid) throw new Error(emailSafety.error);
+
+      const passSafety = validateCredentialSafety(pass, 'Staff Password');
+      if (!passSafety.isValid) throw new Error(passSafety.error);
+
+      if (!cleanEmail || !cleanEmail.includes('@')) {
+        throw new Error('Please enter a valid staff email address.');
+      }
+      if (!pass || pass.length < 4) {
+        throw new Error('Please enter your staff security credentials.');
+      }
+
+      const staffList: StaffMember[] = JSON.parse(localStorage.getItem('psa_staff_members') || '[]');
+      let matchedStaff = staffList.find(s => s.email.toLowerCase() === cleanEmail);
+
+      const role = designatedRole || (matchedStaff ? matchedStaff.role : 'analyst');
+      const staffName = matchedStaff ? matchedStaff.fullName : cleanEmail.split('@')[0].toUpperCase();
+      const staffTitle = matchedStaff ? matchedStaff.title : (role === 'analyst' ? 'Equity Research Analyst' : 'Staff Executive');
+
+      const user: AuthUser = {
+        uid: matchedStaff ? matchedStaff.id : `staff-${role}-${Date.now()}`,
+        email: cleanEmail,
+        displayName: staffName,
+        roleType: role === 'analyst' ? 'analyst' : 'staff',
+        staffRole: role,
+        staffTitle: staffTitle
+      };
+
+      const profile: Member = {
+        uid: user.uid,
+        fullName: staffName,
+        email: cleanEmail,
+        phone: matchedStaff?.phone || '+234 812 000 0000',
+        membershipTier: 'executive',
+        status: 'active',
+        referralCode: generateReferralCode(staffName),
+        referralCount: 5,
+        appliedAt: new Date().toISOString(),
+        approvedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setCurrentUser(user);
+      setMemberProfile(profile);
+      setIsAdmin(role === 'admin' || cleanEmail === ADMIN_EMAIL.toLowerCase());
+      setIsStaff(true);
+      setStaffRole(role);
+      setDemoRole(null);
+
+      localStorage.setItem('psa_auth_user', JSON.stringify(user));
+      localStorage.setItem('psa_member_profile', JSON.stringify(profile));
+
+      resetRateLimit(cleanEmail);
+      logSecurityEvent('STAFF_LOGIN_SUCCESS', cleanEmail, 'auth', `Staff signed in with role: ${role}`, 'low');
+    } catch (err) {
+      recordFailedAttempt(email);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -415,15 +591,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const key = masterPinOrKey.trim();
+
+      // Rate limit check
+      const rateCheck = checkRateLimit('superuser_master_pin', 5, 300000);
+      if (!rateCheck.allowed) {
+        throw new Error(`Master PIN access locked due to security attempts. Please wait ${rateCheck.retryAfterSeconds} seconds.`);
+      }
+
+      // Security check
+      const safety = validateCredentialSafety(key, 'Super User Master Key');
+      if (!safety.isValid) throw new Error(safety.error);
+
       // Master credentials: '2570' (Chief Analyst PIN), 'PSA-SUPERUSER-2026', or executive password
       if (key !== '2570' && key !== 'PSA-SUPERUSER-2026' && key !== 'salami2026' && key.length < 4) {
+        recordFailedAttempt('superuser_master_pin', 5, 300000);
+        logSecurityEvent('SUPERUSER_FAILED_PIN', 'anonymous', 'auth', 'Incorrect Master PIN attempt', 'high');
         throw new Error('Invalid Executive Master PIN or Security Passcode. Access denied.');
       }
 
       const superUser: AuthUser = {
         uid: 'admin-uid-ceo-super',
         email: ADMIN_EMAIL,
-        displayName: 'Salami Abdullahi (Super User)'
+        displayName: 'Salami Abdullahi (Chief Analyst)',
+        roleType: 'super_admin',
+        staffRole: 'admin',
+        staffTitle: 'Founder, CEO, COO & Chief Analyst'
       };
 
       const superProfile: Member = {
@@ -444,10 +636,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(superUser);
       setMemberProfile(superProfile);
       setIsAdmin(true);
+      setIsStaff(true);
+      setStaffRole('admin');
       setDemoRole(null);
 
       localStorage.setItem('psa_auth_user', JSON.stringify(superUser));
       localStorage.setItem('psa_member_profile', JSON.stringify(superProfile));
+
+      resetRateLimit('superuser_master_pin');
 
       // Log executive audit trail
       const auditLogs = JSON.parse(localStorage.getItem('psa_audit_logs') || '[]');
@@ -460,6 +656,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         severity: 'critical'
       });
       localStorage.setItem('psa_audit_logs', JSON.stringify(auditLogs));
+      logSecurityEvent('SUPERUSER_LOGIN_GRANTED', ADMIN_EMAIL, 'auth', 'Chief Analyst elevation assumed', 'low');
     } finally {
       setLoading(false);
     }
@@ -468,12 +665,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setLoading(true);
     try {
+      const email = currentUser?.email || 'authenticated-user';
       setCurrentUser(null);
       setMemberProfile(null);
       setIsAdmin(false);
+      setIsStaff(false);
+      setStaffRole(null);
       setDemoRole(null);
       localStorage.removeItem('psa_auth_user');
       localStorage.removeItem('psa_member_profile');
+      logSecurityEvent('USER_LOGOUT', email, 'auth', 'User initiated clean session sign out', 'low');
     } finally {
       setLoading(false);
     }
@@ -594,9 +795,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         memberProfile,
         isAdmin,
         isSuperUser,
+        isStaff,
+        staffRole,
+        userRoleTitle,
         loading,
         demoRole,
         loginWithEmail,
+        loginStaff,
         loginWithGoogle,
         registerWithEmail,
         sendRegistrationOtp,

@@ -17,6 +17,7 @@ import {
   ArrowRight,
   TrendingUp,
   FolderOpen,
+  LogOut,
   X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -34,8 +35,8 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
   const {
     currentUser,
     memberProfile,
-    switchDemoRole,
-    updateMemberProfile
+    updateMemberProfile,
+    logout
   } = useAuth();
 
   const { reports, downloadLogs, logReportDownload, chronicles, logChronicleDownload } = useData();
@@ -103,25 +104,6 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
             Apply for Free Access
           </button>
         </div>
-
-        {/* Quick Testing Callout */}
-        <div className="p-4 bg-slate-100 rounded-2xl max-w-md mx-auto text-xs text-slate-500 space-y-2 border border-slate-200">
-          <div className="font-bold text-slate-700">Want to test the member views immediately?</div>
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => switchDemoRole('active_member')}
-              className="px-3 py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 cursor-pointer text-[11px]"
-            >
-              Test Active Dashboard
-            </button>
-            <button
-              onClick={() => switchDemoRole('pending_member')}
-              className="px-3 py-1.5 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700 cursor-pointer text-[11px]"
-            >
-              Test Pending Screen
-            </button>
-          </div>
-        </div>
       </div>
     );
   }
@@ -178,18 +160,15 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
             </div>
           </div>
 
-          {/* Quick simulation helper for tester */}
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/80 text-xs text-amber-900 space-y-2">
-            <div className="font-bold">Evaluating the Approval Flow?</div>
-            <p className="text-[11px] text-amber-800">
-              Switch to the Admin Panel to approve this account, or click the button to simulate
-              immediate active status.
-            </p>
+          {/* Session Action */}
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-[11px] text-slate-500">Need to switch accounts or exit?</span>
             <button
-              onClick={() => updateMemberProfile({ status: 'active', approvedAt: new Date().toISOString() })}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl cursor-pointer text-xs"
+              onClick={() => logout()}
+              className="px-4 py-2 bg-white hover:bg-slate-100 text-rose-600 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              Simulate Account Approved
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
             </button>
           </div>
         </div>
@@ -289,17 +268,25 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => {
                 setEditName(memberProfile?.fullName || '');
                 setEditPhone(memberProfile?.phone || '');
                 setEditProfileOpen(true);
               }}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>Edit Profile</span>
+            </button>
+            <button
+              onClick={() => logout()}
+              className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Sign Out of Member Session"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
             </button>
           </div>
         </div>

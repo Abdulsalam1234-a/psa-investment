@@ -41,34 +41,34 @@ export const AdminPublish: React.FC<AdminPublishProps> = ({ onNavigate }) => {
   const [briefingDate, setBriefingDate] = useState(new Date().toISOString().split('T')[0]);
   const [briefingVolume, setBriefingVolume] = useState('VOL. LVIII');
   const [briefingTitle, setBriefingTitle] = useState('');
-  const [briefingAsi, setBriefingAsi] = useState('253,120.50 pts');
-  const [briefingChange, setBriefingChange] = useState('+0.25%');
-  const [briefingCap, setBriefingCap] = useState('₦164.50 Trillion');
-  const [briefingVolumeTraded, setBriefingVolumeTraded] = useState('1.50B units');
-  const [briefingValueTraded, setBriefingValueTraded] = useState('₦38.50 Billion');
+  const [briefingAsi, setBriefingAsi] = useState('');
+  const [briefingChange, setBriefingChange] = useState('');
+  const [briefingCap, setBriefingCap] = useState('');
+  const [briefingVolumeTraded, setBriefingVolumeTraded] = useState('');
+  const [briefingValueTraded, setBriefingValueTraded] = useState('');
   const [briefingBreadth, setBriefingBreadth] = useState('Positive (1.3x)');
   const [briefingLeadArticle, setBriefingLeadArticle] = useState('');
-  const [briefingGainersText, setBriefingGainersText] = useState('GTCO (₦119.20, +3.65%)\nFIDSON (₦94.50, +9.88%)\nPRESCO (₦620.00, +5.44%)');
-  const [briefingLosersText, setBriefingLosersText] = useState('INTBREW (₦8.10, -3.57%)\nHONYFLOUR (₦30.20, -3.82%)');
-  const [briefingYoutubeUrl, setBriefingYoutubeUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  const [briefingGainersText, setBriefingGainersText] = useState('');
+  const [briefingLosersText, setBriefingLosersText] = useState('');
+  const [briefingYoutubeUrl, setBriefingYoutubeUrl] = useState('');
 
-  // Equity Dossier Form State
+  // Equity Dossier Form State (Zero pre-population)
   const [dossierCompany, setDossierCompany] = useState('');
   const [dossierTicker, setDossierTicker] = useState('');
   const [dossierSector, setDossierSector] = useState<NgxSector>('Banking');
   const [dossierRating, setDossierRating] = useState<ConvictionRating>('BUY');
-  const [dossierCurrentPrice, setDossierCurrentPrice] = useState('₦');
-  const [dossierTargetPrice, setDossierTargetPrice] = useState('₦');
-  const [dossierUpside, setDossierUpside] = useState('+%');
-  const [dossierPe, setDossierPe] = useState('4.2x');
-  const [dossierPb, setDossierPb] = useState('0.85x');
-  const [dossierDivYield, setDossierDivYield] = useState('9.5%');
-  const [dossierRoe, setDossierRoe] = useState('28.0%');
-  const [dossierMarketCap, setDossierMarketCap] = useState('₦3.20 Trillion');
+  const [dossierCurrentPrice, setDossierCurrentPrice] = useState('');
+  const [dossierTargetPrice, setDossierTargetPrice] = useState('');
+  const [dossierUpside, setDossierUpside] = useState('');
+  const [dossierPe, setDossierPe] = useState('');
+  const [dossierPb, setDossierPb] = useState('');
+  const [dossierDivYield, setDossierDivYield] = useState('');
+  const [dossierRoe, setDossierRoe] = useState('');
+  const [dossierMarketCap, setDossierMarketCap] = useState('');
   const [dossierSummary, setDossierSummary] = useState('');
   const [dossierThesis, setDossierThesis] = useState('');
   const [dossierAnalysisMarkdown, setDossierAnalysisMarkdown] = useState('');
-  const [dossierTearSheetUrl, setDossierTearSheetUrl] = useState('/transcripts/PSA-Financial-Chronicle-VOL-LIII.docx');
+  const [dossierTearSheetUrl, setDossierTearSheetUrl] = useState('');
 
   // Result & WhatsApp Teaser State
   const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
@@ -292,7 +292,7 @@ export const AdminPublish: React.FC<AdminPublishProps> = ({ onNavigate }) => {
           <input
             type="password"
             autoFocus
-            placeholder="Enter Master PIN (e.g. 2570)..."
+            placeholder="Enter Executive Master PIN..."
             value={securityPin}
             onChange={e => setSecurityPin(e.target.value)}
             className="w-full p-3 text-center bg-white border border-slate-200 rounded-2xl text-sm font-mono tracking-widest outline-none focus:border-[#C9A84C]"

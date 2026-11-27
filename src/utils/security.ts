@@ -192,3 +192,171 @@ function getInitialAuditLogs(): SecurityAuditEntry[] {
     }
   ];
 }
+
+/**
+ * Client-Side Rate Limiter & Brute Force Lockout
+ * Protects login endpoints (analyst, member, staff, super admin) from dictionary/credential stuffing attacks.
+ */
+interface RateLimitRecord {
+  attempts: number;
+  firstAttemptAt: number;
+  lockedUntil?: number;
+}
+
+const RATE_LIMIT_STORAGE_KEY = 'psa_auth_rate_limits';
+
+function getRateLimitStore(): Record<string, RateLimitRecord> {
+  try {
+    const raw = localStorage.getItem(RATE_LIMIT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveRateLimitStore(store: Record<string, RateLimitRecord>): void {
+  try {
+    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, JSON.stringify(store));
+  } catch (e) {
+    console.error('Rate limit storage error', e);
+  }
+}
+
+/**
+ * Checks whether an identifier (email, IP, or role key) is currently locked out
+ */
+export function checkRateLimit(
+  identifier: string,
+  maxAttempts: number = 5,
+  lockoutDurationMs: number = 300000 // 5 minutes
+): { allowed: boolean; remainingAttempts: number; retryAfterSeconds: number } {
+  if (!identifier) return { allowed: true, remainingAttempts: maxAttempts, retryAfterSeconds: 0 };
+
+  const store = getRateLimitStore();
+  const key = identifier.trim().toLowerCase();
+  const record = store[key];
+
+  if (!record) {
+    return { allowed: true, remainingAttempts: maxAttempts, retryAfterSeconds: 0 };
+  }
+
+  const now = Date.now();
+
+  // If locked out, check if lockout has expired
+  if (record.lockedUntil && record.lockedUntil > now) {
+    const retryAfter = Math.ceil((record.lockedUntil - now) / 1000);
+    return {
+      allowed: false,
+      remainingAttempts: 0,
+      retryAfterSeconds: retryAfter
+    };
+  }
+
+  // If lockout expired or more than 15 minutes have passed since first attempt, reset
+  if (now - record.firstAttemptAt > 900000) {
+    delete store[key];
+    saveRateLimitStore(store);
+    return { allowed: true, remainingAttempts: maxAttempts, retryAfterSeconds: 0 };
+  }
+
+  const remaining = Math.max(0, maxAttempts - record.attempts);
+  return {
+    allowed: remaining > 0,
+    remainingAttempts: remaining,
+    retryAfterSeconds: 0
+  };
+}
+
+/**
+ * Records a failed authentication attempt. Automatically triggers lockout on reaching max attempts.
+ */
+export function recordFailedAttempt(
+  identifier: string,
+  maxAttempts: number = 5,
+  lockoutDurationMs: number = 300000
+): { locked: boolean; remainingAttempts: number; retryAfterSeconds: number } {
+  const store = getRateLimitStore();
+  const key = (identifier || 'anonymous').trim().toLowerCase();
+  const now = Date.now();
+
+  let record = store[key];
+  if (!record || now - record.firstAttemptAt > 900000) {
+    record = { attempts: 1, firstAttemptAt: now };
+  } else {
+    record.attempts += 1;
+  }
+
+  if (record.attempts >= maxAttempts) {
+    record.lockedUntil = now + lockoutDurationMs;
+    const retryAfter = Math.ceil(lockoutDurationMs / 1000);
+    store[key] = record;
+    saveRateLimitStore(store);
+
+    logSecurityEvent(
+      'RATE_LIMIT_LOCKOUT',
+      identifier,
+      'auth',
+      `Identifier reached ${maxAttempts} consecutive failed attempts. Locked out for ${retryAfter}s.`,
+      'high'
+    );
+
+    return { locked: true, remainingAttempts: 0, retryAfterSeconds: retryAfter };
+  }
+
+  store[key] = record;
+  saveRateLimitStore(store);
+
+  const remaining = Math.max(0, maxAttempts - record.attempts);
+  return { locked: false, remainingAttempts: remaining, retryAfterSeconds: 0 };
+}
+
+/**
+ * Resets the failed attempts counter upon successful authentication
+ */
+export function resetRateLimit(identifier: string): void {
+  if (!identifier) return;
+  const store = getRateLimitStore();
+  const key = identifier.trim().toLowerCase();
+  if (store[key]) {
+    delete store[key];
+    saveRateLimitStore(store);
+  }
+}
+
+/**
+ * Validates credentials strictly against SQL injection, null-byte attacks, and XSS
+ */
+export function validateCredentialSafety(value: string, fieldName: string): { isValid: boolean; error?: string } {
+  if (!value) return { isValid: true };
+
+  const sqlCheck = checkSqlSafety(value);
+  if (!sqlCheck.isSafe) {
+    logSecurityEvent(
+      'INJECTION_ATTEMPT_BLOCKED',
+      fieldName,
+      'input_threat',
+      `Suspicious pattern detected in ${fieldName}: "${sqlCheck.detectedPattern}".`,
+      'high'
+    );
+    return {
+      isValid: false,
+      error: `Security Alert: Dangerous characters or SQL sequence detected in ${fieldName}. Submission blocked.`
+    };
+  }
+
+  if (value.includes('<script') || value.includes('javascript:') || value.includes('\0')) {
+    logSecurityEvent(
+      'XSS_ATTEMPT_BLOCKED',
+      fieldName,
+      'input_threat',
+      `Malicious script payload detected in ${fieldName}.`,
+      'high'
+    );
+    return {
+      isValid: false,
+      error: `Security Alert: Malicious script tags or protocols detected in ${fieldName}. Submission blocked.`
+    };
+  }
+
+  return { isValid: true };
+}
