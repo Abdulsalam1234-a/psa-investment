@@ -101,9 +101,6 @@ export const AdminPanel: React.FC = () => {
   const [securityLogs, setSecurityLogs] = useState<SecurityAuditEntry[]>(() => getSecurityAuditLogs());
   const [testPayload, setTestPayload] = useState<string>("' OR '1'='1");
   const [testResult, setTestResult] = useState<{ isSafe: boolean; detected?: string; sanitized: string } | null>(null);
-  const [securityPin, setSecurityPin] = useState<string>('2570');
-  const [pinInput, setPinInput] = useState<string>('');
-  const [isPinUnlocked, setIsPinUnlocked] = useState<boolean>(true);
 
   // Staff management state
   const [staffRoleFilter, setStaffRoleFilter] = useState<string>('all');

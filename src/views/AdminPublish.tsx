@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { computeSha256, SUPERADMIN_PIN_HASH } from '../utils/security';
 import { NgxSector, ConvictionRating, EquityDossier, MarketBriefing } from '../types';
 
 interface AdminPublishProps {
@@ -81,13 +82,18 @@ export const AdminPublish: React.FC<AdminPublishProps> = ({ onNavigate }) => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleUnlockPin = (e: React.FormEvent) => {
+  const handleUnlockPin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (securityPin === '2570' || securityPin === 'psai2026') {
+    if (!securityPin.trim()) {
+      showToast('Please enter the security PIN.');
+      return;
+    }
+    const pinHash = await computeSha256(securityPin.trim());
+    if (pinHash === SUPERADMIN_PIN_HASH) {
       setIsUnlocked(true);
       showToast('Admin Command Access Unlocked.');
     } else {
-      showToast('Invalid Security PIN.');
+      showToast('Invalid Security PIN. Access denied.');
     }
   };
 

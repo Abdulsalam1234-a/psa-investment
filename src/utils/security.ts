@@ -53,7 +53,7 @@ export function sanitizeSql(input: string): string {
     .replace(/'/g, "''") // Standard SQL escape for single quotes
     .replace(/\\/g, '\\\\')
     .replace(/;/g, '；') // Replace semi-colons to prevent multi-statement stacking
-    .replace(/--/g, '—') // Replace comment dashes
+    .replace(/--/g, '__') // Neutralize SQL comment sequences
     .trim();
 }
 
@@ -410,9 +410,9 @@ export const AUTHORIZED_SUPERADMIN_EMAILS = [
   'salamiabdullhahi257@gmail.com'
 ];
 
-// SHA-256 hash of 'PSAISuperAdmin@1234'
+// Cryptographic SHA-256 digest for Super Admin executive password
 export const SUPERADMIN_PASSWORD_HASH = 'cb80938f9787eb86d909f15243299eba400035b2959e122035ecce89e3eaec3b';
 
-// SHA-256 hash of '2570' (Chief Analyst PIN)
+// Cryptographic SHA-256 digest for executive master PIN
 export const SUPERADMIN_PIN_HASH = '5e8a21ead84851c212c2cae58849de4d37bc0babfcab05ceff51350412eb3e94';
 

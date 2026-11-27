@@ -24,6 +24,7 @@ import mammoth from 'mammoth';
 import { useData } from '../context/DataContext';
 import { ChronicleEdition } from '../types';
 import { parseRawChronicle } from '../utils/chronicleParser';
+import { sanitizeSafeHtml } from '../utils/security';
 import { ChronicleReader } from './ChronicleReader';
 
 export const ChronicleAdminDesk: React.FC = () => {
@@ -103,11 +104,11 @@ export const ChronicleAdminDesk: React.FC = () => {
       // Read array buffer for mammoth parsing
       const arrayBuffer = await file.arrayBuffer();
 
-      // Convert to HTML using mammoth
+      // Convert to HTML using mammoth and sanitize immediately
       const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
       const rawTextResult = await mammoth.extractRawText({ arrayBuffer });
 
-      const html = htmlResult.value;
+      const html = sanitizeSafeHtml(htmlResult.value);
       const rawText = rawTextResult.value;
 
       setDocxFormattedHtml(html);

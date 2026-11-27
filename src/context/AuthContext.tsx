@@ -150,13 +150,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const isAdminLogin = isAdminEmail(cleanEmail);
 
-      // Strict Password Verification
+      // Strict Password Verification via Cryptographic Hash Matching
       if (isAdminLogin) {
         const passHash = await computeSha256(pass);
-        if (passHash !== SUPERADMIN_PASSWORD_HASH && pass !== 'PSAISuperAdmin@1234') {
+        if (passHash !== SUPERADMIN_PASSWORD_HASH) {
           recordFailedAttempt(cleanEmail);
           logSecurityEvent('SUPERADMIN_FAILED_AUTH', cleanEmail, 'auth', 'Invalid password attempted for Super Admin account', 'high');
-          throw new Error('Authentication Failed: Invalid password for Founder & Chief Analyst account.');
+          throw new Error('Authentication Failed: Invalid credentials for Founder & Chief Analyst account.');
         }
       } else {
         // Check if email belongs to a staff member
@@ -313,7 +313,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const isSuperAdminStaff = isAdminEmail(cleanEmail);
       if (isSuperAdminStaff) {
         const passHash = await computeSha256(pass);
-        if (passHash !== SUPERADMIN_PASSWORD_HASH && pass !== 'PSAISuperAdmin@1234') {
+        if (passHash !== SUPERADMIN_PASSWORD_HASH) {
           recordFailedAttempt(cleanEmail);
           throw new Error('Authentication Failed: Invalid credentials for Chief Analyst account.');
         }
@@ -657,8 +657,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedResets = JSON.parse(localStorage.getItem('psa_pwd_resets') || '{}');
       const resetEntry = storedResets[cleanEmail];
 
-      // Verify code (allow demo OTPs 123456 or 257000 as universal fallback)
-      const isValid = (resetEntry && resetEntry.code === cleanCode && resetEntry.expiresAt > Date.now()) || cleanCode === '123456' || cleanCode === '257000';
+      // Verify code strictly against valid active reset record
+      const isValid = Boolean(resetEntry && resetEntry.code === cleanCode && resetEntry.expiresAt > Date.now());
 
       if (!isValid) {
         throw new Error('Invalid or expired 6-digit recovery code. Please request a new code.');
@@ -704,13 +704,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const safety = validateCredentialSafety(key, 'Super User Master Key');
       if (!safety.isValid) throw new Error(safety.error);
 
-      // Verify exact credentials (PIN '2570' or Password 'PSAISuperAdmin@1234')
+      // Verify cryptographic credential digest
       const inputHash = await computeSha256(key);
       const isAuthorized =
         inputHash === SUPERADMIN_PIN_HASH ||
-        inputHash === SUPERADMIN_PASSWORD_HASH ||
-        key === '2570' ||
-        key === 'PSAISuperAdmin@1234';
+        inputHash === SUPERADMIN_PASSWORD_HASH;
 
       if (!isAuthorized) {
         recordFailedAttempt('superuser_master_pin', 5, 300000);
