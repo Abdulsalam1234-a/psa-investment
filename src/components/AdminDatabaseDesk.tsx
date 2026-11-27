@@ -12,7 +12,10 @@ import {
   ShieldCheck,
   Server,
   Zap,
-  Info
+  Info,
+  Code,
+  Copy,
+  Check
 } from 'lucide-react';
 import {
   getCloudDbConfig,
@@ -33,6 +36,8 @@ export const AdminDatabaseDesk: React.FC = () => {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; latencyMs: number } | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showSqlSchema, setShowSqlSchema] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -111,6 +116,83 @@ export const AdminDatabaseDesk: React.FC = () => {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleCopySql = () => {
+    const sqlScript = `-- PSA Investment Database Schema
+CREATE TABLE IF NOT EXISTS public.briefings (
+  id TEXT PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  volume TEXT NOT NULL,
+  briefing_date DATE NOT NULL,
+  title TEXT NOT NULL,
+  asi TEXT NOT NULL,
+  asi_change TEXT NOT NULL,
+  market_cap TEXT NOT NULL,
+  lead_article TEXT NOT NULL,
+  macro_highlights JSONB DEFAULT '[]'::jsonb,
+  top_gainers JSONB DEFAULT '[]'::jsonb,
+  top_losers JSONB DEFAULT '[]'::jsonb,
+  published_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS public.dossiers (
+  id TEXT PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  ticker TEXT NOT NULL,
+  company_name TEXT NOT NULL,
+  sector TEXT NOT NULL,
+  conviction_rating TEXT NOT NULL,
+  current_price TEXT NOT NULL,
+  target_price TEXT NOT NULL,
+  upside_percent TEXT NOT NULL,
+  multiples JSONB DEFAULT '{}'::jsonb,
+  executive_summary TEXT NOT NULL,
+  investment_thesis TEXT NOT NULL,
+  published_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS public.chronicles (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  volume TEXT NOT NULL,
+  chronicle_date DATE NOT NULL,
+  cover_headline TEXT NOT NULL,
+  market_summary TEXT NOT NULL,
+  raw_text TEXT,
+  formatted_html TEXT,
+  docx_url TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS public.members (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT,
+  role_type TEXT DEFAULT 'member',
+  membership_status TEXT DEFAULT 'pending',
+  applied_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS public.events (
+  id TEXT PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  event_date TIMESTAMPTZ NOT NULL,
+  location TEXT NOT NULL,
+  description TEXT NOT NULL
+);
+ALTER TABLE public.briefings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.dossiers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chronicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read Briefings" ON public.briefings FOR SELECT USING (true);
+CREATE POLICY "Public Read Dossiers" ON public.dossiers FOR SELECT USING (true);
+CREATE POLICY "Public Read Chronicles" ON public.chronicles FOR SELECT USING (true);
+CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
+
+    navigator.clipboard.writeText(sqlScript);
+    setCopiedSql(true);
+    showToast('PostgreSQL SQL Schema copied to clipboard!');
+    setTimeout(() => setCopiedSql(false), 2500);
   };
 
   return (
@@ -234,15 +316,26 @@ export const AdminDatabaseDesk: React.FC = () => {
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <button
-              type="button"
-              onClick={handleTestConnection}
-              disabled={testing}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
-            >
-              <Server className="w-3.5 h-3.5" />
-              <span>{testing ? 'Probing Cloud...' : 'Test Connection'}</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleTestConnection}
+                disabled={testing}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
+              >
+                <Server className="w-3.5 h-3.5" />
+                <span>{testing ? 'Probing Cloud...' : 'Test Connection'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleCopySql}
+                className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
+              >
+                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Code className="w-3.5 h-3.5 text-amber-700" />}
+                <span>{copiedSql ? 'Schema Copied!' : 'Copy Supabase SQL Schema'}</span>
+              </button>
+            </div>
 
             <div className="flex items-center gap-2">
               <button

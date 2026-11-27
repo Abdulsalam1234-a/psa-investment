@@ -109,6 +109,23 @@ export const syncTableToCloud = async (
   tableName: string,
   records: any[]
 ): Promise<{ success: boolean; count: number; error?: string }> => {
+  // 1. Attempt secure serverless backend proxy first
+  try {
+    const apiRes = await fetch('/api/database', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: tableName, records })
+    });
+    if (apiRes.ok) {
+      const json = await apiRes.json();
+      if (json.success) {
+        return { success: true, count: records.length };
+      }
+    }
+  } catch {
+    // Serverless proxy unavailable, proceed to client fallback
+  }
+
   const config = getCloudDbConfig();
   if (config.provider === 'local_fallback' || !config.projectUrl || !config.apiKey) {
     // Already in local storage, operation succeeded in local mode
@@ -149,6 +166,19 @@ export const syncTableToCloud = async (
 export const fetchTableFromCloud = async <T = any>(
   tableName: string
 ): Promise<T[] | null> => {
+  // 1. Attempt secure serverless backend proxy first
+  try {
+    const apiRes = await fetch(`/api/database?table=${encodeURIComponent(tableName)}`);
+    if (apiRes.ok) {
+      const json = await apiRes.json();
+      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        return json.data as T[];
+      }
+    }
+  } catch {
+    // Serverless proxy unavailable, proceed to client fallback
+  }
+
   const config = getCloudDbConfig();
   if (config.provider === 'local_fallback' || !config.projectUrl || !config.apiKey) {
     return null;

@@ -195,20 +195,11 @@ export const ChronicleAdminDesk: React.FC = () => {
     setGeminiStatus('Connecting to Google Gemini API at 07:00 AM WAT schedule...');
 
     try {
-      if (geminiApiKey) {
-        setGeminiStatus('Generating official verified market chronicle via Google Gemini 1.5 Pro / 2.5...');
-        // Direct Gemini API call if key is present
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: `You are the Lead Financial Analyst at PSA INVESTMENT (Chief Analyst Salami Abdullahi).
+      // 1. Try secure serverless backend endpoint first
+      setGeminiStatus('Calling secure serverless backend (/api/summarize-chronicle)...');
+      let candidateText = '';
+
+      const promptText = `You are the Lead Financial Analyst at PSA INVESTMENT (Chief Analyst Salami Abdullahi).
 Generate the morning 07:00 AM WAT pre-market newspaper edition for THE PSA FINANCIAL CHRONICLE.
 Target date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
 Volume: VOL. ${chronicles.length + 1}.
@@ -221,11 +212,35 @@ Include:
 6. BLUE-CHIP BELLWETHERS & VOLUME LEADERS DOSSIER (Zenith Bank, GTCO, Access, MTNN, Dangote Cement).
 7. MACROECONOMIC, FX & MONEY MARKET BENCHMARKS (MPR, CRR, Official FX, BDC FX).
 8. TACTICAL PRE-MARKET PLAYBOOK & BROKER DESK STRATEGY (3 tactical numbered points).
-Format strictly matching PSA Financial Chronicle newspaper standard.`
-                    }
-                  ]
-                }
-              ]
+Format strictly matching PSA Financial Chronicle newspaper standard.`;
+
+      try {
+        const serverRes = await fetch('/api/summarize-chronicle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: promptText })
+        });
+        if (serverRes.ok) {
+          const serverData = await serverRes.json();
+          if (serverData?.text) {
+            candidateText = serverData.text;
+            setGeminiStatus('Successfully generated via serverless backend Gemini service.');
+          }
+        }
+      } catch {
+        // Fall back to client execution if serverless route unavailable
+      }
+
+      if (!candidateText && geminiApiKey) {
+        setGeminiStatus('Generating official verified market chronicle via Google Gemini API...');
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: { temperature: 0.2, maxOutputTokens: 4096 }
             })
           }
         );
@@ -235,17 +250,15 @@ Format strictly matching PSA Financial Chronicle newspaper standard.`
         }
 
         const data = await response.json();
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      }
 
-        if (generatedText) {
-          setGeminiStatus('Parsing and publishing generated newspaper edition...');
-          const newEdition = await autoPublishGeminiChronicle(generatedText, `VOL. ${chronicles.length + 1}`);
-          showToast(`Successfully published ${newEdition.volume} via Gemini 7:00 AM Automation!`);
-          setGeminiStatus(`Successfully auto-published ${newEdition.volume} to live archive.`);
-          setSubTab('manage');
-        } else {
-          throw new Error('No text returned from Gemini API.');
-        }
+      if (candidateText) {
+        setGeminiStatus('Parsing and publishing generated newspaper edition...');
+        const newEdition = await autoPublishGeminiChronicle(candidateText, `VOL. ${chronicles.length + 1}`);
+        showToast(`Successfully published ${newEdition.volume} via Gemini 7:00 AM Automation!`);
+        setGeminiStatus(`Successfully auto-published ${newEdition.volume} to live archive.`);
+        setSubTab('manage');
       } else {
         // Simulation mode for demonstration without live key
         setGeminiStatus('Simulating 07:00 AM Automated Gemini Ingestion Pipeline...');
@@ -261,7 +274,7 @@ Verified Pre-Market Intelligence Briefing for Institutional Partners, Stockbroke
 
 NGX BELLWETHERS CONSOLIDATE AMID RETAIL BUYING
 Index Holds 248,360 pts as Banking Tier-1 Counters Attract Fresh Bids Ahead of Floor Open
-LAGOS (PSA INVESTMENT DESK) — Institutional interest gathered around dividend-paying counters as the market opened with positive breadth (25 gainers vs 18 losers).
+LAGOS (PSA INVESTMENT DESK) - Institutional interest gathered around dividend-paying counters as the market opened with positive breadth (25 gainers vs 18 losers).
 
 TABLE 1: VERIFIED OFFICIAL MARKET BAROMETERS
 | Official Market Barometer | Current Close | Prior Close | Day Change (%) | Official Verified Source |
