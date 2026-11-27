@@ -1,13 +1,16 @@
 /**
- * PSA Investment (PSAI) — Static Pre-Rendering & Technical SEO Script
+ * PSA Investment (PSAI) - Static Pre-Rendering & Technical SEO Script
  * Generates:
- * 1. 1200x630 Vector Open Graph Cards (public/og and dist/og)
+ * 1. 1200x630 Vector and Raster Open Graph Cards (public/og and dist/og)
  * 2. Pre-rendered HTML pages with JSON-LD, SEO meta tags, and semantic HTML for all routes
  * 3. Distribution artifacts (sitemap.xml, robots.txt, llms.txt)
  */
 
 const fs = require('fs');
 const path = require('path');
+
+// Execute Raster PNG generation first for WhatsApp, LinkedIn and X social link cards
+require('./generate-png-og.cjs');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
@@ -259,7 +262,7 @@ saveOgSvg('presco.svg', generateOgSvg({
 }));
 
 saveOgSvg('briefing-latest.svg', generateOgSvg({
-  title: 'NGX Pre-Market Intelligence Briefing — Vol. LVIII',
+  title: 'NGX Pre-Market Intelligence Briefing - Vol. LVIII',
   subtitle: 'ASI crosses 104,000 pts milestone | Banking liquidity surge & corporate actions',
   badge: '07:00 WAT BRIEFING'
 }));
@@ -272,7 +275,7 @@ console.log('✓ Open Graph SVG cards generated successfully.');
 const DOSSIERS = [
   {
     slug: 'gtco-holdings-fy2026-valuation-dossier',
-    ogImage: '/og/gtco.svg',
+    ogImage: '/og/gtco.png',
     title: 'Guaranty Trust Holding Company (GTCO): FY2026 Valuation & Dividend Analysis',
     companyName: 'Guaranty Trust Holding Company Plc',
     ticker: 'GTCO',
@@ -303,7 +306,7 @@ const DOSSIERS = [
   },
   {
     slug: 'zenith-bank-recapitalization-equity-dossier',
-    ogImage: '/og/zenithbank.svg',
+    ogImage: '/og/zenithbank.png',
     title: 'Zenith Bank Plc: Recapitalization, Tier-1 Capital Adequacy & Valuation Model',
     companyName: 'Zenith Bank Plc',
     ticker: 'ZENITHBANK',
@@ -334,7 +337,7 @@ const DOSSIERS = [
   },
   {
     slug: 'seplat-energy-anoh-gas-valuation-dossier',
-    ogImage: '/og/seplat.svg',
+    ogImage: '/og/seplat.png',
     title: 'Seplat Energy Plc: ANOH Gas Commercialization & Free Cash Flow Accretion',
     companyName: 'Seplat Energy Plc',
     ticker: 'SEPLAT',
@@ -365,7 +368,7 @@ const DOSSIERS = [
   },
   {
     slug: 'mtn-nigeria-telecoms-infrastructure-dossier',
-    ogImage: '/og/mtnn.svg',
+    ogImage: '/og/mtnn.png',
     title: 'MTN Nigeria Communications Plc: Tariff Deregulation, 5G Capex & FX Turnaround',
     companyName: 'MTN Nigeria Communications Plc',
     ticker: 'MTNN',
@@ -391,12 +394,12 @@ const DOSSIERS = [
       { metric: 'Return on Equity (ROE)', current: '31.5%', peer: '24.0%', assessment: 'Underlying operating ROE insulated by digital and fintech transaction growth.' },
       { metric: 'Market Capitalization', current: '₦4.32 Trillion', peer: '₦2.80 Trillion', assessment: 'Second-largest enterprise on the entire Nigerian capital market.' }
     ],
-    executiveSummary: 'MTN Nigeria Communications Plc (NGX: MTNN) has navigated the worst of the 2024–2025 foreign exchange translation storm. With tower lease contracts renegotiated with IHS Towers and ATC to cap FX exposure, coupled with Nigerian Communications Commission regulatory tariff adjustments, MTNN is poised for the most rapid earnings inflection on the NGX.',
+    executiveSummary: 'MTN Nigeria Communications Plc (NGX: MTNN) has navigated the worst of the 2024-2025 foreign exchange translation storm. With tower lease contracts renegotiated with IHS Towers and ATC to cap FX exposure, coupled with Nigerian Communications Commission regulatory tariff adjustments, MTNN is poised for the most rapid earnings inflection on the NGX.',
     investmentThesis: 'We upgrade MTN Nigeria to BUY with a target price of ₦285.00 (+39.0% upside). Voice and data traffic volumes continue to compound at over 28% year-on-year, while MoMo PSB active wallets have surpassed 6 million users. Free cash flow generation will rebound swiftly, clearing negative equity and restoring dividend distributions.'
   },
   {
     slug: 'dangote-cement-industrial-growth-dossier',
-    ogImage: '/og/dangcem.svg',
+    ogImage: '/og/dangcem.png',
     title: 'Dangote Cement Plc: Pan-African Export Capacity, Pricing Power & Margin Defense',
     companyName: 'Dangote Cement Plc',
     ticker: 'DANGCEM',
@@ -427,7 +430,7 @@ const DOSSIERS = [
   },
   {
     slug: 'presco-plantation-agriculture-expansion-dossier',
-    ogImage: '/og/presco.svg',
+    ogImage: '/og/presco.png',
     title: 'Presco Plc: Crude Palm Oil Yield Expansion, Land Acquisition & Export Parity',
     companyName: 'Presco Plc',
     ticker: 'PRESCO',
@@ -461,7 +464,7 @@ const DOSSIERS = [
 const BRIEFINGS = [
   {
     slug: 'ngx-pre-market-briefing-2026-11-27',
-    ogImage: '/og/briefing-latest.svg',
+    ogImage: '/og/briefing-latest.png',
     volume: 'VOL. LVIII',
     date: '2026-11-27',
     title: 'NGX Pre-Market Intelligence: ASI Crosses 104,200 pts; Tier-1 Banking Recapitalization Liquidity Surge',
@@ -495,7 +498,7 @@ const BRIEFINGS = [
   },
   {
     slug: 'ngx-pre-market-briefing-2026-11-26',
-    ogImage: '/og/market-briefings.svg',
+    ogImage: '/og/market-briefings.png',
     volume: 'VOL. LVII',
     date: '2026-11-26',
     title: 'NGX Pre-Market Intelligence: CBN MPC Rate Hold Reaction; MTNN Leads Infrastructure Rebound',
@@ -529,7 +532,7 @@ const BRIEFINGS = [
   },
   {
     slug: 'ngx-pre-market-briefing-2026-11-13',
-    ogImage: '/og/market-briefings.svg',
+    ogImage: '/og/market-briefings.png',
     volume: 'VOL. LIII',
     date: '2026-11-13',
     title: 'NGX Pre-Market Intelligence: Banking Recapitalization Rights Issues Absorb Foreign Inflows',
@@ -569,7 +572,7 @@ const CORE_PAGES = [
     route: '/research',
     title: 'Equity Research & Valuation Dossiers | Nigerian Exchange (NGX) | PSA Investment',
     description: 'Institutional Nigerian equity research dossiers, DCF valuation models, banking recapitalization stress-tests, and dividend sustainability metrics directed by Salami Abdullahi.',
-    ogImage: '/og/research.svg',
+    ogImage: '/og/research.png',
     heading: 'Nigerian Exchange (NGX) Equity Research & Valuation Dossiers',
     subheading: 'Institutional-grade fundamental analysis, Discounted Cash Flow (DCF) valuation models, and banking recapitalization stress-testing directed by Chief Analyst Salami Abdullahi.'
   },
@@ -577,7 +580,7 @@ const CORE_PAGES = [
     route: '/market-briefings',
     title: 'Daily NGX Pre-Market Intelligence Briefing (07:00 WAT) | PSA Investment',
     description: 'Comprehensive Nigerian Exchange (NGX) daily pre-market intelligence published every morning at 07:00 WAT. ASI snapshot, gainers/losers, corporate disclosures, and macro benchmarks.',
-    ogImage: '/og/market-briefings.svg',
+    ogImage: '/og/market-briefings.png',
     heading: 'Daily NGX Pre-Market Intelligence Briefings',
     subheading: 'Published every trading day at 07:00 WAT before the opening bell. Independent coverage of the Nigerian Exchange (NGX) All-Share Index, banking liquidity, corporate earnings, and macro indicators.'
   },
@@ -585,7 +588,7 @@ const CORE_PAGES = [
     route: '/about',
     title: 'About PSA Investment | Salami Abdullahi | Institutional Authority & E-E-A-T',
     description: 'PSA Investment is an independent Nigerian equity research, corporate valuation, and capital advisory firm founded by Salami Abdullahi (ABU First-Class Honours, IBM Data Analyst, FMVA Candidate).',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'About PSA Investment (PSAI)',
     subheading: 'Independent Nigerian Equity Research, Corporate Valuation & Capital Advisory'
   },
@@ -593,7 +596,7 @@ const CORE_PAGES = [
     route: '/services',
     title: 'Services & Advisory | Portfolio Advisory & Solar Finance | PSA Investment',
     description: 'Institutional investment advisory services: Equity Research & Valuation, Banking Recapitalization Analysis, Solar Power-as-a-Service Underwriting, and Executive Financial Modeling.',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'Advisory & Capital Services',
     subheading: 'Rigorous valuation underwriting, equity intelligence, and structured energy financing.'
   },
@@ -601,7 +604,7 @@ const CORE_PAGES = [
     route: '/chronicle',
     title: 'PSA Financial Chronicle & Transcripts | Institutional Archives | PSA Investment',
     description: 'Weekly financial chronicle, earnings call transcripts, and macroeconomic research digests covering the Nigerian capital markets.',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'PSA Financial Chronicle & Transcripts',
     subheading: 'Comprehensive archival research, executive transcripts, and institutional digests.'
   },
@@ -609,7 +612,7 @@ const CORE_PAGES = [
     route: '/events',
     title: 'Events & FMVA Masterclass | Executive Financial Education | PSA Investment',
     description: 'Professional executive masterclasses in Financial Modeling and Valuation Analysis (FMVA) and Nigerian capital market symposiums directed by Salami Abdullahi.',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'Executive Education & Events',
     subheading: 'Hands-on 3-statement modeling, DCF valuation, and banking recapitalization masterclasses.'
   },
@@ -617,15 +620,15 @@ const CORE_PAGES = [
     route: '/events/financial-modeling-valuation-analysis-masterclass-nov-2026',
     title: 'Financial Modeling & Valuation Analysis (FMVA) Masterclass Nov 28, 2026 | PSA Investment',
     description: 'Executive hands-on financial modeling masterclass covering dynamic 3-statement models, DCF valuation, and Nigerian banking recapitalization metrics directed by Salami Abdullahi.',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'Financial Modeling & Valuation Analysis (FMVA) Executive Masterclass',
-    subheading: 'Saturday, November 28, 2026 | 10:00 AM – 4:00 PM WAT | Virtual Interactive Session'
+    subheading: 'Saturday, November 28, 2026 | 10:00 AM - 4:00 PM WAT | Virtual Interactive Session'
   },
   {
     route: '/analyst-circle',
     title: 'PSA Analyst Circle | Institutional Membership Tier | PSA Investment',
     description: 'Private research access for portfolio managers, corporate treasurers, and high-net-worth investors. Tear-sheets, private Q&A, and real-time research alerts.',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'The PSA Analyst Circle',
     subheading: 'Exclusive institutional equity research, downloadable financial models, and strategic capital market insights.'
   },
@@ -633,15 +636,15 @@ const CORE_PAGES = [
     route: '/videos',
     title: 'PSA Lens | Video Market Intelligence & YouTube Analysis | PSA Investment',
     description: 'Video-based Nigerian stock market commentary, company deep-dives, and financial intelligence from @psa_investment on YouTube.',
-    ogImage: '/og/default.svg',
-    heading: 'PSA Lens — Video Market Intelligence',
+    ogImage: '/og/default.png',
+    heading: 'PSA Lens - Video Market Intelligence',
     subheading: 'Executive video analysis, earnings breakdowns, and macroeconomic commentary.'
   },
   {
     route: '/contact',
     title: 'Contact Advisory Desk | Lagos & Abuja, Nigeria | PSA Investment',
     description: 'Get in touch with the PSA Investment research desk and capital advisory team in Lagos and Abuja. Phone: +234 706 837 1292. Email: psainvestment.ng@gmail.com.',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'Contact PSA Investment',
     subheading: 'Institutional Advisory Desk | Lagos & Abuja, Nigeria'
   },
@@ -649,7 +652,7 @@ const CORE_PAGES = [
     route: '/admin/publish',
     title: 'Fast-Publishing CMS | 07:45 WAT Workflow | PSA Investment Admin',
     description: 'Protected fast-publishing portal for daily NGX pre-market briefings and monthly equity research dossiers.',
-    ogImage: '/og/default.svg',
+    ogImage: '/og/default.png',
     heading: 'PSA Investment Fast-Publishing CMS',
     subheading: 'Publish-First, WhatsApp-Second Workflow for Pre-Market Intelligence'
   }
@@ -830,7 +833,7 @@ function buildBriefingHtml(briefing) {
     </section>
 
     <!-- Gainers & Losers Tables -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 28px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; margin-bottom: 28px;">
       <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px;">
         <h3 style="font-size: 17px; font-weight: 700; color: #10B981; margin: 0 0 14px 0;">Top 5 Gainers</h3>
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">

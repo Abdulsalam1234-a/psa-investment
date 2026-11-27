@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PSA INVESTMENT — DAILY 07:00 WAT FINANCIAL CHRONICLE AUTOMATION
+PSA INVESTMENT - DAILY 07:00 WAT FINANCIAL CHRONICLE AUTOMATION
 ================================================================
 Author: Salami Abdullahi (Founder, CEO, COO & Chief Analyst)
 Platform: PSA Investment (https://psa-investment.ai.studio)
@@ -54,7 +54,7 @@ NGX WEEKLY CLOSE & PRE-MARKET ASSESSMENT
 [Headline regarding NGX ASI, Equities Cap, and Traded Turnover]
 [Subheadline summarizing institutional flow and market breadth]
 
-LAGOS (PSA INVESTMENT DESK) — [Lead dispatch with authoritative institutional perspective]
+LAGOS (PSA INVESTMENT DESK) - [Lead dispatch with authoritative institutional perspective]
 
 TABLE 1: VERIFIED OFFICIAL MARKET BAROMETERS (CLOSE VS. PREVIOUS CLOSE)
 | Official Market Barometer | Current Close | Previous Close | Day Change (%) | Official Verified Source |
