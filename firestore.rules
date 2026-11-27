@@ -1,0 +1,852 @@
+rules_version = '2';
+
+// ===============================================================
+// PSA Investment - Hardened Cloud Firestore Security Rules
+// Institutional Nigerian Equity Research and Intelligence Portal
+// ===============================================================
+//
+// Assumed Data Model
+//
+// Collection: briefings
+// Document ID: unique briefing ID or slug (e.g. ngx-pre-market-briefing-YYYY-MM-DD)
+// Fields:
+//   - id: string (optional, 1-100 chars)
+//   - slug: string (required, 3-150 chars, immutable)
+//   - title: string (required, 3-300 chars)
+//   - date: string (required, 8-30 chars)
+//   - volume: string (required, 2-50 chars)
+//   - asiSnapshot: map (required, market indices and trading breadth)
+//   - topGainers: list (optional, max 100 items)
+//   - topLosers: list (optional, max 100 items)
+//   - moverDrivers: map (optional)
+//   - corporateDisclosures: list (optional, max 100 items)
+//   - macroDrivers: list (optional, max 100 items)
+//   - tacticalPlaybook: list (optional, max 100 items)
+//   - youtubeUrl: string (optional, max 1000 chars)
+//   - leadArticle: string (optional, max 100000 chars)
+//   - whatsappTeaser: string (optional, max 5000 chars)
+//   - publishedAt: string (optional, max 50 chars)
+//   - createdAt: string (optional, max 50 chars)
+//   - updatedAt: string (optional, max 50 chars)
+//
+// Collection: dossiers
+// Document ID: unique dossier ID or slug (e.g. zenith-bank-valuation-q3)
+// Fields:
+//   - id: string (optional, 1-100 chars)
+//   - slug: string (required, 3-150 chars, immutable)
+//   - title: string (required, 3-300 chars)
+//   - companyName: string (required, 2-150 chars)
+//   - ticker: string (required, 1-30 chars)
+//   - sector: string (required, 2-80 chars)
+//   - convictionRating: string (required, enum: BUY, ACCUMULATE, HOLD, WATCHLIST, UNDERWEIGHT, SELL)
+//   - currentPrice: string (optional, max 50 chars)
+//   - targetPrice: string (optional, max 50 chars)
+//   - upsidePercent: string (optional, max 50 chars)
+//   - multiples: map (optional, financial metrics)
+//   - valuationTable: list (optional, max 100 items)
+//   - executiveSummary: string (optional, max 50000 chars)
+//   - investmentThesis: string (optional, max 50000 chars)
+//   - businessOverview: string (optional, max 50000 chars)
+//   - financialDiagnostics: string (optional, max 50000 chars)
+//   - catalystsAndRisks: string (optional, max 50000 chars)
+//   - valuationAndPriceTarget: string (optional, max 50000 chars)
+//   - coverImage: string (optional, max 2000 chars)
+//   - tearSheetPdfUrl: string (optional, max 2000 chars)
+//   - whatsappTeaser: string (optional, max 5000 chars)
+//   - metaTitle: string (optional, max 300 chars)
+//   - metaDescription: string (optional, max 1000 chars)
+//   - author: string (optional, max 100 chars)
+//   - publishedAt: string (optional, max 50 chars)
+//   - updatedAt: string (optional, max 50 chars)
+//   - createdAt: string (optional, max 50 chars)
+//
+// Collection: chronicles
+// Document ID: unique chronicle ID or slug (e.g. chronicle-vol-58)
+// Fields:
+//   - id: string (optional, 1-100 chars)
+//   - slug: string (optional, max 150 chars)
+//   - title: string (required, 3-300 chars)
+//   - subtitle: string (optional, max 500 chars)
+//   - volume: string (required, 2-50 chars)
+//   - editionDate: string (required, 3-80 chars)
+//   - briefingTime: string (optional, max 50 chars)
+//   - headline: string (required, 3-400 chars)
+//   - subheadline: string (optional, max 500 chars)
+//   - leadArticle: string (optional, max 100000 chars)
+//   - marketBarometers: list (optional, max 100 items)
+//   - topGainers: list (optional, max 100 items)
+//   - topLosers: list (optional, max 100 items)
+//   - gainerDrivers: list (optional, max 100 items)
+//   - loserDrivers: list (optional, max 100 items)
+//   - bellwethers: list (optional, max 100 items)
+//   - corporateActions: list (optional, max 100 items)
+//   - macroBenchmarks: list (optional, max 100 items)
+//   - tacticalPlaybook: list (optional, max 100 items)
+//   - rawText: string (optional, max 250000 chars)
+//   - pdfUrl: string (optional, max 2000 chars)
+//   - docxUrl: string (optional, max 2000 chars)
+//   - docxFileName: string (optional, max 300 chars)
+//   - formattedHtml: string (optional, max 250000 chars)
+//   - fileSizeBytes: number (optional)
+//   - status: string (required, enum: published, draft)
+//   - source: string (optional, max 50 chars)
+//   - downloadCount: number (optional)
+//   - viewCount: number (optional)
+//   - createdAt: string (optional, max 50 chars)
+//   - publishedAt: string (optional, max 50 chars)
+//   - updatedAt: string (optional, max 50 chars)
+//
+// Collection: research_reports
+// Document ID: unique report ID (e.g. report-1700000000)
+// Fields:
+//   - id: string (optional, 1-100 chars)
+//   - title: string (required, 3-300 chars)
+//   - summary: string (optional, max 5000 chars)
+//   - body: string (optional, max 150000 chars)
+//   - category: string (required, 2-100 chars)
+//   - coverImage: string (optional, max 2000 chars)
+//   - pdfUrl: string (optional, max 2000 chars)
+//   - access: string (required, enum: public, premium)
+//   - status: string (required, enum: published, draft)
+//   - author: string (optional, max 100 chars)
+//   - readTime: string (optional, max 50 chars)
+//   - downloadCount: number (optional)
+//   - viewsCount: number (optional)
+//   - ticker: string (optional, max 30 chars)
+//   - targetPrice: string (optional, max 50 chars)
+//   - recommendation: string (optional, max 50 chars)
+//   - createdAt: string (optional, max 50 chars)
+//   - updatedAt: string (optional, max 50 chars)
+//
+// Collection: events
+// Document ID: unique event ID (e.g. event-fmva-training-2026)
+// Fields:
+//   - id: string (optional, 1-100 chars)
+//   - slug: string (optional, max 100 chars)
+//   - title: string (required, 3-200 chars)
+//   - category: string (required, enum: masterclass, training, webinar, conference, announcement)
+//   - description: string (optional, max 10000 chars)
+//   - learningObjectives: list (optional, max 50 items)
+//   - targetAudience: string (optional, max 500 chars)
+//   - instructor: string (optional, max 120 chars)
+//   - instructorTitle: string (optional, max 150 chars)
+//   - instructorPhoto: string (optional, max 2000 chars)
+//   - startDate: string (required, 8-30 chars)
+//   - endDate: string (optional, max 30 chars)
+//   - startTime: string (required, 2-30 chars)
+//   - endTime: string (required, 2-30 chars)
+//   - timezone: string (optional, max 30 chars)
+//   - locationType: string (optional, enum: virtual, physical, hybrid)
+//   - venue: string (required, 2-200 chars)
+//   - capacity: number (optional)
+//   - registrationDeadline: string (optional, max 30 chars)
+//   - price: string (optional, max 50 chars)
+//   - status: string (required, enum: upcoming, ongoing, completed, cancelled)
+//   - bannerUrl: string (optional, max 2000 chars)
+//   - badge: string (optional, max 50 chars)
+//   - customFormFields: list (optional, max 50 items)
+//   - createdAt: string (optional, max 50 chars)
+//   - updatedAt: string (optional, max 50 chars)
+//
+// Collection: event_registrations
+// Document ID: unique registration ID (e.g. reg-1700000000-xxxx)
+// Fields:
+//   - id: string (optional, 1-100 chars)
+//   - eventId: string (required, 1-100 chars, immutable)
+//   - eventTitle: string (required, 1-200 chars)
+//   - fullName: string (required, 2-120 chars)
+//   - email: string (required, valid email, max 120 chars)
+//   - phone: string (required, valid phone, 7-40 chars)
+//   - organization: string (optional, max 150 chars)
+//   - jobTitle: string (optional, max 120 chars)
+//   - responses: map (optional, custom form responses)
+//   - ticketCode: string (required, 4-60 chars, immutable)
+//   - registeredAt: string (optional, max 50 chars, immutable)
+//   - status: string (required, enum: confirmed, waitlist, attended, pending, cancelled)
+//
+// Collection: members
+// Document ID: user UID (or unique application ID matching request.auth.uid)
+// Fields:
+//   - uid: string (optional/required, matches auth UID, immutable)
+//   - fullName: string (required, 2-120 chars)
+//   - email: string (required, valid email, max 120 chars, immutable for member)
+//   - phone: string (optional, max 40 chars)
+//   - membershipTier: string (required, enum: standard, executive, institutional, immutable for applicant)
+//   - status: string (required, enum: pending, active, suspended, rejected, immutable for applicant)
+//   - referralCode: string (required, 3-50 chars, immutable for member)
+//   - referredBy: string (optional, max 50 chars)
+//   - referralCount: number (optional, default 0, immutable for member)
+//   - notes: string (optional, max 2000 chars)
+//   - appliedAt: string (optional, max 50 chars)
+//   - approvedAt: string (optional, max 50 chars)
+//   - createdAt: string (optional, max 50 chars)
+//   - updatedAt: string (optional, max 50 chars)
+//
+// Collection: site_settings
+// Document ID: global config document (e.g. default or site_configuration)
+// Fields:
+//   - siteTitle: string (required, 2-100 chars)
+//   - tagline: string (required, 2-200 chars)
+//   - heroHeadline: string (required, 2-200 chars)
+//   - heroSubheadline: string (required, 2-500 chars)
+//   - logoUrl: string (optional, max 200000 chars for data URL/remote link)
+//   - faviconUrl: string (optional, max 200000 chars)
+//   - ceoPhotoUrl: string (optional, max 200000 chars)
+//   - officialEmail: string (optional, max 120 chars)
+//   - ceoEmail: string (optional, max 120 chars)
+//   - officialPhone: string (optional, max 40 chars)
+//   - whatsappChannelUrl: string (optional, max 2000 chars)
+//   - mediumBlogUrl: string (optional, max 2000 chars)
+//   - announcementTickerText: string (optional, max 1000 chars)
+//   - showTicker: bool (optional)
+//   - showDailyChronicleHighlight: bool (optional)
+//   - showAdsenseOnHome: bool (optional)
+//   - metaDescription: string (optional, max 500 chars)
+//   - metaKeywords: string (optional, max 500 chars)
+//   - enableSocialProofMultiplier: bool (optional)
+//   - publicMetricMultiplier: number (optional)
+//   - publicMetricOffset: number (optional)
+//   - missionStatement: string (optional, max 5000 chars)
+//   - visionStatement: string (optional, max 5000 chars)
+//   - pillars: list (optional, max 30 items)
+//   - managementTeam: list (optional, max 30 items)
+//   - financialModels: list (optional, max 30 items)
+//   - updatedAt: string (optional, max 50 chars)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Global Default Deny
+    // ===============================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Core Helper Functions
+    // ===============================================================
+
+    // Check if user is authenticated with Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user is the authorized SuperAdmin
+    // Evaluates custom claim or verified CEO/SuperAdmin email addresses
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.keys().hasAny(['admin']) && request.auth.token.admin == true) ||
+        ('email' in request.auth.token && (
+          request.auth.token.email == 'salamiabdullhahi257@gmail.com' ||
+          request.auth.token.email == 'salamiabdullahi257@gmail.com'
+        ))
+      );
+    }
+
+    // Check if authenticated user owns the resource by ID
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if authenticated user matches document uid field
+    function isDocOwner() {
+      return isAuthenticated() &&
+        ('uid' in resource.data) &&
+        request.auth.uid == resource.data.uid;
+    }
+
+    // Verify UID field is not spoofed during creation
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        (isAuthenticated() && request.resource.data.uid == request.auth.uid);
+    }
+
+    // Verify UID field is not modified during update
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    // Validate that required fields exist in request payload
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate that document contains only allowed fields
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Ensure specified critical fields remain immutable on update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Validate required string field and length
+    function validStringLength(field, minLen, maxLen) {
+      return (field in request.resource.data) &&
+        request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validate optional string field length if present
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validate email format and bounded length
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() >= 5 &&
+        email.size() <= 120 &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Validate phone number format (7 to 40 digits, plus, parentheses, spaces, hyphens)
+    function isValidPhone(phone) {
+      return phone is string &&
+        phone.size() >= 7 &&
+        phone.size() <= 40 &&
+        phone.matches("^[0-9+() -]{7,40}$");
+    }
+
+    // Validate list type and enforce maximum element count
+    function isValidList(field, maxSize) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is list && request.resource.data[field].size() <= maxSize);
+    }
+
+    // Validate map type
+    function isValidMap(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] is map;
+    }
+
+    // ===============================================================
+    // Domain Validator Functions (Validator Function Pattern)
+    // ===============================================================
+
+    // Validator for Daily NGX Pre-Market Intelligence Briefings
+    function isValidBriefing(data) {
+      return hasRequiredFields(['title', 'slug', 'date', 'volume', 'asiSnapshot']) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 300 &&
+        data.slug is string && data.slug.size() >= 3 && data.slug.size() <= 150 &&
+        data.date is string && data.date.size() >= 8 && data.date.size() <= 30 &&
+        data.volume is string && data.volume.size() >= 2 && data.volume.size() <= 50 &&
+        data.asiSnapshot is map &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('leadArticle', 0, 100000) &&
+        isValidOptionalString('whatsappTeaser', 0, 5000) &&
+        isValidOptionalString('youtubeUrl', 0, 1000) &&
+        isValidOptionalString('publishedAt', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        isValidList('topGainers', 100) &&
+        isValidList('topLosers', 100) &&
+        isValidList('corporateDisclosures', 100) &&
+        isValidList('macroDrivers', 100) &&
+        isValidList('tacticalPlaybook', 100) &&
+        isValidMap('moverDrivers') &&
+        data.keys().hasOnly([
+          'id', 'slug', 'title', 'date', 'volume', 'asiSnapshot',
+          'topGainers', 'topLosers', 'moverDrivers', 'corporateDisclosures',
+          'macroDrivers', 'tacticalPlaybook', 'youtubeUrl', 'leadArticle',
+          'whatsappTeaser', 'publishedAt', 'createdAt', 'updatedAt'
+        ]);
+    }
+
+    // Validator for Monthly In-Depth Equity Valuation Dossiers
+    function isValidDossier(data) {
+      return hasRequiredFields(['title', 'slug', 'companyName', 'ticker', 'sector', 'convictionRating']) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 300 &&
+        data.slug is string && data.slug.size() >= 3 && data.slug.size() <= 150 &&
+        data.companyName is string && data.companyName.size() >= 2 && data.companyName.size() <= 150 &&
+        data.ticker is string && data.ticker.size() >= 1 && data.ticker.size() <= 30 &&
+        data.sector is string && data.sector.size() >= 2 && data.sector.size() <= 80 &&
+        data.convictionRating in ['BUY', 'ACCUMULATE', 'HOLD', 'WATCHLIST', 'UNDERWEIGHT', 'SELL'] &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('currentPrice', 0, 50) &&
+        isValidOptionalString('targetPrice', 0, 50) &&
+        isValidOptionalString('upsidePercent', 0, 50) &&
+        isValidOptionalString('executiveSummary', 0, 50000) &&
+        isValidOptionalString('investmentThesis', 0, 50000) &&
+        isValidOptionalString('businessOverview', 0, 50000) &&
+        isValidOptionalString('financialDiagnostics', 0, 50000) &&
+        isValidOptionalString('catalystsAndRisks', 0, 50000) &&
+        isValidOptionalString('valuationAndPriceTarget', 0, 50000) &&
+        isValidOptionalString('coverImage', 0, 2000) &&
+        isValidOptionalString('tearSheetPdfUrl', 0, 2000) &&
+        isValidOptionalString('whatsappTeaser', 0, 5000) &&
+        isValidOptionalString('metaTitle', 0, 300) &&
+        isValidOptionalString('metaDescription', 0, 1000) &&
+        isValidOptionalString('author', 0, 100) &&
+        isValidOptionalString('publishedAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidMap('multiples') &&
+        isValidList('valuationTable', 100) &&
+        data.keys().hasOnly([
+          'id', 'slug', 'title', 'companyName', 'ticker', 'sector',
+          'convictionRating', 'currentPrice', 'targetPrice', 'upsidePercent',
+          'multiples', 'valuationTable', 'executiveSummary', 'investmentThesis',
+          'businessOverview', 'financialDiagnostics', 'catalystsAndRisks',
+          'valuationAndPriceTarget', 'coverImage', 'tearSheetPdfUrl',
+          'whatsappTeaser', 'metaTitle', 'metaDescription', 'author',
+          'publishedAt', 'updatedAt', 'createdAt'
+        ]);
+    }
+
+    // Validator for Daily Financial Chronicle Editions
+    function isValidChronicle(data) {
+      return hasRequiredFields(['title', 'volume', 'editionDate', 'headline', 'status']) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 300 &&
+        data.volume is string && data.volume.size() >= 2 && data.volume.size() <= 50 &&
+        data.editionDate is string && data.editionDate.size() >= 3 && data.editionDate.size() <= 80 &&
+        data.headline is string && data.headline.size() >= 3 && data.headline.size() <= 400 &&
+        data.status in ['published', 'draft'] &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('slug', 0, 150) &&
+        isValidOptionalString('subtitle', 0, 500) &&
+        isValidOptionalString('briefingTime', 0, 50) &&
+        isValidOptionalString('subheadline', 0, 500) &&
+        isValidOptionalString('leadArticle', 0, 100000) &&
+        isValidOptionalString('rawText', 0, 250000) &&
+        isValidOptionalString('pdfUrl', 0, 2000) &&
+        isValidOptionalString('docxUrl', 0, 2000) &&
+        isValidOptionalString('docxFileName', 0, 300) &&
+        isValidOptionalString('formattedHtml', 0, 250000) &&
+        isValidOptionalString('source', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidOptionalString('publishedAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        isValidList('marketBarometers', 100) &&
+        isValidList('topGainers', 100) &&
+        isValidList('topLosers', 100) &&
+        isValidList('gainerDrivers', 100) &&
+        isValidList('loserDrivers', 100) &&
+        isValidList('bellwethers', 100) &&
+        isValidList('corporateActions', 100) &&
+        isValidList('macroBenchmarks', 100) &&
+        isValidList('tacticalPlaybook', 100) &&
+        data.keys().hasOnly([
+          'id', 'slug', 'title', 'subtitle', 'volume', 'editionDate',
+          'briefingTime', 'headline', 'subheadline', 'leadArticle',
+          'marketBarometers', 'topGainers', 'topLosers', 'gainerDrivers',
+          'loserDrivers', 'bellwethers', 'corporateActions', 'macroBenchmarks',
+          'tacticalPlaybook', 'rawText', 'pdfUrl', 'docxUrl', 'docxFileName',
+          'formattedHtml', 'fileSizeBytes', 'status', 'source', 'downloadCount',
+          'viewCount', 'createdAt', 'publishedAt', 'updatedAt'
+        ]);
+    }
+
+    // Validator for Institutional Equity Research Notes
+    function isValidResearchReport(data) {
+      return hasRequiredFields(['title', 'category', 'status', 'access']) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 300 &&
+        data.category is string && data.category.size() >= 2 && data.category.size() <= 100 &&
+        data.status in ['published', 'draft'] &&
+        data.access in ['public', 'premium'] &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('summary', 0, 5000) &&
+        isValidOptionalString('body', 0, 150000) &&
+        isValidOptionalString('coverImage', 0, 2000) &&
+        isValidOptionalString('pdfUrl', 0, 2000) &&
+        isValidOptionalString('author', 0, 100) &&
+        isValidOptionalString('readTime', 0, 50) &&
+        isValidOptionalString('ticker', 0, 30) &&
+        isValidOptionalString('targetPrice', 0, 50) &&
+        isValidOptionalString('recommendation', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        data.keys().hasOnly([
+          'id', 'title', 'summary', 'body', 'category', 'coverImage',
+          'pdfUrl', 'access', 'status', 'author', 'readTime', 'downloadCount',
+          'viewsCount', 'ticker', 'targetPrice', 'recommendation',
+          'createdAt', 'updatedAt'
+        ]);
+    }
+
+    // Validator for Training Events & Masterclasses (e.g. FMVA)
+    function isValidEvent(data) {
+      return hasRequiredFields(['title', 'category', 'startDate', 'startTime', 'endTime', 'status', 'venue']) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 200 &&
+        data.category in ['masterclass', 'training', 'webinar', 'conference', 'announcement'] &&
+        data.startDate is string && data.startDate.size() >= 8 && data.startDate.size() <= 30 &&
+        data.startTime is string && data.startTime.size() >= 2 && data.startTime.size() <= 30 &&
+        data.endTime is string && data.endTime.size() >= 2 && data.endTime.size() <= 30 &&
+        data.venue is string && data.venue.size() >= 2 && data.venue.size() <= 200 &&
+        data.status in ['upcoming', 'ongoing', 'completed', 'cancelled'] &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('slug', 0, 100) &&
+        isValidOptionalString('description', 0, 10000) &&
+        isValidOptionalString('targetAudience', 0, 500) &&
+        isValidOptionalString('instructor', 0, 120) &&
+        isValidOptionalString('instructorTitle', 0, 150) &&
+        isValidOptionalString('instructorPhoto', 0, 2000) &&
+        isValidOptionalString('endDate', 0, 30) &&
+        isValidOptionalString('timezone', 0, 30) &&
+        isValidOptionalString('locationType', 0, 30) &&
+        isValidOptionalString('registrationDeadline', 0, 30) &&
+        isValidOptionalString('price', 0, 50) &&
+        isValidOptionalString('bannerUrl', 0, 2000) &&
+        isValidOptionalString('badge', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        isValidList('learningObjectives', 50) &&
+        isValidList('customFormFields', 50) &&
+        data.keys().hasOnly([
+          'id', 'slug', 'title', 'category', 'description', 'learningObjectives',
+          'targetAudience', 'instructor', 'instructorTitle', 'instructorPhoto',
+          'startDate', 'endDate', 'startTime', 'endTime', 'timezone',
+          'locationType', 'venue', 'capacity', 'registrationDeadline',
+          'price', 'status', 'bannerUrl', 'badge', 'customFormFields',
+          'createdAt', 'updatedAt'
+        ]);
+    }
+
+    // Validator for Public Event Registrations
+    function isValidEventRegistration(data) {
+      return hasRequiredFields(['eventId', 'eventTitle', 'fullName', 'email', 'phone', 'ticketCode', 'status']) &&
+        data.eventId is string && data.eventId.size() >= 1 && data.eventId.size() <= 100 &&
+        data.eventTitle is string && data.eventTitle.size() >= 1 && data.eventTitle.size() <= 200 &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 120 &&
+        isValidEmail(data.email) &&
+        isValidPhone(data.phone) &&
+        data.ticketCode is string && data.ticketCode.size() >= 4 && data.ticketCode.size() <= 60 &&
+        data.status in ['confirmed', 'waitlist', 'attended', 'pending', 'cancelled'] &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('organization', 0, 150) &&
+        isValidOptionalString('jobTitle', 0, 120) &&
+        isValidOptionalString('registeredAt', 0, 50) &&
+        isValidMap('responses') &&
+        data.keys().hasOnly([
+          'id', 'eventId', 'eventTitle', 'fullName', 'email', 'phone',
+          'organization', 'jobTitle', 'responses', 'ticketCode',
+          'registeredAt', 'status'
+        ]);
+    }
+
+    // Validator for Member Directory & Circle Applications (Create)
+    function isValidMemberCreate(memberId, data) {
+      return hasRequiredFields(['fullName', 'email', 'membershipTier', 'status', 'referralCode']) &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 120 &&
+        isValidEmail(data.email) &&
+        data.membershipTier in ['standard', 'executive', 'institutional'] &&
+        data.referralCode is string && data.referralCode.size() >= 3 && data.referralCode.size() <= 50 &&
+        isValidOptionalString('phone', 0, 40) &&
+        isValidOptionalString('referredBy', 0, 50) &&
+        isValidOptionalString('notes', 0, 2000) &&
+        isValidOptionalString('appliedAt', 0, 50) &&
+        isValidOptionalString('approvedAt', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        // RBAC security: Non-admin applicant cannot set status to active or self-approve
+        (isSuperAdmin() || (data.status == 'pending' && (!('referralCount' in data) || data.referralCount == 0))) &&
+        // Owner verification: Document ID should match UID when authenticated
+        (!isAuthenticated() || isOwner(memberId) || isSuperAdmin()) &&
+        data.keys().hasOnly([
+          'uid', 'fullName', 'email', 'phone', 'membershipTier', 'status',
+          'referralCode', 'referredBy', 'referralCount', 'notes',
+          'appliedAt', 'approvedAt', 'createdAt', 'updatedAt'
+        ]);
+    }
+
+    // Validator for Member Directory (Update)
+    function isValidMemberUpdate(data) {
+      return hasRequiredFields(['fullName', 'email', 'membershipTier', 'status']) &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 120 &&
+        isValidEmail(data.email) &&
+        data.membershipTier in ['standard', 'executive', 'institutional'] &&
+        data.status in ['pending', 'active', 'suspended', 'rejected'] &&
+        isValidOptionalString('phone', 0, 40) &&
+        isValidOptionalString('referralCode', 3, 50) &&
+        isValidOptionalString('referredBy', 0, 50) &&
+        isValidOptionalString('notes', 0, 2000) &&
+        isValidOptionalString('appliedAt', 0, 50) &&
+        isValidOptionalString('approvedAt', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        data.keys().hasOnly([
+          'uid', 'fullName', 'email', 'phone', 'membershipTier', 'status',
+          'referralCode', 'referredBy', 'referralCount', 'notes',
+          'appliedAt', 'approvedAt', 'createdAt', 'updatedAt'
+        ]);
+    }
+
+    // Privilege check: Restricts what non-admin members can change on their profile
+    function isMemberSelfUpdateAllowed() {
+      return isAuthenticated() &&
+        isDocOwner() &&
+        areImmutableFieldsUnchanged([
+          'status', 'membershipTier', 'referralCount', 'referralCode',
+          'approvedAt', 'appliedAt', 'uid', 'email'
+        ]);
+    }
+
+    // Validator for Site Settings and Official Branding
+    function isValidSiteSettings(data) {
+      return hasRequiredFields(['siteTitle', 'tagline', 'heroHeadline', 'heroSubheadline']) &&
+        data.siteTitle is string && data.siteTitle.size() >= 2 && data.siteTitle.size() <= 100 &&
+        data.tagline is string && data.tagline.size() >= 2 && data.tagline.size() <= 200 &&
+        data.heroHeadline is string && data.heroHeadline.size() >= 2 && data.heroHeadline.size() <= 200 &&
+        data.heroSubheadline is string && data.heroSubheadline.size() >= 2 && data.heroSubheadline.size() <= 500 &&
+        isValidOptionalString('officialEmail', 0, 120) &&
+        isValidOptionalString('ceoEmail', 0, 120) &&
+        isValidOptionalString('officialPhone', 0, 40) &&
+        isValidOptionalString('whatsappChannelUrl', 0, 2000) &&
+        isValidOptionalString('mediumBlogUrl', 0, 2000) &&
+        isValidOptionalString('announcementTickerText', 0, 1000) &&
+        isValidOptionalString('metaDescription', 0, 500) &&
+        isValidOptionalString('metaKeywords', 0, 500) &&
+        isValidOptionalString('logoUrl', 0, 200000) &&
+        isValidOptionalString('faviconUrl', 0, 200000) &&
+        isValidOptionalString('ceoPhotoUrl', 0, 200000) &&
+        isValidOptionalString('missionStatement', 0, 5000) &&
+        isValidOptionalString('visionStatement', 0, 5000) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        isValidList('pillars', 30) &&
+        isValidList('managementTeam', 30) &&
+        isValidList('financialModels', 30) &&
+        data.keys().hasOnly([
+          'siteTitle', 'tagline', 'logoUrl', 'faviconUrl', 'ceoPhotoUrl',
+          'heroHeadline', 'heroSubheadline', 'officialEmail', 'ceoEmail',
+          'officialPhone', 'whatsappChannelUrl', 'mediumBlogUrl',
+          'announcementTickerText', 'showTicker', 'showDailyChronicleHighlight',
+          'showAdsenseOnHome', 'metaDescription', 'metaKeywords',
+          'enableSocialProofMultiplier', 'publicMetricMultiplier',
+          'publicMetricOffset', 'missionStatement', 'visionStatement',
+          'pillars', 'managementTeam', 'financialModels', 'updatedAt'
+        ]);
+    }
+
+    // Validator for Site Announcements and Popup Banners
+    function isValidAnnouncement(data) {
+      return hasRequiredFields(['title', 'category', 'urgency']) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 200 &&
+        data.category in ['event', 'research', 'policy', 'market_update', 'system'] &&
+        data.urgency in ['normal', 'high', 'critical'] &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('summary', 0, 500) &&
+        isValidOptionalString('content', 0, 5000) &&
+        isValidOptionalString('targetAudience', 0, 50) &&
+        isValidOptionalString('linkUrl', 0, 500) &&
+        isValidOptionalString('linkText', 0, 100) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        data.keys().hasOnly([
+          'id', 'title', 'summary', 'content', 'category', 'urgency',
+          'popupAlert', 'emailBroadcast', 'whatsappBroadcast',
+          'targetAudience', 'linkUrl', 'linkText', 'createdAt', 'dismissed'
+        ]);
+    }
+
+    // Validator for Learning Videos & Masterclasses
+    function isValidVideo(data) {
+      return hasRequiredFields(['title', 'youtubeUrl', 'status']) &&
+        data.title is string && data.title.size() >= 3 && data.title.size() <= 200 &&
+        data.youtubeUrl is string && data.youtubeUrl.size() <= 1000 &&
+        data.status in ['published', 'draft'] &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('description', 0, 5000) &&
+        isValidOptionalString('youtubeId', 0, 50) &&
+        isValidOptionalString('topicTag', 0, 100) &&
+        isValidOptionalString('thumbnailUrl', 0, 2000) &&
+        isValidOptionalString('duration', 0, 50) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        isValidOptionalString('updatedAt', 0, 50) &&
+        data.keys().hasOnly([
+          'id', 'title', 'description', 'youtubeUrl', 'youtubeId',
+          'topicTag', 'thumbnailUrl', 'status', 'clicksToYouTube',
+          'duration', 'createdAt', 'updatedAt'
+        ]);
+    }
+
+    // Validator for Contact Form Submissions
+    function isValidContactSubmission(data) {
+      return hasRequiredFields(['name', 'email', 'message']) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
+        isValidEmail(data.email) &&
+        data.message is string && data.message.size() >= 5 && data.message.size() <= 3000 &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('phone', 0, 40) &&
+        isValidOptionalString('service', 0, 100) &&
+        isValidOptionalString('subject', 0, 150) &&
+        isValidOptionalString('status', 0, 30) &&
+        isValidOptionalString('createdAt', 0, 50) &&
+        data.keys().hasOnly([
+          'id', 'name', 'email', 'phone', 'service', 'subject',
+          'message', 'status', 'createdAt'
+        ]);
+    }
+
+    // Validator for Newsletter Subscriptions
+    function isValidSubscriber(data) {
+      return hasRequiredFields(['email']) &&
+        isValidEmail(data.email) &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('fullName', 0, 120) &&
+        isValidOptionalString('source', 0, 100) &&
+        isValidOptionalString('status', 0, 30) &&
+        isValidOptionalString('subscribedAt', 0, 50) &&
+        isValidList('preferences', 20) &&
+        data.keys().hasOnly([
+          'id', 'email', 'fullName', 'subscribedAt', 'status', 'source', 'preferences'
+        ]);
+    }
+
+    // Validator for Research Dossier Subscriber Leads
+    function isValidSubscriberLead(data) {
+      return hasRequiredFields(['name', 'email', 'dossierSlug']) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
+        isValidEmail(data.email) &&
+        data.dossierSlug is string && data.dossierSlug.size() >= 2 && data.dossierSlug.size() <= 150 &&
+        isValidOptionalString('id', 1, 100) &&
+        isValidOptionalString('whatsapp', 0, 40) &&
+        isValidOptionalString('source', 0, 100) &&
+        isValidOptionalString('subscribedAt', 0, 50) &&
+        data.keys().hasOnly([
+          'id', 'name', 'email', 'whatsapp', 'dossierSlug', 'subscribedAt', 'source'
+        ]);
+    }
+
+    // ===============================================================
+    // Collection Match Rules
+    // ===============================================================
+
+    // 1. briefings: Daily NGX Pre-Market Intelligence Briefings
+    // Publicly readable; only SuperAdmin can write/update/delete
+    match /briefings/{briefingId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidBriefing(request.resource.data);
+      allow update: if isSuperAdmin() &&
+                       isValidBriefing(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'slug']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // 2. dossiers: Monthly In-Depth Equity Valuation Dossiers
+    // Publicly readable; only SuperAdmin can write/update/delete
+    match /dossiers/{dossierId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidDossier(request.resource.data);
+      allow update: if isSuperAdmin() &&
+                       isValidDossier(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'slug']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // 3. chronicles: Daily Financial Chronicle Newspapers
+    // Publicly readable; only SuperAdmin can write/update/delete
+    match /chronicles/{chronicleId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidChronicle(request.resource.data);
+      allow update: if isSuperAdmin() &&
+                       isValidChronicle(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'slug', 'createdAt']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // 4. research_reports: Equity Research Notes & Valuation Models
+    // Publicly readable; only SuperAdmin can write/update/delete
+    match /research_reports/{reportId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidResearchReport(request.resource.data);
+      allow update: if isSuperAdmin() &&
+                       isValidResearchReport(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // 5. events: Masterclasses and Training Programs (e.g. FMVA)
+    // Publicly readable; only SuperAdmin can write/update/delete
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidEvent(request.resource.data);
+      allow update: if isSuperAdmin() &&
+                       isValidEvent(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // 6. event_registrations: Registrations for Active Events
+    // Public can create/submit registration with valid email, name, and phone
+    // Only SuperAdmin can list, read, update, or delete registrations (PII Protection)
+    match /event_registrations/{registrationId} {
+      allow read: if isSuperAdmin();
+      allow create: if isValidEventRegistration(request.resource.data);
+      allow update: if isSuperAdmin() &&
+                       isValidEventRegistration(request.resource.data) &&
+                       areImmutableFieldsUnchanged(['id', 'eventId', 'ticketCode', 'registeredAt']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // 7. members: Member Directory and Analyst Circle Applications
+    // Public/applicant can create registration application
+    // Users can read their own profile; SuperAdmin can read, approve, and manage all members
+    match /members/{memberId} {
+      allow get: if isOwner(memberId) || isSuperAdmin();
+      allow list: if isSuperAdmin();
+      allow create: if isValidMemberCreate(memberId, request.resource.data);
+      allow update: if (isSuperAdmin() || (isOwner(memberId) && isMemberSelfUpdateAllowed())) &&
+                       isValidMemberUpdate(request.resource.data);
+      allow delete: if isSuperAdmin();
+    }
+
+    // 8. site_settings: Branding, Official Logo, and Marquee Alerts
+    // Publicly readable; only SuperAdmin can write/update/delete
+    match /site_settings/{settingId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidSiteSettings(request.resource.data);
+      allow update: if isSuperAdmin() && isValidSiteSettings(request.resource.data);
+      allow delete: if isSuperAdmin();
+    }
+
+    // ===============================================================
+    // Auxiliary System Collections
+    // ===============================================================
+
+    // announcements: News ticker and urgency popup alerts
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidAnnouncement(request.resource.data);
+      allow update: if isSuperAdmin() && isValidAnnouncement(request.resource.data);
+      allow delete: if isSuperAdmin();
+    }
+
+    // videos: PSA Lens educational videos
+    match /videos/{videoId} {
+      allow read: if true;
+      allow create: if isSuperAdmin() && isValidVideo(request.resource.data);
+      allow update: if isSuperAdmin() && isValidVideo(request.resource.data);
+      allow delete: if isSuperAdmin();
+    }
+
+    // contact_submissions: Institutional and general inquiries (PII Protected)
+    match /contact_submissions/{submissionId} {
+      allow read: if isSuperAdmin();
+      allow create: if isValidContactSubmission(request.resource.data);
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // newsletter_subscribers: Email dispatch subscribers (PII Protected)
+    match /newsletter_subscribers/{subscriberId} {
+      allow read: if isSuperAdmin();
+      allow create: if isValidSubscriber(request.resource.data);
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // subscriber_leads: Research tear sheet download leads (PII Protected)
+    match /subscriber_leads/{leadId} {
+      allow read: if isSuperAdmin();
+      allow create: if isValidSubscriberLead(request.resource.data);
+      allow update, delete: if isSuperAdmin();
+    }
+
+  }
+}

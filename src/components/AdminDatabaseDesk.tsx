@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   HardDrive,
   Database,
@@ -15,7 +15,8 @@ import {
   Info,
   Code,
   Copy,
-  Check
+  Check,
+  Flame
 } from 'lucide-react';
 import {
   getCloudDbConfig,
@@ -36,8 +37,8 @@ export const AdminDatabaseDesk: React.FC = () => {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; latencyMs: number } | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [showSqlSchema, setShowSqlSchema] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
+  const [copiedRules, setCopiedRules] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -195,6 +196,61 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
     setTimeout(() => setCopiedSql(false), 2500);
   };
 
+  const handleCopyFirestoreRules = async () => {
+    try {
+      const res = await fetch('/firestore.rules');
+      if (res.ok) {
+        const text = await res.text();
+        await navigator.clipboard.writeText(text);
+        setCopiedRules(true);
+        showToast('Production firestore.rules copied to clipboard!');
+        setTimeout(() => setCopiedRules(false), 2500);
+        return;
+      }
+    } catch {
+      // Fallback to embedded rules summary
+    }
+
+    const fallbackRules = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSuperAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'salamiabdullhahi257@gmail.com' ||
+        request.auth.token.email == 'salamiabdullahi257@gmail.com'
+      );
+    }
+    match /briefings/{id} { allow read: if true; allow write: if isSuperAdmin(); }
+    match /dossiers/{id} { allow read: if true; allow write: if isSuperAdmin(); }
+    match /chronicles/{id} { allow read: if true; allow write: if isSuperAdmin(); }
+    match /research_reports/{id} { allow read: if true; allow write: if isSuperAdmin(); }
+    match /events/{id} { allow read: if true; allow write: if isSuperAdmin(); }
+    match /event_registrations/{id} {
+      allow create: if request.resource.data.email != null;
+      allow read, update, delete: if isSuperAdmin();
+    }
+    match /members/{id} {
+      allow create: if request.resource.data.email != null;
+      allow read: if isSuperAdmin() || (request.auth != null && request.auth.uid == id);
+      allow update, delete: if isSuperAdmin();
+    }
+    match /site_settings/{id} { allow read: if true; allow write: if isSuperAdmin(); }
+  }
+}`;
+    await navigator.clipboard.writeText(fallbackRules);
+    setCopiedRules(true);
+    showToast('Production firestore.rules copied to clipboard!');
+    setTimeout(() => setCopiedRules(false), 2500);
+  };
+
+  const isConfigured = Boolean(
+    config.provider === 'firebase'
+      ? (config.firebaseProjectId || config.projectUrl) && config.apiKey
+      : config.provider === 'supabase'
+      ? config.projectUrl && config.apiKey
+      : true
+  );
+
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {toastMessage && (
@@ -209,14 +265,22 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#0A1F44] text-[#C9A84C] flex items-center justify-center shadow-md">
-              <Database className="w-6 h-6 stroke-[2.2]" />
+              {config.provider === 'firebase' ? (
+                <Flame className="w-6 h-6 stroke-[2.2] text-amber-400" />
+              ) : (
+                <Database className="w-6 h-6 stroke-[2.2]" />
+              )}
             </div>
             <div>
               <h2 className="font-serif font-black text-2xl text-[#0A1F44]">
-                Free Cloud Database & Storage Manager
+                Cloud Database and Storage Manager
               </h2>
               <p className="text-xs text-slate-500">
-                Persistent PostgreSQL database via Supabase (Perpetual Free Tier: 500MB, unlimited API queries, automated SSL).
+                {config.provider === 'firebase'
+                  ? 'Google Cloud Firestore (Perpetual Free Spark Plan: 1GB storage, 50,000 reads/day, automated global SSL).'
+                  : config.provider === 'supabase'
+                  ? 'Persistent PostgreSQL database via Supabase (Perpetual Free Tier: 500MB, unlimited API queries).'
+                  : 'High-reliability browser persistent storage with instant offline fallback.'}
               </p>
             </div>
           </div>
@@ -224,13 +288,17 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
           <div className="flex items-center gap-2">
             <span
               className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                config.projectUrl && config.apiKey
+                isConfigured && config.provider !== 'local_fallback'
                   ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                   : 'bg-amber-50 text-amber-800 border border-amber-200'
               }`}
             >
               <Zap className="w-3.5 h-3.5 text-emerald-600" />
-              {config.projectUrl && config.apiKey ? 'Cloud Database Linked' : 'Local Fail-Safe Mode Active'}
+              {config.provider === 'firebase'
+                ? isConfigured ? 'Firebase Cloud Active' : 'Firebase Keys Needed'
+                : config.provider === 'supabase'
+                ? isConfigured ? 'Supabase Linked' : 'Supabase Keys Needed'
+                : 'Local Fail-Safe Mode Active'}
             </span>
           </div>
         </div>
@@ -241,10 +309,16 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <h3 className="font-serif font-bold text-lg text-[#0A1F44]">
-              Supabase / Cloud Database Connection Credentials
+              {config.provider === 'firebase'
+                ? 'Google Firebase Firestore Connection Credentials'
+                : config.provider === 'supabase'
+                ? 'Supabase Connection Credentials'
+                : 'Storage Configuration'}
             </h3>
             <p className="text-xs text-slate-500">
-              Provide your free project credentials from <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-[#0A1F44] underline font-bold">Supabase.com</a>.
+              {config.provider === 'firebase'
+                ? 'Retrieve these from your Google Firebase Console (Project Settings -> General -> Your apps).'
+                : 'Retrieve these from your Supabase Dashboard (Project Settings -> API).'}
             </p>
           </div>
           <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
@@ -255,48 +329,98 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Cloud Database Provider
+              Active Cloud Database Engine
             </label>
             <select
               value={config.provider}
               onChange={e => setConfig({ ...config, provider: e.target.value as any })}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-[#0A1F44] outline-none"
             >
-              <option value="supabase">Supabase PostgreSQL (Recommended - 100% Free Forever)</option>
-              <option value="firebase">Google Firebase Firestore (Alternative Free Tier)</option>
-              <option value="local_fallback">Local Browser Fail-Safe (Zero Configuration)</option>
+              <option value="firebase">Google Cloud Firestore (Firebase Free Spark Plan) - Recommended</option>
+              <option value="supabase">Supabase PostgreSQL (Edge REST API)</option>
+              <option value="local_fallback">Local Browser Fail-Safe (Zero Cloud Configuration)</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Project REST API URL
-              </label>
-              <input
-                type="url"
-                value={config.projectUrl}
-                onChange={e => setConfig({ ...config, projectUrl: e.target.value })}
-                placeholder="https://yourprojectid.supabase.co"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
-              />
-              <span className="text-[10px] text-slate-400">Found in Project Settings &rarr; API &rarr; Project URL</span>
-            </div>
+          {/* Conditional Fields: Firebase vs Supabase */}
+          {config.provider === 'firebase' && (
+            <div className="space-y-4 animate-in fade-in duration-150">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Firebase Project ID
+                  </label>
+                  <input
+                    type="text"
+                    value={config.firebaseProjectId || config.projectUrl}
+                    onChange={e => setConfig({ ...config, firebaseProjectId: e.target.value, projectUrl: e.target.value })}
+                    placeholder="psa-investment"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+                  />
+                  <span className="text-[10px] text-slate-400">Found in Project Settings &rarr; General &rarr; Project ID</span>
+                </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Public Anon / Client API Key
-              </label>
-              <input
-                type="password"
-                value={config.apiKey}
-                onChange={e => setConfig({ ...config, apiKey: e.target.value })}
-                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
-              />
-              <span className="text-[10px] text-slate-400">Safe for frontend usage (Project Settings &rarr; API &rarr; anon public)</span>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Firebase Web API Key
+                  </label>
+                  <input
+                    type="password"
+                    value={config.apiKey}
+                    onChange={e => setConfig({ ...config, apiKey: e.target.value })}
+                    placeholder="AIzaSyB..."
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+                  />
+                  <span className="text-[10px] text-slate-400">Project Settings &rarr; General &rarr; Web API Key</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Auth Domain (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={config.firebaseAuthDomain || ''}
+                  onChange={e => setConfig({ ...config, firebaseAuthDomain: e.target.value })}
+                  placeholder="psa-investment.firebaseapp.com"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+                />
+              </div>
             </div>
-          </div>
+          )}
+
+          {config.provider === 'supabase' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in duration-150">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Supabase Project REST URL
+                </label>
+                <input
+                  type="url"
+                  value={config.projectUrl}
+                  onChange={e => setConfig({ ...config, projectUrl: e.target.value })}
+                  placeholder="https://yourprojectid.supabase.co"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+                />
+                <span className="text-[10px] text-slate-400">Project Settings &rarr; API &rarr; Project URL</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Public Anon Key
+                </label>
+                <input
+                  type="password"
+                  value={config.apiKey}
+                  onChange={e => setConfig({ ...config, apiKey: e.target.value })}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 outline-none focus:border-[#C9A84C]"
+                />
+                <span className="text-[10px] text-slate-400">Project Settings &rarr; API &rarr; anon public</span>
+              </div>
+            </div>
+          )}
 
           {testResult && (
             <div
@@ -327,14 +451,27 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
                 <span>{testing ? 'Probing Cloud...' : 'Test Connection'}</span>
               </button>
 
-              <button
-                type="button"
-                onClick={handleCopySql}
-                className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
-              >
-                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Code className="w-3.5 h-3.5 text-amber-700" />}
-                <span>{copiedSql ? 'Schema Copied!' : 'Copy Supabase SQL Schema'}</span>
-              </button>
+              {config.provider === 'firebase' && (
+                <button
+                  type="button"
+                  onClick={handleCopyFirestoreRules}
+                  className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
+                >
+                  {copiedRules ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Flame className="w-3.5 h-3.5 text-amber-600" />}
+                  <span>{copiedRules ? 'Rules Copied!' : 'Copy firestore.rules'}</span>
+                </button>
+              )}
+
+              {config.provider === 'supabase' && (
+                <button
+                  type="button"
+                  onClick={handleCopySql}
+                  className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
+                >
+                  {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Code className="w-3.5 h-3.5 text-amber-700" />}
+                  <span>{copiedSql ? 'Schema Copied!' : 'Copy Supabase SQL Schema'}</span>
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -364,7 +501,7 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-4">
         <div className="pb-3 border-b border-slate-100">
           <h3 className="font-serif font-bold text-lg text-[#0A1F44]">
-            Zero-Data-Loss Backup & Snapshot Restoration
+            Zero-Data-Loss Backup and Snapshot Restoration
           </h3>
           <p className="text-xs text-slate-500">
             Download your entire system state (chronicles, member registrations, research reports, settings, and logs) in one encrypted JSON archive.
@@ -397,7 +534,7 @@ CREATE POLICY "Public Read Events" ON public.events FOR SELECT USING (true);`;
                 Restore System from Backup File
               </h4>
               <p className="text-[11px] text-slate-500 mt-1">
-                Upload a previously saved `.json` snapshot to seamlessly restore all data tables without losing any history.
+                Upload a previously saved .json snapshot to seamlessly restore all data tables without losing any history.
               </p>
             </div>
             <label className="w-full py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 text-center cursor-pointer transition-colors block">
