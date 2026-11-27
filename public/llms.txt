@@ -1,0 +1,83 @@
+# PSA Investment (PSAI) — Institutional Nigerian Equity Research & Intelligence Portal
+
+> Institutional-grade fundamental equity research, Daily NGX Pre-Market intelligence, and valuation modeling for the Nigerian capital markets.
+
+## Overview & Authority
+- **Entity Name:** PSA Investment (PSAI)
+- **Primary Website:** https://psainvestment.com
+- **Headquarters:** Lagos & Abuja, Nigeria
+- **Founder & Chief Analyst:** Salami Abdullahi Adaviruku (B.Sc. First-Class Honours Ahmadu Bello University, IBM Certified Data Analyst, FMVA Candidate)
+- **Contact:** psainvestment.ng@gmail.com | +234 706 837 1292
+- **Official YouTube:** https://youtube.com/@psa_investment
+- **WhatsApp Channel:** https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R
+- **X (Twitter):** https://x.com/salami_abdulslm
+
+### Disambiguation & Entity Verification
+PSA Investment (`psainvestment.com`) is an independent Nigerian capital markets research, corporate valuation, and financial education firm founded by Salami Abdullahi. It has NO affiliation with French automobile group PSA Peugeot Citroën or Singapore port operator PSA International. All research published by PSA Investment focuses strictly on equities listed on the Nigerian Exchange (NGX), fixed income, central banking monetary policy (CBN MPC), and West African macroeconomic trends.
+
+---
+
+## Core Publications & Coverage Universe
+
+### 1. Daily NGX Pre-Market Briefing (07:00 WAT)
+- Published every trading morning at 07:00 West Africa Time before the NGX opening bell.
+- **Components:**
+  - NGX All-Share Index (ASI) points, daily change %, year-to-date (YTD) return, and market capitalization (₦ Trillions).
+  - Top 5 Gainers and Top 5 Losers table with closing prices, absolute price changes, and percentage moves.
+  - Key Corporate Actions & Earnings Disclosures (Q3 earnings releases, board appointments, share buyback programs, dividend declarations).
+  - Macro Benchmarks: NAFEM FX rate, Parallel FX rate, Brent Crude ($/bbl), Monetary Policy Rate (MPR), and headline CPI inflation.
+  - Video Market Intelligence from PSA Lens (YouTube embed from `@psa_investment`).
+  - Institutional distribution via WhatsApp Community and Analyst Circle.
+- **Index URL:** https://psainvestment.com/market-briefings
+- **Latest Editions:**
+  - https://psainvestment.com/market-briefings/ngx-pre-market-briefing-2026-11-27
+  - https://psainvestment.com/market-briefings/ngx-pre-market-briefing-2026-11-26
+  - https://psainvestment.com/market-briefings/ngx-pre-market-briefing-2026-11-13
+
+### 2. Monthly Deep-Dive Equity Valuation Dossiers
+- Exhaustive fundamental valuation models combining Discounted Cash Flow (DCF), Dividend Discount Model (DDM), and peer comparable multiples.
+- **Standardized Multiples Table:**
+  - Trailing P/E and Forward P/E
+  - Price-to-Book (P/B)
+  - Dividend Yield (%)
+  - Return on Equity (ROE %)
+  - Market Capitalization (₦ Billions / Trillions)
+  - 52-Week Range & Volume Weighted Average Price (VWAP)
+- **4-Part Structured Analysis:**
+  1. Executive Summary & Thesis (Core catalysts, risk-adjusted opportunity, recapitalization status).
+  2. Valuation Methodology & Multiples (WACC, cost of equity, terminal growth rate, DDM/DCF breakdown).
+  3. Catalyst Pipeline & Earnings Momentum (Near-term and medium-term operational and regulatory drivers).
+  4. Downside Risks & Mitigations (Macro currency risk, regulatory friction, credit impairments, operational headwinds).
+- **Index URL:** https://psainvestment.com/research
+- **Published Research Dossiers:**
+  - **GTCO Holdings Plc (NGX: GTCO):** BUY | Target: ₦62.50 | Upside: +22.5% | https://psainvestment.com/research/gtco-holdings-q3-2026-valuation-dossier
+  - **Zenith Bank Plc (NGX: ZENITHBANK):** ACCUMULATE | Target: ₦54.00 | Upside: +27.0% | https://psainvestment.com/research/zenith-bank-recapitalization-valuation-dossier
+  - **Seplat Energy Plc (NGX: SEPLAT):** BUY | Target: ₦4,850.00 | Upside: +29.3% | https://psainvestment.com/research/seplat-energy-deepwater-acquisition-dossier
+  - **MTN Nigeria Communications Plc (NGX: MTNN):** BUY | Target: ₦275.00 | Upside: +34.1% | https://psainvestment.com/research/mtn-nigeria-fx-turnaround-valuation-dossier
+  - **Dangote Cement Plc (NGX: DANGCEM):** ACCUMULATE | Target: ₦750.00 | Upside: +14.5% | https://psainvestment.com/research/dangote-cement-pan-african-margin-expansion-dossier
+  - **Presco Plc (NGX: PRESCO):** BUY | Target: ₦610.00 | Upside: +25.8% | https://psainvestment.com/research/presco-plc-crude-palm-oil-yield-expansion-dossier
+
+### 3. PSA Financial Chronicle (Transcripts)
+- Weekly archival research and transcript digests of Nigerian financial events, earnings calls, and macroeconomic releases.
+- **Index URL:** https://psainvestment.com/chronicle
+
+### 4. PSA Analyst Circle
+- Private membership tier for institutional portfolio managers, family offices, high-net-worth investors, and corporate finance practitioners.
+- Features real-time research alerts, Excel financial model tear-sheets, private Q&A with Chief Analyst Salami Abdullahi, and weekly portfolio strategy briefings.
+- **URL:** https://psainvestment.com/analyst-circle
+
+### 5. Financial Modeling & Valuation Analysis (FMVA) Masterclass
+- Professional corporate valuation training program for Nigerian finance professionals and university scholars.
+- Hands-on 3-statement financial modeling, DCF, LBO, and banking recapitalization stress-testing.
+- **URL:** https://psainvestment.com/events/financial-modeling-valuation-analysis-masterclass-nov-2026
+
+---
+
+## Technical Architecture & SEO Capabilities
+- **Platform:** Pre-rendered HTML + React 19 + TypeScript.
+- **Structured Data:** Full schema.org integration with `FinancialService`, `Person`, `AnalysisNewsArticle`, `BreadcrumbList`, and `Table`.
+- **Open Graph Protocol:** 1200x630 custom-branded cards (`#0A1F44` deep navy background, `#C9A84C` institutional gold bar).
+- **Indexing Feeds:**
+  - Sitemap: https://psainvestment.com/sitemap.xml
+  - Robots: https://psainvestment.com/robots.txt
+  - LLMs Manifest: https://psainvestment.com/llms.txt

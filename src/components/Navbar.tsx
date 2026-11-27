@@ -63,11 +63,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks: { id: ViewTab; label: string; badge?: string }[] = [
     { id: 'home', label: 'Home' },
-    { id: 'chronicle', label: 'PSA Transcripts', badge: '07:00 WAT' },
+    { id: 'research', label: 'Equity Research', badge: 'Dossiers' },
+    { id: 'market-briefings', label: 'Market Briefings', badge: '07:00 WAT' },
+    { id: 'chronicle', label: 'PSA Transcripts' },
     { id: 'events', label: 'Events & FMVA', badge: 'Nov 28' },
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
-    { id: 'research', label: 'Research' },
     { id: 'videos', label: 'PSA Lens' },
     { id: 'analyst-circle', label: 'Analyst Circle' },
     { id: 'contact', label: 'Contact' }

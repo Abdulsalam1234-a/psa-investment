@@ -229,6 +229,7 @@ export interface ResourceComment {
 export type ViewTab =
   | 'home'
   | 'chronicle'
+  | 'market-briefings'
   | 'events'
   | 'about'
   | 'services'
@@ -237,9 +238,106 @@ export type ViewTab =
   | 'analyst-circle'
   | 'contact'
   | 'member-portal'
-  | 'admin-panel';
+  | 'admin-panel'
+  | 'admin-publish';
 
 export type DemoRole = 'visitor' | 'pending_member' | 'active_member' | 'admin' | null;
+
+// ==========================================
+// RESEARCH DOSSIER & MARKET BRIEFING TYPES
+// ==========================================
+
+export type NgxSector =
+  | 'Banking'
+  | 'Oil & Gas'
+  | 'Consumer Goods'
+  | 'Industrial Goods'
+  | 'Telecoms'
+  | 'Agriculture';
+
+export type ConvictionRating = 'BUY' | 'ACCUMULATE' | 'HOLD' | 'WATCHLIST';
+
+export interface ValuationMultipleRow {
+  metric: string;
+  currentFigure: string;
+  sectorPeerAverage: string;
+  analystAssessment: string;
+}
+
+export interface EquityDossier {
+  id: string;
+  slug: string;
+  title: string;
+  companyName: string;
+  ticker: string;
+  sector: NgxSector;
+  convictionRating: ConvictionRating;
+  currentPrice: string;
+  targetPrice: string;
+  upsidePercent: string;
+  multiples: {
+    pe: string;
+    pb: string;
+    dividendYield: string;
+    roe: string;
+    marketCap: string;
+  };
+  valuationTable: ValuationMultipleRow[];
+  executiveSummary: string;
+  investmentThesis: string;
+  businessOverview: string;
+  financialDiagnostics: string;
+  catalystsAndRisks: string;
+  valuationAndPriceTarget: string;
+  coverImage?: string;
+  tearSheetPdfUrl?: string;
+  whatsappTeaser: string;
+  metaTitle: string;
+  metaDescription: string;
+  author: string;
+  publishedAt: string;
+  updatedAt: string;
+}
+
+export interface MarketBriefing {
+  id: string;
+  slug: string;
+  title: string;
+  date: string;
+  volume: string;
+  asiSnapshot: {
+    asi: string;
+    dayChange: string;
+    marketCap: string;
+    volume: string;
+    value: string;
+    deals: string;
+    breadth: string;
+  };
+  topGainers: StockMover[];
+  topLosers: StockMover[];
+  moverDrivers?: {
+    gainers: string[];
+    losers: string[];
+  };
+  corporateDisclosures: CorporateActionItem[];
+  macroDrivers: MacroBenchmark[];
+  tacticalPlaybook: string[];
+  youtubeUrl?: string;
+  leadArticle: string;
+  whatsappTeaser: string;
+  publishedAt: string;
+}
+
+export interface SubscriberLead {
+  id: string;
+  name: string;
+  email: string;
+  whatsapp?: string;
+  dossierSlug: string;
+  subscribedAt: string;
+  source: string;
+}
 
 // ==========================================
 // EVENTS, TRAINING & CUSTOM FORM BUILDER TYPES

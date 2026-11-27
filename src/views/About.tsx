@@ -52,10 +52,10 @@ export const About: React.FC<AboutProps> = ({ setActiveTab, onOpenAuthModal }) =
   return (
     <div className="space-y-20 pb-20">
       {/* Hero Header */}
-      <section className="bg-gradient-to-b from-white to-slate-50 pt-16 pb-20 border-b border-slate-200/80">
+      <section className="bg-gradient-to-b from-white to-slate-50 pt-16 pb-16 border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
           <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C]">
-            About PSA Investment
+            About PSA Investment (PSAI)
           </span>
           <h1 className="font-serif font-black text-4xl sm:text-5xl text-[#0A1F44] tracking-tight max-w-3xl mx-auto">
             Institutional Discipline. Grassroots Conviction.
@@ -79,6 +79,57 @@ export const About: React.FC<AboutProps> = ({ setActiveTab, onOpenAuthModal }) =
               </a>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* INSTITUTIONAL E-E-A-T & NIGERIAN ENTITY VERIFICATION SECTION */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-br from-[#0A1F44] to-[#07152E] rounded-3xl p-6 sm:p-10 border border-[#C9A84C]/50 text-white shadow-xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#C9A84C] animate-pulse" />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#C9A84C]">
+                  Official E-E-A-T Entity Verification
+                </span>
+              </div>
+              <h2 className="font-serif font-black text-xl sm:text-2xl text-white">
+                PSA Investment (PSAI) — Nigerian Capital Markets Authority
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                Verified Domestic Operation
+              </span>
+              <span className="px-3 py-1 rounded-full bg-white/10 text-slate-300 border border-white/10 font-mono">
+                Lagos, Nigeria
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-300 leading-relaxed">
+            <div className="space-y-2 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <span className="font-bold text-[#C9A84C] text-sm block">1. Operational Mandate</span>
+              <p>
+                <strong>PSA Investment (PSAI)</strong> operates exclusively within Nigerian capital markets, the Nigerian Exchange (NGX), and West African emerging sovereign instruments. It provides independent fundamental equity research, recapitalization diagnostics, and SME financial structuring.
+              </p>
+            </div>
+
+            <div className="space-y-2 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <span className="font-bold text-[#C9A84C] text-sm block">2. Entity Disambiguation</span>
+              <p>
+                PSA Investment is an independent Nigerian institution headquartered in Lagos, Nigeria. It is distinct from and completely unaffiliated with foreign sovereign wealth funds, international logistics firms, or overseas namesakes. All intelligence is produced under local regulatory context.
+              </p>
+            </div>
+
+            <div className="space-y-2 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <span className="font-bold text-[#C9A84C] text-sm block">3. Research Independence</span>
+              <p>
+                Our valuation models, pre-market briefings, and equity dossiers are published free from sell-side broker conflicts, trading commissions, or issuer-paid bias. Every recommendation adheres to discounted cash flow (DCF) and Gordon Growth equity principles.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -126,15 +177,35 @@ export const About: React.FC<AboutProps> = ({ setActiveTab, onOpenAuthModal }) =
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 {/* Left Bio Details */}
                 <div className="lg:col-span-8 space-y-6">
-                  <div className="space-y-1">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C]">
-                      Executive Leadership
-                    </span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-widest text-[#C9A84C]">
+                        Founder & Chief Analyst
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/40">
+                        ABU First-Class Honours
+                      </span>
+                    </div>
+
                     <h2 className="font-serif font-black text-3xl sm:text-4xl text-white">
-                      {member.fullName}
+                      Salami Abdullahi Adaviruku (Salami Abdullahi A.)
                     </h2>
-                    <div className="text-sm font-semibold text-slate-300">
-                      {member.roleTitle}
+
+                    <div className="text-sm font-semibold text-[#C9A84C]">
+                      Founder, Chief Operating Officer & Lead Equity Research Analyst
+                    </div>
+
+                    {/* Academic & Professional Credentials Badges */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-white/10 text-slate-200 border border-white/10 font-semibold">
+                        🎓 First-Class Honours in Banking & Finance — Ahmadu Bello University (ABU), Zaria
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white/10 text-slate-200 border border-white/10 font-semibold">
+                        📊 IBM Data Analyst Certified
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-white/10 text-[#C9A84C] border border-[#C9A84C]/30 font-semibold">
+                        📈 FMVA Candidate (Financial Modeling & Valuation)
+                      </span>
                     </div>
                   </div>
 

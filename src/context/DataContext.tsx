@@ -17,7 +17,10 @@ import {
   EventRegistration,
   Announcement,
   GoogleAdsConfig,
-  SiteSettings
+  SiteSettings,
+  EquityDossier,
+  MarketBriefing,
+  SubscriberLead
 } from '../types';
 import {
   INITIAL_SERVICES,
@@ -36,6 +39,8 @@ import {
   INITIAL_SITE_SETTINGS
 } from '../data/initialData';
 import { INITIAL_CHRONICLES } from '../data/initialChronicles';
+import { INITIAL_EQUITY_DOSSIERS } from '../data/dossiersData';
+import { INITIAL_MARKET_BRIEFINGS } from '../data/briefingsData';
 import { parseRawChronicle } from '../utils/chronicleParser';
 import {
   sanitizeText,
@@ -46,6 +51,9 @@ import {
 
 interface DataContextType {
   reports: ResearchReport[];
+  equityDossiers: EquityDossier[];
+  marketBriefings: MarketBriefing[];
+  subscriberLeads: SubscriberLead[];
   videos: LearningVideo[];
   members: Member[];
   services: ServiceItem[];
@@ -63,6 +71,13 @@ interface DataContextType {
   googleAdsConfig: GoogleAdsConfig;
   siteSettings: SiteSettings;
   loading: boolean;
+  saveEquityDossier: (dossier: Partial<EquityDossier>) => Promise<EquityDossier>;
+  deleteEquityDossier: (id: string) => Promise<void>;
+  getDossierBySlug: (slug: string) => EquityDossier | undefined;
+  saveMarketBriefing: (briefing: Partial<MarketBriefing>) => Promise<MarketBriefing>;
+  deleteMarketBriefing: (id: string) => Promise<void>;
+  getBriefingBySlug: (slug: string) => MarketBriefing | undefined;
+  addSubscriberLead: (data: Omit<SubscriberLead, 'id' | 'subscribedAt'>) => Promise<SubscriberLead>;
   saveReport: (report: Partial<ResearchReport>) => Promise<ResearchReport>;
   deleteReport: (id: string) => Promise<void>;
   incrementReportView: (id: string) => Promise<void>;
@@ -232,7 +247,36 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? { ...INITIAL_SITE_SETTINGS, ...JSON.parse(saved) } : INITIAL_SITE_SETTINGS;
   });
 
+  // Equity Dossiers & Market Briefings States
+  const [equityDossiers, setEquityDossiers] = useState<EquityDossier[]>(() => {
+    const saved = localStorage.getItem('psa_equity_dossiers');
+    return saved ? JSON.parse(saved) : INITIAL_EQUITY_DOSSIERS;
+  });
+
+  const [marketBriefings, setMarketBriefings] = useState<MarketBriefing[]>(() => {
+    const saved = localStorage.getItem('psa_market_briefings');
+    return saved ? JSON.parse(saved) : INITIAL_MARKET_BRIEFINGS;
+  });
+
+  const [subscriberLeads, setSubscriberLeads] = useState<SubscriberLead[]>(() => {
+    const saved = localStorage.getItem('psa_subscriber_leads');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Sync state to local storage
+  useEffect(() => {
+    localStorage.setItem('psa_equity_dossiers', JSON.stringify(equityDossiers));
+  }, [equityDossiers]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_market_briefings', JSON.stringify(marketBriefings));
+  }, [marketBriefings]);
+
+  useEffect(() => {
+    localStorage.setItem('psa_subscriber_leads', JSON.stringify(subscriberLeads));
+  }, [subscriberLeads]);
 
   // Sync state to local storage
   useEffect(() => {
@@ -367,6 +411,146 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     []
   );
+
+  const saveEquityDossier = async (dossierData: Partial<EquityDossier>): Promise<EquityDossier> => {
+    const slug =
+      dossierData.slug ||
+      dossierData.title
+        ?.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') ||
+      `dossier-${Date.now()}`;
+    const newDossier: EquityDossier = {
+      id: dossierData.id || `dossier-${Date.now()}`,
+      slug,
+      title: dossierData.title || 'Untitled Equity Dossier',
+      companyName: dossierData.companyName || 'NGX Listed Corporation',
+      ticker: dossierData.ticker || 'NGX',
+      sector: dossierData.sector || 'Banking',
+      convictionRating: dossierData.convictionRating || 'BUY',
+      currentPrice: dossierData.currentPrice || '₦0.00',
+      targetPrice: dossierData.targetPrice || '₦0.00',
+      upsidePercent: dossierData.upsidePercent || '0.0%',
+      multiples: dossierData.multiples || {
+        pe: '4.0x',
+        pb: '0.8x',
+        dividendYield: '8.0%',
+        roe: '20.0%',
+        marketCap: '₦1.00 Trillion'
+      },
+      valuationTable: dossierData.valuationTable || [],
+      executiveSummary: dossierData.executiveSummary || '',
+      investmentThesis: dossierData.investmentThesis || '',
+      businessOverview: dossierData.businessOverview || '',
+      financialDiagnostics: dossierData.financialDiagnostics || '',
+      catalystsAndRisks: dossierData.catalystsAndRisks || '',
+      valuationAndPriceTarget: dossierData.valuationAndPriceTarget || '',
+      coverImage: dossierData.coverImage || 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1200&q=80',
+      tearSheetPdfUrl: dossierData.tearSheetPdfUrl || '/transcripts/PSA-Financial-Chronicle-VOL-LIII.docx',
+      whatsappTeaser: dossierData.whatsappTeaser || '',
+      metaTitle: dossierData.metaTitle || `${dossierData.title} | PSA Investment`,
+      metaDescription: dossierData.metaDescription || dossierData.executiveSummary?.slice(0, 160) || '',
+      author: dossierData.author || 'Salami Abdullahi A.',
+      publishedAt: dossierData.publishedAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setEquityDossiers(prev => {
+      const idx = prev.findIndex(d => d.id === newDossier.id || d.slug === newDossier.slug);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = newDossier;
+        return updated;
+      }
+      return [newDossier, ...prev];
+    });
+
+    return newDossier;
+  };
+
+  const deleteEquityDossier = async (id: string): Promise<void> => {
+    setEquityDossiers(prev => prev.filter(d => d.id !== id && d.slug !== id));
+  };
+
+  const getDossierBySlug = useCallback(
+    (slug: string) => {
+      return equityDossiers.find(d => d.slug === slug || d.id === slug);
+    },
+    [equityDossiers]
+  );
+
+  const saveMarketBriefing = async (briefingData: Partial<MarketBriefing>): Promise<MarketBriefing> => {
+    const slug =
+      briefingData.slug ||
+      `ngx-pre-market-briefing-${briefingData.date || new Date().toISOString().split('T')[0]}`;
+    const newBriefing: MarketBriefing = {
+      id: briefingData.id || `briefing-${Date.now()}`,
+      slug,
+      title: briefingData.title || `NGX Pre-Market Briefing: ${briefingData.date}`,
+      date: briefingData.date || new Date().toISOString().split('T')[0],
+      volume: briefingData.volume || 'VOL. LVIII',
+      asiSnapshot: briefingData.asiSnapshot || {
+        asi: '252,500.00 pts',
+        dayChange: '+0.15%',
+        marketCap: '₦164.00 Trillion',
+        volume: '1.20 Billion units',
+        value: '₦35.00 Billion',
+        deals: '25,000 deals',
+        breadth: 'Positive (1.2x)'
+      },
+      topGainers: briefingData.topGainers || [],
+      topLosers: briefingData.topLosers || [],
+      moverDrivers: briefingData.moverDrivers,
+      corporateDisclosures: briefingData.corporateDisclosures || [],
+      macroDrivers: briefingData.macroDrivers || [],
+      tacticalPlaybook: briefingData.tacticalPlaybook || [],
+      youtubeUrl: briefingData.youtubeUrl,
+      leadArticle: briefingData.leadArticle || '',
+      whatsappTeaser: briefingData.whatsappTeaser || '',
+      publishedAt: briefingData.publishedAt || new Date().toISOString()
+    };
+
+    setMarketBriefings(prev => {
+      const idx = prev.findIndex(b => b.id === newBriefing.id || b.slug === newBriefing.slug);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = newBriefing;
+        return updated;
+      }
+      return [newBriefing, ...prev];
+    });
+
+    return newBriefing;
+  };
+
+  const deleteMarketBriefing = async (id: string): Promise<void> => {
+    setMarketBriefings(prev => prev.filter(b => b.id !== id && b.slug !== id));
+  };
+
+  const getBriefingBySlug = useCallback(
+    (slug: string) => {
+      return marketBriefings.find(b => b.slug === slug || b.id === slug);
+    },
+    [marketBriefings]
+  );
+
+  const addSubscriberLead = async (
+    data: Omit<SubscriberLead, 'id' | 'subscribedAt'>
+  ): Promise<SubscriberLead> => {
+    const newLead: SubscriberLead = {
+      id: `lead-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      name: data.name,
+      email: data.email.toLowerCase().trim(),
+      whatsapp: data.whatsapp?.trim(),
+      dossierSlug: data.dossierSlug,
+      subscribedAt: new Date().toISOString(),
+      source: data.source || 'research-tear-sheet'
+    };
+
+    setSubscriberLeads(prev => [newLead, ...prev]);
+
+    return newLead;
+  };
 
   const saveReport = async (reportData: Partial<ResearchReport>): Promise<ResearchReport> => {
     const id = reportData.id || `report-${Date.now()}`;
@@ -1347,6 +1531,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <DataContext.Provider
       value={{
         reports,
+        equityDossiers,
+        marketBriefings,
+        subscriberLeads,
         videos,
         members,
         services,
@@ -1359,6 +1546,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         staffMembers,
         comments,
         loading,
+        saveEquityDossier,
+        deleteEquityDossier,
+        getDossierBySlug,
+        saveMarketBriefing,
+        deleteMarketBriefing,
+        getBriefingBySlug,
+        addSubscriberLead,
         saveReport,
         deleteReport,
         incrementReportView,

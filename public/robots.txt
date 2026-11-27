@@ -1,0 +1,41 @@
+# robots.txt for PSA Investment (https://psainvestment.com)
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /admin-panel/
+Disallow: /api/
+
+# Specialized Directives for Search Engines & AI Crawlers
+User-agent: Googlebot
+Allow: /
+Allow: /research/
+Allow: /market-briefings/
+Allow: /sitemap.xml
+
+User-agent: Bingbot
+Allow: /
+Allow: /research/
+Allow: /market-briefings/
+
+User-agent: GPTBot
+Allow: /
+Allow: /research/
+Allow: /market-briefings/
+Allow: /llms.txt
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /research/
+Allow: /market-briefings/
+Allow: /llms.txt
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /research/
+Allow: /market-briefings/
+Allow: /llms.txt
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://psainvestment.com/sitemap.xml
