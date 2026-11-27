@@ -94,7 +94,7 @@ export const About: React.FC<AboutProps> = ({ setActiveTab, onOpenAuthModal }) =
                 </span>
               </div>
               <h2 className="font-serif font-black text-xl sm:text-2xl text-white">
-                PSA Investment (PSAI) — Nigerian Capital Markets Authority
+                PSA Investment (PSAI) - Nigerian Capital Markets Authority
               </h2>
             </div>
 
@@ -198,7 +198,7 @@ export const About: React.FC<AboutProps> = ({ setActiveTab, onOpenAuthModal }) =
                     {/* Academic & Professional Credentials Badges */}
                     <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
                       <span className="px-2.5 py-1 rounded-lg bg-white/10 text-slate-200 border border-white/10 font-semibold">
-                        🎓 First-Class Honours in Banking & Finance — Ahmadu Bello University (ABU), Zaria
+                        🎓 First-Class Honours in Banking & Finance - Ahmadu Bello University (ABU), Zaria
                       </span>
                       <span className="px-2.5 py-1 rounded-lg bg-white/10 text-slate-200 border border-white/10 font-semibold">
                         📊 IBM Data Analyst Certified

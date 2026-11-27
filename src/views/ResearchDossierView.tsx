@@ -345,7 +345,7 @@ export const ResearchDossierView: React.FC<ResearchDossierViewProps> = ({
             </a>
 
             <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${dossier.title} — Institutional Valuation Dossier by @salami_abdulslm on @psa_investment`)}&url=${encodeURIComponent(shareUrl)}`}
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`${dossier.title} - Institutional Valuation Dossier by @salami_abdulslm on @psa_investment`)}&url=${encodeURIComponent(shareUrl)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer font-mono"

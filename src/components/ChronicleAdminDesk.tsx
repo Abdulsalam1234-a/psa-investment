@@ -317,7 +317,7 @@ The PSA Financial Chronicle © 2026 | Property of PSA INVESTMENT.`;
   };
 
   const cronScriptCode = `"""
-PSA INVESTMENT — 07:00 AM WAT DAILY CHRONICLE GEMINI AUTOMATION
+PSA INVESTMENT - 07:00 AM WAT DAILY CHRONICLE GEMINI AUTOMATION
 Author: Salami Abdullahi (Chief Analyst, PSA Investment)
 Run every morning via Google Cloud Scheduler, Windows Task Scheduler, or Linux Cron:
 0 7 * * 1-5 python scripts/daily_chronicle_cron.py
@@ -625,7 +625,7 @@ NGX WEEKLY CLOSE & PRE-MARKET ASSESSMENT
 NGX Halts 7-Day Losing Run with Modest +0.13% Rebound to 248,363.55 Points; Equities Recover ₦208 Billion
 Selective bargain hunting lifts ASI from Thursday's rout (+321.05 pts), but floor turnover drops 34.6% to ₦20.50B as banking counters diverge ahead of Monday's open.
 
-LAGOS (PSA INVESTMENT DESK) — Trading on the Nigerian Exchange Limited (NGX) concluded the preceding trading week on Friday, October 9, 2026, with a mild technical rebound, snapping a seven-session retreat. The All-Share Index (ASI) advanced by 321.05 points (+0.13%) to close officially at 248,363.55 points...`);
+LAGOS (PSA INVESTMENT DESK) - Trading on the Nigerian Exchange Limited (NGX) concluded the preceding trading week on Friday, October 9, 2026, with a mild technical rebound, snapping a seven-session retreat. The All-Share Index (ASI) advanced by 321.05 points (+0.13%) to close officially at 248,363.55 points...`);
                   showToast('Loaded sample dispatch payload');
                 }}
                 className="text-[#C9A84C] hover:text-[#0A1F44] font-semibold cursor-pointer"

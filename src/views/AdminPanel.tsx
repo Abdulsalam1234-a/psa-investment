@@ -1161,7 +1161,7 @@ export const AdminPanel: React.FC = () => {
                           <td className="p-4">
                             <div className="space-y-0.5">
                               <div className="font-mono text-slate-800 font-semibold">{staff.email}</div>
-                              <div className="font-mono text-slate-500 text-[11px]">{staff.phone || '—'}</div>
+                              <div className="font-mono text-slate-500 text-[11px]">{staff.phone || ' - '}</div>
                             </div>
                           </td>
 
@@ -1927,7 +1927,7 @@ export const AdminPanel: React.FC = () => {
                       {r.title}
                     </td>
                     <td className="py-3.5 px-4 font-mono font-bold text-[#C9A84C]">
-                      {r.ticker || '—'}
+                      {r.ticker || ' - '}
                     </td>
                     <td className="py-3.5 px-4 text-slate-600">{r.category}</td>
                     <td className="py-3.5 px-4">

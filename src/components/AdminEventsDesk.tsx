@@ -374,7 +374,7 @@ export const AdminEventsDesk: React.FC = () => {
                 <span className="text-xs text-slate-500">ID: {selectedEvent.id}</span>
               </div>
               <h3 className="font-serif font-black text-xl text-[#0A1F44] mt-1">
-                {selectedEvent.title} — Registration Intelligence
+                {selectedEvent.title} - Registration Intelligence
               </h3>
               <p className="text-xs text-slate-500">
                 Date: {selectedEvent.startDate} ({selectedEvent.startTime} WAT) • {registrationsForSelected.length} confirmed attendees

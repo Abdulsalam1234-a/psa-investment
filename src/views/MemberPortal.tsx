@@ -432,7 +432,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
           foreign currency obligations, and verifiable free cash flows of NGX-listed firms. Every
           valuation note in your vault below includes sensitivity models and downloadable PDF files."
         </p>
-        <div className="text-xs font-bold text-amber-950 pt-1">— Salami Abdullahi</div>
+        <div className="text-xs font-bold text-amber-950 pt-1"> -  Salami Abdullahi</div>
       </div>
 
       {/* Unlocked Research Vault */}
