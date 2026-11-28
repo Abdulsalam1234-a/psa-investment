@@ -52,7 +52,6 @@ export const Events: React.FC<EventsProps> = ({
   const [selectedEventForDetail, setSelectedEventForDetail] = useState<EventProgram | null>(null);
   const [selectedEventForRegister, setSelectedEventForRegister] = useState<EventProgram | null>(null);
   const [copyToast, setCopyToast] = useState<boolean>(false);
-  const [emailCopied, setEmailCopied] = useState<boolean>(false);
 
   // Registration Form State
   const [regFullName, setRegFullName] = useState<string>('');
@@ -625,37 +624,18 @@ export const Events: React.FC<EventsProps> = ({
                         </div>
                       </div>
 
-                      {/* Official Confirmation Email Preview */}
-                      {(() => {
-                        const emailInfo = getEventConfirmationEmail(regSuccess);
-                        return (
-                          <div className="p-4 bg-slate-900 text-white rounded-2xl text-left border border-slate-800 space-y-2">
-                            <div className="flex items-center justify-between text-xs text-[#C9A84C] font-bold border-b border-slate-800 pb-2">
-                              <span className="flex items-center gap-1.5">
-                                <Mail className="w-3.5 h-3.5 text-[#C9A84C]" />
-                                <span>Official Confirmation Email Dispatched</span>
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-mono">From: {emailInfo.from}</span>
-                            </div>
-                            <div className="text-[11px] text-slate-300 font-semibold">{emailInfo.subject}</div>
-                            <div className="max-h-36 overflow-y-auto text-[11px] font-mono text-slate-300 whitespace-pre-wrap bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 leading-relaxed">
-                              {emailInfo.body}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(emailInfo.body);
-                                setEmailCopied(true);
-                                setTimeout(() => setEmailCopied(false), 2000);
-                              }}
-                              className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              <Copy className="w-3 h-3 text-[#C9A84C]" />
-                              <span>{emailCopied ? 'Email Copied to Clipboard!' : 'Copy Official Confirmation Email'}</span>
-                            </button>
+                      {/* Direct Confirmation Email Status */}
+                      <div className="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-start gap-2.5 text-left">
+                        <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-emerald-950">Official Confirmation Email Dispatched</div>
+                          <div className="text-[11px] text-emerald-800/90 mt-0.5 leading-relaxed">
+                            Your full registration dossier, personalized ticket code, and curriculum syllabus have been dispatched directly to <strong className="font-semibold text-emerald-950 underline">{regSuccess.email}</strong> from <span className="font-mono text-emerald-900 font-medium">psainvestment.ng@gmail.com</span>. Please check your inbox and spam folder.
                           </div>
-                        );
-                      })()}
+                        </div>
+                      </div>
 
                       {/* Official WhatsApp Channels (NEXT STEPS) */}
                       <div className="p-4 bg-emerald-950/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
@@ -1305,37 +1285,18 @@ export const Events: React.FC<EventsProps> = ({
                     </div>
                   </div>
 
-                  {/* Official Confirmation Email Preview */}
-                  {(() => {
-                    const emailInfo = getEventConfirmationEmail(regSuccess);
-                    return (
-                      <div className="p-4 bg-slate-900 text-white rounded-2xl text-left border border-slate-800 space-y-2">
-                        <div className="flex items-center justify-between text-xs text-[#C9A84C] font-bold border-b border-slate-800 pb-2">
-                          <span className="flex items-center gap-1.5">
-                            <Mail className="w-3.5 h-3.5 text-[#C9A84C]" />
-                            <span>Official Confirmation Email Dispatched</span>
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">From: {emailInfo.from}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-300 font-semibold">{emailInfo.subject}</div>
-                        <div className="max-h-36 overflow-y-auto text-[11px] font-mono text-slate-300 whitespace-pre-wrap bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 leading-relaxed">
-                          {emailInfo.body}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(emailInfo.body);
-                            setEmailCopied(true);
-                            setTimeout(() => setEmailCopied(false), 2000);
-                          }}
-                          className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <Copy className="w-3 h-3 text-[#C9A84C]" />
-                          <span>{emailCopied ? 'Email Copied to Clipboard!' : 'Copy Official Confirmation Email'}</span>
-                        </button>
+                  {/* Direct Confirmation Email Status */}
+                  <div className="p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-2xl flex items-start gap-2.5 text-left">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-emerald-950">Official Confirmation Email Dispatched</div>
+                      <div className="text-[11px] text-emerald-800/90 mt-0.5 leading-relaxed">
+                        Your full registration dossier, personalized ticket code, and curriculum syllabus have been dispatched directly to <strong className="font-semibold text-emerald-950 underline">{regSuccess.email}</strong> from <span className="font-mono text-emerald-900 font-medium">psainvestment.ng@gmail.com</span>. Please check your inbox and spam folder.
                       </div>
-                    );
-                  })()}
+                    </div>
+                  </div>
 
                   {/* Official WhatsApp Channels (NEXT STEPS) */}
                   <div className="p-4 bg-emerald-950/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">

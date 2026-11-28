@@ -1376,6 +1376,22 @@ https://psainvestment.com.ng`;
 
     setEventRegistrations(prev => [newReg, ...prev]);
 
+    // Dispatch direct confirmation email to applicant's submitted email address
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: newReg.email,
+        recipientName: newReg.fullName,
+        from: 'psainvestment.ng@gmail.com',
+        subject: emailData.subject,
+        body: emailData.body,
+        templateType: 'registration_confirmation',
+        ticketCode: newReg.ticketCode,
+        eventId: newReg.eventId
+      })
+    }).catch(err => console.warn('Background email dispatch notice:', err));
+
     // Send confirmation email dispatch log
     logDispatch({
       recipientEmail: newReg.email,
@@ -1392,7 +1408,19 @@ https://psainvestment.com.ng`;
       `Registered for ${event.title} with ticket ${ticketCode}. Confirmation sent to ${newReg.email} via psainvestment.ng@gmail.com`,
       'low'
     );
+
     syncRecordToCloud('psa_event_registrations', newReg).catch(e => console.warn(e));
+    syncRecordToCloud('psa_email_dispatches', {
+      id: `email-${Date.now()}-${newReg.ticketCode}`,
+      recipientEmail: newReg.email,
+      recipientName: newReg.fullName,
+      senderEmail: 'psainvestment.ng@gmail.com',
+      templateType: 'registration_confirmation',
+      subject: emailData.subject,
+      body: emailData.body,
+      status: 'dispatched',
+      sentAt: new Date().toISOString()
+    }).catch(e => console.warn(e));
 
     return newReg;
   };
