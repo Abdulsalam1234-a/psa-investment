@@ -240,13 +240,23 @@ export const AdminEventsDesk: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreateModal}
-          className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow cursor-pointer transition-all hover:scale-102 flex items-center gap-2 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Launch New Program / Masterclass</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => exportEventRegistrationsToCsv()}
+            className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow cursor-pointer transition-all hover:scale-102 flex items-center gap-2 shrink-0"
+            title="Download complete database of all event applicants across all masterclasses as an Excel-formatted CSV"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+            <span>Export All Registrations (Excel)</span>
+          </button>
+          <button
+            onClick={handleOpenCreateModal}
+            className="px-5 py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow cursor-pointer transition-all hover:scale-102 flex items-center gap-2 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Launch New Program / Masterclass</span>
+          </button>
+        </div>
       </div>
 
       {/* PROGRAMS LIST TABLE */}

@@ -128,11 +128,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           </a>
           <span className="hidden md:inline text-slate-600">|</span>
           <a
-            href="tel:+2347068371292"
+            href="tel:+2347068371295"
             className="inline-flex items-center gap-1 text-slate-300 hover:text-[#C9A84C] font-mono transition-colors"
           >
             <Phone className="w-3 h-3 text-[#C9A84C]" />
-            <span>+234 706 837 1292</span>
+            <span>+234 706 837 1295</span>
           </a>
           <span className="text-slate-600">|</span>
           <button
@@ -308,7 +308,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           {currentUser?.displayName || memberProfile?.fullName || 'Authenticated User'}
                         </div>
                         <div className="text-xs text-slate-500 font-mono truncate">
-                          {currentUser?.email || memberProfile?.email || 'user@psainvestment.com'}
+                          {currentUser?.email || memberProfile?.email || 'user@psainvestment.com.ng'}
                         </div>
                         <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-tight bg-[#0A1F44]/10 text-[#0A1F44]">
                           {isAdmin ? (

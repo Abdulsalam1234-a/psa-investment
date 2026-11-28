@@ -328,7 +328,7 @@ import json
 from datetime import datetime
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
-PSA_API_URL = os.getenv("PSA_API_URL", "https://psa-investment.ai.studio/api/chronicle/publish")
+PSA_API_URL = os.getenv("PSA_API_URL", "https://psainvestment.com.ng/api/chronicle/publish")
 
 def fetch_and_publish():
     print(f"[{datetime.now()}] 07:00 WAT Trigger: Querying Google Gemini for NGX Daily Chronicle...")

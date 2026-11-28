@@ -335,7 +335,7 @@ export const INITIAL_STAFF: StaffMember[] = [
     id: 'staff-ceo-001',
     fullName: 'Salami Abdullahi',
     email: 'salamiabdullahi257@gmail.com',
-    phone: '+234 706 837 1292',
+    phone: '+234 706 837 1295',
     role: 'admin',
     title: 'Founder, CEO, COO, and Chief Analyst',
     department: 'Executive Directorate',
@@ -357,7 +357,7 @@ export const INITIAL_STAFF: StaffMember[] = [
   {
     id: 'staff-mgmt-002',
     fullName: 'Omolara Adeleke',
-    email: 'management@psainvestment.com',
+    email: 'management@psainvestment.com.ng',
     phone: '+234 802 334 5566',
     role: 'management',
     title: 'Director of Operations & Management',
@@ -378,7 +378,7 @@ export const INITIAL_STAFF: StaffMember[] = [
   {
     id: 'staff-smd-003',
     fullName: 'Chidinma Nwosu',
-    email: 'media@psainvestment.com',
+    email: 'media@psainvestment.com.ng',
     phone: '+234 813 445 6677',
     role: 'social_media_director',
     title: 'Director of Social Media & Digital Communications',
@@ -399,7 +399,7 @@ export const INITIAL_STAFF: StaffMember[] = [
   {
     id: 'staff-analyst-004',
     fullName: 'Farouk Ibrahim',
-    email: 'analyst@psainvestment.com',
+    email: 'analyst@psainvestment.com.ng',
     phone: '+234 814 556 7788',
     role: 'analyst',
     title: 'Senior Equity Research Analyst',
@@ -420,7 +420,7 @@ export const INITIAL_STAFF: StaffMember[] = [
   {
     id: 'staff-partner-005',
     fullName: 'Kenneth Okoye',
-    email: 'partners@psainvestment.com',
+    email: 'partners@psainvestment.com.ng',
     phone: '+234 809 667 8899',
     role: 'partners',
     title: 'Managing Partner - Capital Alliances & SME Syndication',
@@ -556,7 +556,7 @@ export const INITIAL_EVENTS: EventProgram[] = [
         id: 'field_phone',
         label: 'WhatsApp / Phone Number',
         type: 'phone',
-        placeholder: '+234 706 837 1292',
+        placeholder: '+234 706 837 1295',
         required: true
       },
       {
@@ -787,7 +787,7 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
   heroSubheadline: 'Institutional-grade Nigerian equity research, valuation models, and capital advisory directed by Chief Analyst Salami Abdullahi.',
   officialEmail: 'psainvestment.ng@gmail.com',
   ceoEmail: 'salamiabdullahi257@gmail.com',
-  officialPhone: '+234 706 837 1292',
+  officialPhone: '+234 706 837 1295',
   whatsappChannelUrl: 'https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R',
   mediumBlogUrl: 'https://medium.com/@salamiabdullahi257',
   announcementTickerText: 'Vol. LIII Nigerian Capital Markets Daily Intelligence & Nov 28 FMVA Masterclass Registration Active',
@@ -830,7 +830,7 @@ export const INITIAL_SITE_SETTINGS: SiteSettings = {
       fullName: 'Salami Abdullahi',
       roleTitle: 'Founder, CEO, COO, & Chief Analyst',
       email: 'salamiabdullahi257@gmail.com',
-      phone: '+234 706 837 1292',
+      phone: '+234 706 837 1295',
       bio: "As Founder, CEO, COO, and Chief Analyst of PSA Investment, Salami Abdullahi directs both the institutional research framework and the overarching strategic expansion of the firm. Under his analytical leadership, PSA Investment has pioneered a distinct valuation paradigm for Nigerian equities incorporating sovereign spreads, domestic inflation buffers, and cash conversion cycles.",
       photoUrl: '/salami-abdullahi.jpg',
       order: 1,

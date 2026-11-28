@@ -18,7 +18,7 @@ const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const DIST_OG_DIR = path.join(DIST_DIR, 'og');
 const PUBLIC_OG_DIR = path.join(PUBLIC_DIR, 'og');
 
-const BASE_URL = 'https://psainvestment.com';
+const BASE_URL = 'https://psainvestment.com.ng';
 
 // Ensure OG directories exist
 [DIST_OG_DIR, PUBLIC_OG_DIR].forEach(dir => {
@@ -170,7 +170,7 @@ function generateOgSvg({
     <text x="0" y="5" font-family="'Inter', sans-serif" font-size="14" font-weight="600" fill="#C9A84C">Directed by Salami Abdullahi A.</text>
     <text x="250" y="5" font-family="'Inter', sans-serif" font-size="14" font-weight="400" fill="#64748B">• Founder &amp; Chief Analyst, PSA Investment</text>
     
-    <text x="1040" y="5" font-family="'Inter', sans-serif" font-size="14" font-weight="600" fill="#94A3B8" text-anchor="end">psainvestment.com</text>
+    <text x="1040" y="5" font-family="'Inter', sans-serif" font-size="14" font-weight="600" fill="#94A3B8" text-anchor="end">psainvestment.com.ng</text>
   </g>
 </svg>`;
 }
@@ -612,7 +612,7 @@ const CORE_PAGES = [
     route: '/events',
     title: 'Events & FMVA Masterclass | Executive Financial Education | PSA Investment',
     description: 'Professional executive masterclasses in Financial Modeling and Valuation Analysis (FMVA) and Nigerian capital market symposiums directed by Salami Abdullahi.',
-    ogImage: '/og/default.png',
+    ogImage: '/og/fmva-bootcamp.png',
     heading: 'Executive Education & Events',
     subheading: 'Hands-on 3-statement modeling, DCF valuation, and banking recapitalization masterclasses.'
   },
@@ -620,7 +620,7 @@ const CORE_PAGES = [
     route: '/events/financial-modeling-valuation-analysis-masterclass-nov-2026',
     title: 'Financial Modeling & Valuation Analysis (FMVA) Masterclass Nov 28, 2026 | PSA Investment',
     description: 'Executive hands-on financial modeling masterclass covering dynamic 3-statement models, DCF valuation, and Nigerian banking recapitalization metrics directed by Salami Abdullahi.',
-    ogImage: '/og/default.png',
+    ogImage: '/og/fmva-bootcamp.png',
     heading: 'Financial Modeling & Valuation Analysis (FMVA) Executive Masterclass',
     subheading: 'Saturday, November 28, 2026 | 10:00 AM - 4:00 PM WAT | Virtual Interactive Session'
   },
@@ -643,7 +643,7 @@ const CORE_PAGES = [
   {
     route: '/contact',
     title: 'Contact Advisory Desk | Lagos & Abuja, Nigeria | PSA Investment',
-    description: 'Get in touch with the PSA Investment research desk and capital advisory team in Lagos and Abuja. Phone: +234 706 837 1292. Email: psainvestment.ng@gmail.com.',
+    description: 'Get in touch with the PSA Investment research desk and capital advisory team in Lagos and Abuja. Phone: +234 706 837 1295. Email: psainvestment.ng@gmail.com.',
     ogImage: '/og/default.png',
     heading: 'Contact PSA Investment',
     subheading: 'Institutional Advisory Desk | Lagos & Abuja, Nigeria'
@@ -773,7 +773,7 @@ function buildDossierHtml(dossier) {
         <div style="font-size: 13px; color: #94A3B8;">B.Sc. First-Class Honours (Ahmadu Bello University) • IBM Certified Data Analyst • FMVA Candidate</div>
       </div>
       <div>
-        Published under institutional guidelines on <a href="https://psainvestment.com" style="color: #0A1F44; font-weight: 600; text-decoration: none;">psainvestment.com</a>
+        Published under institutional guidelines on <a href="https://psainvestment.com.ng" style="color: #0A1F44; font-weight: 600; text-decoration: none;">psainvestment.com.ng</a>
       </div>
     </div>
   </div>`;
@@ -1050,6 +1050,8 @@ function preRenderPages() {
     pageHtml = pageHtml.replace(/<meta property="og:title" content=".*?" \/>/i, `<meta property="og:title" content="${escapeHtml(item.title)}" />`);
     pageHtml = pageHtml.replace(/<meta property="og:description" content=".*?" \/>/i, `<meta property="og:description" content="${escapeHtml(item.description)}" />`);
     pageHtml = pageHtml.replace(/<meta property="og:image" content=".*?" \/>/i, `<meta property="og:image" content="${fullOgImageUrl}" />`);
+    pageHtml = pageHtml.replace(/<meta property="og:image:secure_url" content=".*?" \/>/i, `<meta property="og:image:secure_url" content="${fullOgImageUrl}" />`);
+    pageHtml = pageHtml.replace(/<link rel="image_src" href=".*?" \/>/i, `<link rel="image_src" href="${fullOgImageUrl}" />`);
     pageHtml = pageHtml.replace(/<meta property="og:type" content=".*?" \/>/i, `<meta property="og:type" content="${item.type}" />`);
 
     // Replace Twitter meta

@@ -1,4 +1,4 @@
-# robots.txt for PSA Investment (https://psainvestment.com)
+# robots.txt for PSA Investment (https://psainvestment.com.ng)
 User-agent: *
 Allow: /
 Disallow: /admin/
@@ -38,4 +38,4 @@ Allow: /llms.txt
 User-agent: Applebot
 Allow: /
 
-Sitemap: https://psainvestment.com/sitemap.xml
+Sitemap: https://psainvestment.com.ng/sitemap.xml

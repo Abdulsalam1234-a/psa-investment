@@ -55,7 +55,7 @@ export const MarketBriefingDetailView: React.FC<MarketBriefingDetailViewProps> =
     // Dynamic Canonical
     let canonical = document.querySelector('link[rel="canonical"]');
     if (canonical) {
-      canonical.setAttribute('href', `https://psainvestment.com/market-briefings/${briefing.slug}`);
+      canonical.setAttribute('href', `https://psainvestment.com.ng/market-briefings/${briefing.slug}`);
     }
 
     // Dynamic Open Graph Tags
@@ -66,7 +66,7 @@ export const MarketBriefingDetailView: React.FC<MarketBriefingDetailViewProps> =
     if (ogDesc) ogDesc.setAttribute('content', briefing.leadArticle.slice(0, 160));
 
     const ogUrl = document.querySelector('meta[property="og:url"]');
-    if (ogUrl) ogUrl.setAttribute('content', `https://psainvestment.com/market-briefings/${briefing.slug}`);
+    if (ogUrl) ogUrl.setAttribute('content', `https://psainvestment.com.ng/market-briefings/${briefing.slug}`);
 
     // Inject Per-Page JSON-LD
     const scriptId = 'briefing-jsonld-schema';
@@ -88,42 +88,42 @@ export const MarketBriefingDetailView: React.FC<MarketBriefingDetailViewProps> =
               '@type': 'ListItem',
               'position': 1,
               'name': 'Home',
-              'item': 'https://psainvestment.com'
+              'item': 'https://psainvestment.com.ng'
             },
             {
               '@type': 'ListItem',
               'position': 2,
               'name': 'Market Briefings',
-              'item': 'https://psainvestment.com/market-briefings'
+              'item': 'https://psainvestment.com.ng/market-briefings'
             },
             {
               '@type': 'ListItem',
               'position': 3,
               'name': briefing.volume,
-              'item': `https://psainvestment.com/market-briefings/${briefing.slug}`
+              'item': `https://psainvestment.com.ng/market-briefings/${briefing.slug}`
             }
           ]
         },
         {
           '@type': 'AnalysisNewsArticle',
-          '@id': `https://psainvestment.com/market-briefings/${briefing.slug}#article`,
+          '@id': `https://psainvestment.com.ng/market-briefings/${briefing.slug}#article`,
           'headline': briefing.title,
           'description': briefing.leadArticle.slice(0, 160),
           'datePublished': briefing.publishedAt,
           'dateModified': briefing.publishedAt,
-          'mainEntityOfPage': `https://psainvestment.com/market-briefings/${briefing.slug}`,
+          'mainEntityOfPage': `https://psainvestment.com.ng/market-briefings/${briefing.slug}`,
           'author': {
             '@type': 'Person',
-            '@id': 'https://psainvestment.com/#founder',
+            '@id': 'https://psainvestment.com.ng/#founder',
             'name': 'Salami Abdullahi Adaviruku',
             'jobTitle': 'Founder & Chief Analyst',
             'alumniOf': 'Ahmadu Bello University'
           },
           'publisher': {
             '@type': 'FinancialService',
-            '@id': 'https://psainvestment.com/#organization',
+            '@id': 'https://psainvestment.com.ng/#organization',
             'name': 'PSA Investment',
-            'url': 'https://psainvestment.com'
+            'url': 'https://psainvestment.com.ng'
           }
         }
       ]
@@ -153,7 +153,7 @@ export const MarketBriefingDetailView: React.FC<MarketBriefingDetailViewProps> =
     );
   }
 
-  const shareUrl = `https://psainvestment.com/market-briefings/${briefing.slug}?utm_source=whatsapp&utm_medium=social`;
+  const shareUrl = `https://psainvestment.com.ng/market-briefings/${briefing.slug}?utm_source=whatsapp&utm_medium=social`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);

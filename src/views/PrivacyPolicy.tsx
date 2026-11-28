@@ -197,7 +197,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onNavigate }) => {
             </div>
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-[#C9A84C]" />
-              <span>Telephone: +234 706 837 1292</span>
+              <span>Telephone: +234 706 837 1295</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-[#C9A84C]" />

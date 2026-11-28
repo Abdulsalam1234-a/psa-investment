@@ -182,7 +182,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
     d => d.memberId === (currentUser?.uid || memberProfile?.uid)
   );
 
-  const referralLink = `https://psainvestment.com/?ref=${memberProfile?.referralCode}`;
+  const referralLink = `https://psainvestment.com.ng/?ref=${memberProfile?.referralCode}`;
 
   const handleCopyCode = () => {
     if (memberProfile?.referralCode) {
@@ -211,7 +211,7 @@ export const MemberPortal: React.FC<MemberPortalProps> = ({
 
   const handleDownload = async (rep: typeof reports[0]) => {
     const memberId = currentUser?.uid || memberProfile?.uid || 'user-active';
-    const memberEmail = currentUser?.email || memberProfile?.email || 'member@psainvestment.com';
+    const memberEmail = currentUser?.email || memberProfile?.email || 'member@psainvestment.com.ng';
 
     await logReportDownload(rep.id, memberId, memberEmail);
 

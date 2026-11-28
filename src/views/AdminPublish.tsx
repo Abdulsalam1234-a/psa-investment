@@ -133,7 +133,7 @@ export const AdminPublish: React.FC<AdminPublishProps> = ({ onNavigate }) => {
       });
 
     const slug = `ngx-pre-market-briefing-${briefingDate}`;
-    const shareUrl = `https://psainvestment.com/market-briefings/${slug}?utm_source=whatsapp&utm_medium=social`;
+    const shareUrl = `https://psainvestment.com.ng/market-briefings/${slug}?utm_source=whatsapp&utm_medium=social`;
 
     const whatsappTeaser = `*PSA INVESTMENT • DAILY NGX PRE-MARKET INTELLIGENCE*\n📅 *${new Date(briefingDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })} | ${briefingVolume}*\n• *ASI Snapshot:* ${briefingAsi} (${briefingChange}) | Cap: ${briefingCap}\n• *Turnover:* ${briefingValueTraded} across ${briefingVolumeTraded}\n• *Lead Story:* ${briefingTitle}\n🔗 Read Full Briefing: ${shareUrl}`;
 
@@ -193,7 +193,7 @@ export const AdminPublish: React.FC<AdminPublishProps> = ({ onNavigate }) => {
     }
 
     const slug = `${dossierTicker.toLowerCase().trim()}-valuation-equity-dossier-${new Date().getFullYear()}`;
-    const shareUrl = `https://psainvestment.com/research/${slug}?utm_source=whatsapp&utm_medium=social`;
+    const shareUrl = `https://psainvestment.com.ng/research/${slug}?utm_source=whatsapp&utm_medium=social`;
 
     const whatsappTeaser = `*PSA INVESTMENT • INSTITUTIONAL EQUITY DOSSIER*\n📊 *${dossierCompany.trim()} (NGX: ${dossierTicker.toUpperCase().trim()})*\n• Rating: *${dossierRating}* | Target Price: *${dossierTargetPrice}* (${dossierUpside} Upside)\n• Multiples: P/E ${dossierPe} | P/B ${dossierPb} | Div Yield ${dossierDivYield} | ROE ${dossierRoe}\n• Summary: ${dossierSummary.trim().slice(0, 140)}...\n🔗 Full Dossier & Model: ${shareUrl}`;
 
@@ -382,7 +382,7 @@ export const AdminPublish: React.FC<AdminPublishProps> = ({ onNavigate }) => {
                 <div>
                   <h3 className="font-serif font-black text-lg text-white">Successfully Published Live!</h3>
                   <p className="text-xs text-slate-300">
-                    Live URL: <code className="text-[#C9A84C]">https://psainvestment.com/{publishMode === 'briefing' ? 'market-briefings' : 'research'}/{publishedSlug}</code>
+                    Live URL: <code className="text-[#C9A84C]">https://psainvestment.com.ng/{publishMode === 'briefing' ? 'market-briefings' : 'research'}/{publishedSlug}</code>
                   </p>
                 </div>
               </div>

@@ -194,7 +194,7 @@ export const AnalystCircle: React.FC<AnalystCircleProps> = ({
             <div className="lg:col-span-4 p-6 bg-[#07152E] rounded-2xl border border-slate-700 text-center space-y-3 shadow-lg">
               <div className="text-xs text-[#C9A84C] font-semibold">Sample Member Referral Link</div>
               <div className="p-3 bg-slate-900 rounded-xl font-mono text-xs text-[#C9A84C] font-bold truncate border border-slate-800">
-                psainvestment.com/?ref=PSA-DEMO77
+                psainvestment.com.ng/?ref=PSA-DEMO77
               </div>
               <div className="text-[11px] text-slate-300">
                 Pre-fills referral code for new applicants automatically.

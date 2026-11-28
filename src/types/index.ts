@@ -413,6 +413,8 @@ export interface EventRegistration {
   ticketCode: string;
   registeredAt: string;
   status: 'confirmed' | 'waitlist' | 'attended';
+  confirmationEmailSubject?: string;
+  confirmationEmailBody?: string;
 }
 
 export interface Announcement {

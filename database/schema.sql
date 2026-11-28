@@ -1,7 +1,7 @@
 -- =====================================================================
 -- PSA INVESTMENT (PSAI) - ENTERPRISE DATABASE SCHEMA & SECURITY POLICIES
 -- Target Platform: Supabase PostgreSQL (Standard & Perpetual Free Tier)
--- Canonical Domain: https://psainvestment.com/
+-- Canonical Domain: https://psainvestment.com.ng/
 -- Security: Row-Level Security (RLS) enabled on all tables
 -- =====================================================================
 
@@ -13,9 +13,9 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
   id TEXT PRIMARY KEY DEFAULT 'psa_site_settings',
   official_email TEXT NOT NULL DEFAULT 'psainvestment.ng@gmail.com',
   ceo_email TEXT NOT NULL DEFAULT 'salamiabdullahi257@gmail.com',
-  official_phone TEXT NOT NULL DEFAULT '+234 706 837 1292',
+  official_phone TEXT NOT NULL DEFAULT '+234 706 837 1295',
   whatsapp_channel_url TEXT NOT NULL DEFAULT 'https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R',
-  canonical_domain TEXT NOT NULL DEFAULT 'https://psainvestment.com',
+  canonical_domain TEXT NOT NULL DEFAULT 'https://psainvestment.com.ng',
   logo_url TEXT,
   banner_announcement TEXT,
   banner_active BOOLEAN DEFAULT false,

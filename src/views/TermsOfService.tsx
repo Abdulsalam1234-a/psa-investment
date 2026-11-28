@@ -59,12 +59,12 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onNavigate }) =>
         </h2>
         <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
           <p>
-            All valuation dossiers, Discounted Cash Flow (DCF) spreadsheets, daily financial chronicles, editorial articles, brand logos, and proprietary formulas published on psainvestment.com are the exclusive intellectual property of PSA Investment and Salami Abdullahi.
+            All valuation dossiers, Discounted Cash Flow (DCF) spreadsheets, daily financial chronicles, editorial articles, brand logos, and proprietary formulas published on psainvestment.com.ng are the exclusive intellectual property of PSA Investment and Salami Abdullahi.
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Permitted Use:</strong> Members and visitors are granted a limited, revocable, non-transferable license to access, view, and read research dispatches for personal analytical or corporate reference.</li>
             <li><strong>Prohibited Actions:</strong> You may not commercially redistribute, scrape, reverse-engineer, resell, or republish complete research dossiers, financial models, or subscriber materials without explicit written authorization from the Chief Analyst.</li>
-            <li><strong>Attribution:</strong> Fair citation of excerpted market figures requires clear attribution to "PSA Investment (psainvestment.com)".</li>
+            <li><strong>Attribution:</strong> Fair citation of excerpted market figures requires clear attribution to "PSA Investment (psainvestment.com.ng)".</li>
           </ul>
         </div>
       </section>
@@ -106,7 +106,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onNavigate }) =>
         </h2>
         <div className="bg-white p-6 rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-700 leading-relaxed space-y-2">
           <p>
-            These Terms of Service are governed by and construed in accordance with the laws of the Federal Republic of Nigeria. Any legal disputes arising in connection with the use of psainvestment.com shall be resolved through good-faith negotiation, and if unresolved, through the competent courts located in Lagos State, Nigeria.
+            These Terms of Service are governed by and construed in accordance with the laws of the Federal Republic of Nigeria. Any legal disputes arising in connection with the use of psainvestment.com.ng shall be resolved through good-faith negotiation, and if unresolved, through the competent courts located in Lagos State, Nigeria.
           </p>
         </div>
       </section>
@@ -125,7 +125,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onNavigate }) =>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-[#C9A84C]" />
-              <span>Phone: +234 706 837 1292</span>
+              <span>Phone: +234 706 837 1295</span>
             </div>
           </div>
         </div>

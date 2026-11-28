@@ -133,11 +133,18 @@ interface DataContextType {
     jobTitle?: string;
     responses: Record<string, any>;
   }) => Promise<EventRegistration>;
+  getEventConfirmationEmail: (registration: EventRegistration) => {
+    subject: string;
+    body: string;
+    from: string;
+    whatsappFmvaUrl: string;
+    whatsappMainUrl: string;
+  };
   saveAnnouncement: (announcement: Partial<Announcement>) => Promise<Announcement>;
   deleteAnnouncement: (id: string) => Promise<void>;
   dismissAnnouncement: (id: string) => void;
   updateGoogleAdsConfig: (config: Partial<GoogleAdsConfig>) => void;
-  exportEventRegistrationsToCsv: (eventId: string) => void;
+  exportEventRegistrationsToCsv: (eventId?: string) => void;
   triggerEventBroadcast: (eventId: string, channels: { email: boolean; whatsapp: boolean }) => Promise<{ emailsSent: number; whatsappUrl: string }>;
   updateSiteSettings: (settings: Partial<SiteSettings>) => Promise<void>;
   registerMemberDirectly: (member: Member) => Promise<void>;
@@ -713,7 +720,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       recipientName: member.fullName,
       templateType: 'membership_approved',
       subject: 'Welcome to the Circle: Your PSA Analyst Circle Account is Active',
-      body: `Hello ${member.fullName},\n\nCongratulations! Your application to the PSA Analyst Circle has been approved by the Chief Analyst. You can now log into your member dashboard to access institutional equity research, proprietary valuation models, and downloadable PDF investment memos.\n\nAccess your dashboard: https://psainvestment.com/portal\n\nBest regards,\nSalami Abdullahi\nFounder, CEO, COO, & Chief Analyst\nPSA Investment`
+      body: `Hello ${member.fullName},\n\nCongratulations! Your application to the PSA Analyst Circle has been approved by the Chief Analyst. You can now log into your member dashboard to access institutional equity research, proprietary valuation models, and downloadable PDF investment memos.\n\nAccess your dashboard: https://psainvestment.com.ng/portal\n\nBest regards,\nSalami Abdullahi\nFounder, CEO, COO, & Chief Analyst\nPSA Investment`
     });
   };
 
@@ -1050,7 +1057,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newLog: DownloadLog = {
       id: `download-chron-${Date.now()}`,
       memberId: 'public-download',
-      memberEmail: memberEmail || 'public-reader@psa-investment.ai.studio',
+      memberEmail: memberEmail || 'public-reader@psainvestment.com.ng',
       reportId: chronicleId,
       fileId: `pdf-${chronicleId}`,
       reportTitle: chron ? `${chron.title} (${chron.volume})` : 'The PSA Financial Chronicle',
@@ -1247,6 +1254,79 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const getEventConfirmationEmail = (registration: EventRegistration) => {
+    const event = events.find(e => e.id === registration.eventId);
+    const isFmvaBootcamp = !event || event.id.includes('fmva') || event.slug.includes('financial-modeling') || (event.title && event.title.toLowerCase().includes('financial modeling'));
+
+    const org = registration.organization || registration.responses?.field_org || 'Independent / Private Scholar';
+    const role = registration.jobTitle || registration.responses?.field_role || 'Financial Modeling Candidate';
+    const track = registration.responses?.field_experience || registration.responses?.proficiency || 'Foundation & Intermediate Financial Modeling Track';
+    const goal = registration.responses?.field_objective || registration.responses?.goal || 'Master 3-statement dynamic modeling, DCF valuation, and NGX equity analysis';
+
+    const subject = isFmvaBootcamp
+      ? `Registration Confirmed: PSAI FMVA Foundation Bootcamp - Welcome, ${registration.fullName}!`
+      : `Registration Confirmed: ${registration.eventTitle} [Ticket: ${registration.ticketCode}]`;
+
+    const body = isFmvaBootcamp
+      ? `Dear ${registration.fullName},
+
+Thank you for registering for the PSA Investment (PSAI) FMVA Foundation Bootcamp! We have successfully received your application with the following profile details:
+
+• Applicant Name: ${registration.fullName}
+• Institution / Organization: ${org}
+• Role / Level: ${role}
+• Selected Proficiency Track: ${track}
+• Primary Learning Goal: ${goal}
+
+NEXT STEPS - JOIN OUR OFFICIAL CHANNELS IMMEDIATELY
+All class schedules, starter Excel templates, Zoom/Meet access links, and weekly assessment updates will be distributed exclusively through our official WhatsApp channels. Please join both channels right away so you do not miss any onboarding communication:
+
+1. PSAI FMVA Bootcamp Cohort Channel:
+https://whatsapp.com/channel/0029VbDmqAvGOj9lfbP6uT3U
+
+2. PSA Investment Main Intelligence Channel:
+https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R
+
+For any technical inquiries or assistance regarding your registration, please contact our official desk directly at psainvestment.ng@gmail.com or via WhatsApp at +234 706 837 1295.
+
+Welcome aboard, and we look forward to accelerating your financial modeling expertise!
+
+Warm regards,
+Salami Abdullahi A.
+Founder & Lead Analyst, PSA Investment (PSAI)
+https://psainvestment.com.ng`
+      : `Dear ${registration.fullName},
+
+Thank you for registering for "${registration.eventTitle}"! We have successfully received your registration details.
+
+• Ticket Code: ${registration.ticketCode}
+• Event: ${registration.eventTitle}
+• Date: ${event?.startDate || 'Scheduled'} (${event?.startTime || '10:00 WAT'})
+• Venue: ${event?.venue || 'PSA Virtual Suite'}
+
+OFFICIAL CHANNELS - JOIN IMMEDIATELY:
+1. PSAI FMVA Bootcamp Cohort Channel:
+https://whatsapp.com/channel/0029VbDmqAvGOj9lfbP6uT3U
+
+2. PSA Investment Main Intelligence Channel:
+https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R
+
+For desk inquiries, reach us directly at psainvestment.ng@gmail.com or via WhatsApp at +234 706 837 1295.
+
+Warm regards,
+Salami Abdullahi A.
+Founder & Lead Analyst, PSA Investment (PSAI)
+https://psainvestment.com.ng`;
+
+    return {
+      subject,
+      body,
+      from: 'psainvestment.ng@gmail.com',
+      whatsappFmvaUrl: 'https://whatsapp.com/channel/0029VbDmqAvGOj9lfbP6uT3U',
+      whatsappMainUrl: 'https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R'
+    };
+  };
+
   const registerForEvent = async (eventId: string, data: {
     fullName: string;
     email: string;
@@ -1289,6 +1369,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       status: 'confirmed'
     };
 
+    // Generate dynamic customized confirmation email using official template
+    const emailData = getEventConfirmationEmail(newReg);
+    newReg.confirmationEmailSubject = emailData.subject;
+    newReg.confirmationEmailBody = emailData.body;
+
     setEventRegistrations(prev => [newReg, ...prev]);
 
     // Send confirmation email dispatch log
@@ -1296,15 +1381,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       recipientEmail: newReg.email,
       recipientName: newReg.fullName,
       templateType: 'event_announcement',
-      subject: `Registration Confirmed: ${event.title} [Ticket: ${ticketCode}]`,
-      body: `Dear ${newReg.fullName},\n\nYour registration for "${event.title}" has been confirmed.\n\nDate: ${event.startDate}\nTime: ${event.startTime} - ${event.endTime} (${event.timezone})\nVenue: ${event.venue}\nTicket Code: ${ticketCode}\n\nWe look forward to hosting you.\n\nPSA Investment Executive Desk`
+      subject: emailData.subject,
+      body: emailData.body
     });
 
     logSecurityEvent(
-      'Event Registration Confirmed',
+      'Event Registration Confirmed & Direct Email Dispatched',
       newReg.email,
       'admin_action',
-      `Registered for ${event.title} with ticket ${ticketCode}`,
+      `Registered for ${event.title} with ticket ${ticketCode}. Confirmation sent to ${newReg.email} via psainvestment.ng@gmail.com`,
       'low'
     );
     syncRecordToCloud('psa_event_registrations', newReg).catch(e => console.warn(e));
@@ -1354,7 +1439,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             recipientName: m.fullName,
             templateType: 'event_announcement',
             subject: `Announcement: ${newAnn.title}`,
-            body: `Dear ${m.fullName},\n\n${newAnn.content}\n\nRead more: https://psa-investment.ai.studio${newAnn.linkUrl}\n\nPSA Investment Desk`
+            body: `Dear ${m.fullName},\n\n${newAnn.content}\n\nRead more: https://psainvestment.com.ng${newAnn.linkUrl}\n\nPSA Investment Desk`
           });
         });
       }
@@ -1381,51 +1466,70 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const exportEventRegistrationsToCsv = (eventId: string) => {
-    const event = events.find(e => e.id === eventId);
-    const regs = eventRegistrations.filter(r => r.eventId === eventId);
-    if (!event) return;
+  const exportEventRegistrationsToCsv = (eventId?: string) => {
+    let targetEvents = events;
+    let regs = eventRegistrations;
+    let fileName = `PSAI_Registrations_Excel_${Date.now()}.csv`;
+
+    if (eventId && eventId !== 'all') {
+      const event = events.find(e => e.id === eventId);
+      if (event) {
+        targetEvents = [event];
+        regs = eventRegistrations.filter(r => r.eventId === eventId);
+        const safeSlug = event.slug.replace(/[^a-zA-Z0-9-_]/g, '_');
+        fileName = `PSAI_${safeSlug}_Registrations_Excel.csv`;
+      }
+    }
 
     const headers = [
       'Ticket Code',
       'Full Name',
       'Email',
       'Phone',
-      'Organization',
-      'Job Title',
+      'Event / Program',
+      'Organization / Institution',
+      'Role / Level',
+      'Selected Proficiency Track',
+      'Primary Learning Goal',
       'Registration Date',
-      'Status'
+      'Status',
+      'Additional Responses'
     ];
 
-    const customFields = event.customFormFields || [];
-    customFields.forEach(f => headers.push(f.label));
-
     const rows = regs.map(r => {
-      const standardCols = [
-        `"${r.ticketCode}"`,
-        `"${r.fullName.replace(/"/g, '""')}"`,
-        `"${r.email.replace(/"/g, '""')}"`,
-        `"${r.phone.replace(/"/g, '""')}"`,
-        `"${(r.organization || '').replace(/"/g, '""')}"`,
-        `"${(r.jobTitle || '').replace(/"/g, '""')}"`,
+      const org = r.organization || r.responses?.field_org || '';
+      const role = r.jobTitle || r.responses?.field_role || '';
+      const track = r.responses?.field_experience || r.responses?.proficiency || '';
+      const goal = r.responses?.field_objective || r.responses?.goal || '';
+      const extraResponses = Object.entries(r.responses || {})
+        .filter(([k]) => !['field_name', 'field_email', 'field_phone', 'field_org', 'field_role', 'field_experience', 'field_objective'].includes(k))
+        .map(([k, v]) => `${k}: ${v}`)
+        .join('; ');
+
+      const cols = [
+        `"${(r.ticketCode || '').replace(/"/g, '""')}"`,
+        `"${(r.fullName || '').replace(/"/g, '""')}"`,
+        `"${(r.email || '').replace(/"/g, '""')}"`,
+        `"${(r.phone || '').replace(/"/g, '""')}"`,
+        `"${(r.eventTitle || '').replace(/"/g, '""')}"`,
+        `"${org.replace(/"/g, '""')}"`,
+        `"${role.replace(/"/g, '""')}"`,
+        `"${String(track).replace(/"/g, '""')}"`,
+        `"${String(goal).replace(/"/g, '""')}"`,
         `"${new Date(r.registeredAt).toLocaleString()}"`,
-        `"${r.status}"`
+        `"${r.status || 'confirmed'}"`,
+        `"${extraResponses.replace(/"/g, '""')}"`
       ];
 
-      customFields.forEach(f => {
-        const val = r.responses?.[f.id];
-        const strVal = val === true ? 'Yes' : val === false ? 'No' : String(val || '');
-        standardCols.push(`"${strVal.replace(/"/g, '""')}"`);
-      });
-
-      return standardCols.join(',');
+      return cols.join(',');
     });
 
     const csvContent = [headers.map(h => `"${h}"`).join(','), ...rows].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Prepend UTF-8 BOM so Microsoft Excel on Windows parses it directly without character encoding issues
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `PSA_Registrations_${event.slug}_${Date.now()}.csv`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1443,13 +1547,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           recipientName: m.fullName,
           templateType: 'event_announcement',
           subject: `Executive Event: ${event.title}`,
-          body: `Dear ${m.fullName},\n\nWe invite you to participate in "${event.title}".\n\nDate: ${event.startDate}\nTime: ${event.startTime} - ${event.endTime} (${event.timezone})\nVenue: ${event.venue}\nInstructor: ${event.instructor} (${event.instructorTitle})\nPrice: ${event.price}\n\nRegister directly online: https://psa-investment.ai.studio/events\n\nPSA Investment Desk`
+          body: `Dear ${m.fullName},\n\nWe invite you to participate in "${event.title}".\n\nDate: ${event.startDate}\nTime: ${event.startTime} - ${event.endTime} (${event.timezone})\nVenue: ${event.venue}\nInstructor: ${event.instructor} (${event.instructorTitle})\nPrice: ${event.price}\n\nRegister directly online: https://psainvestment.com.ng/events\n\nPSA Investment Desk`
         });
         emailsSent++;
       });
     }
 
-    const waText = `*PSA INVESTMENT CAPITAL INTELLIGENCE*\n*EXECUTIVE EVENT BROADCAST*\n\n📌 *${event.title.toUpperCase()}*\n\n📅 *Date:* ${event.startDate}\n⏰ *Time:* ${event.startTime} - ${event.endTime} (${event.timezone})\n📍 *Venue:* ${event.venue}\n👨‍🏫 *Instructor:* ${event.instructor} (${event.instructorTitle})\n💳 *Access:* ${event.price}\n\n*Program Overview:*\n${event.description}\n\n🔗 *Register Online:* https://psa-investment.ai.studio/events\n\nOfficial Desk: +234 706 837 1292 | psainvestment.ng@gmail.com`;
+    const waText = `*PSA INVESTMENT CAPITAL INTELLIGENCE*\n*EXECUTIVE EVENT BROADCAST*\n\n📌 *${event.title.toUpperCase()}*\n\n📅 *Date:* ${event.startDate}\n⏰ *Time:* ${event.startTime} - ${event.endTime} (${event.timezone})\n📍 *Venue:* ${event.venue}\n👨‍🏫 *Instructor:* ${event.instructor} (${event.instructorTitle})\n💳 *Access:* ${event.price}\n\n*Program Overview:*\n${event.description}\n\n🔗 *Register Online:* https://psainvestment.com.ng/events\n\nOfficial Desk: +234 706 837 1295 | psainvestment.ng@gmail.com`;
 
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waText)}`;
 
@@ -1702,6 +1806,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         saveEvent,
         deleteEvent,
         registerForEvent,
+        getEventConfirmationEmail,
         saveAnnouncement,
         deleteAnnouncement,
         dismissAnnouncement,

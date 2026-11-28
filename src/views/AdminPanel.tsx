@@ -173,7 +173,7 @@ export const AdminPanel: React.FC = () => {
 
   // Admin Profile state
   const [adminFullName, setAdminFullName] = useState(memberProfile?.fullName || 'Salami Abdullahi');
-  const [adminPhone, setAdminPhone] = useState(memberProfile?.phone || '+234 706 837 1292');
+  const [adminPhone, setAdminPhone] = useState(memberProfile?.phone || '+234 706 837 1295');
   const [adminTitle, setAdminTitle] = useState('Founder, CEO, COO, and Chief Analyst');
   const [adminBio, setAdminBio] = useState(
     'Directs institutional equity research, sovereign sensitivity models, and capital allocation frameworks for NGX-listed assets.'
@@ -614,7 +614,7 @@ export const AdminPanel: React.FC = () => {
                       await logReportDownload(
                         firstRep.id,
                         'demo-audit-member',
-                        'auditor@psainvestment.com'
+                        'auditor@psainvestment.com.ng'
                       );
                       showToast(`Audit log recorded for "${firstRep.title}"`);
                     }
@@ -1404,7 +1404,7 @@ export const AdminPanel: React.FC = () => {
                       <input
                         type="email"
                         required
-                        placeholder="name@psainvestment.com"
+                        placeholder="name@psainvestment.com.ng"
                         value={newStaffEmail}
                         onChange={e => setNewStaffEmail(e.target.value)}
                         className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-[#C9A84C] font-medium"

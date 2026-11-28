@@ -182,6 +182,7 @@ const CARDS = [
   { name: 'default.png', accent: 'gold', hasMetrics: false },
   { name: 'research.png', accent: 'gold', hasMetrics: false },
   { name: 'market-briefings.png', accent: 'emerald', hasMetrics: false },
+  { name: 'fmva-bootcamp.png', ticker: 'FMVA MASTERCLASS', rating: 'NOV 28', hasMetrics: true },
   { name: 'gtco.png', ticker: 'GTCO', rating: 'BUY', hasMetrics: true },
   { name: 'zenithbank.png', ticker: 'ZENITHBANK', rating: 'ACCUMULATE', hasMetrics: true },
   { name: 'seplat.png', ticker: 'SEPLAT', rating: 'BUY', hasMetrics: true },

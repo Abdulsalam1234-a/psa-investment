@@ -68,7 +68,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     setDownloading(true);
     try {
       const memberId = currentUser?.uid || memberProfile?.uid || 'guest-user';
-      const memberEmail = currentUser?.email || memberProfile?.email || 'guest@psainvestment.com';
+      const memberEmail = currentUser?.email || memberProfile?.email || 'guest@psainvestment.com.ng';
 
       await logReportDownload(report.id, memberId, memberEmail);
 

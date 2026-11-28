@@ -3,7 +3,7 @@
 PSA INVESTMENT - DAILY 07:00 WAT FINANCIAL CHRONICLE AUTOMATION
 ================================================================
 Author: Salami Abdullahi (Founder, CEO, COO & Chief Analyst)
-Platform: PSA Investment (https://psa-investment.ai.studio)
+Platform: PSA Investment (https://psainvestment.com.ng)
 
 Description:
 This script connects to the Google Gemini API every weekday morning at 07:00 WAT,

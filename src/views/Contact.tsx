@@ -190,10 +190,10 @@ export const Contact: React.FC = () => {
                   <div>
                     <div className="text-xs font-bold uppercase tracking-wider text-[#C9A84C]">Direct & Desk Line</div>
                     <a
-                      href="tel:+2347068371292"
+                      href="tel:+2347068371295"
                       className="text-xs font-bold font-mono text-white hover:text-[#C9A84C] transition-colors block"
                     >
-                      +234 706 837 1292
+                      +234 706 837 1295
                     </a>
                   </div>
                 </div>
@@ -297,7 +297,7 @@ export const Contact: React.FC = () => {
                       </label>
                       <input
                         type="tel"
-                        placeholder="+234 706 837 1292"
+                        placeholder="+234 706 837 1295"
                         value={phone}
                         onChange={e => setPhone(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-[#C9A84C] focus:bg-white font-medium"

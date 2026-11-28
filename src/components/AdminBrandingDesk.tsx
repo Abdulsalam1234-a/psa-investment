@@ -80,7 +80,7 @@ export const AdminBrandingDesk: React.FC = () => {
         heroSubheadline: 'Institutional-grade Nigerian equity research, valuation models, and capital advisory directed by Chief Analyst Salami Abdullahi.',
         officialEmail: 'psainvestment.ng@gmail.com',
         ceoEmail: 'salamiabdullahi257@gmail.com',
-        officialPhone: '+234 706 837 1292',
+        officialPhone: '+234 706 837 1295',
         announcementTickerText: 'Vol. LIII Nigerian Capital Markets Daily Intelligence & Nov 28 FMVA Masterclass Registration Active',
         showTicker: true,
         showDailyChronicleHighlight: true,

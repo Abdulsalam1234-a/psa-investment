@@ -12,7 +12,7 @@ export default async function handler(req: any, res: any) {
   return res.status(200).json({
     status: 'healthy',
     service: 'PSA Investment Production API',
-    canonicalDomain: 'https://psainvestment.com',
+    canonicalDomain: 'https://psainvestment.com.ng',
     timestamp,
     environment: process.env.NODE_ENV || 'production',
     database: {

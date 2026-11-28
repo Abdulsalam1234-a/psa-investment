@@ -2,79 +2,79 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Core Public Routes -->
   <url>
-    <loc>https://psainvestment.com/</loc>
+    <loc>https://psainvestment.com.ng/</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/research</loc>
+    <loc>https://psainvestment.com.ng/research</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/market-briefings</loc>
+    <loc>https://psainvestment.com.ng/market-briefings</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/about</loc>
+    <loc>https://psainvestment.com.ng/about</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/services</loc>
+    <loc>https://psainvestment.com.ng/services</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/chronicle</loc>
+    <loc>https://psainvestment.com.ng/chronicle</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/events</loc>
+    <loc>https://psainvestment.com.ng/events</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/events/financial-modeling-valuation-analysis-masterclass-nov-2026</loc>
+    <loc>https://psainvestment.com.ng/events/financial-modeling-valuation-analysis-masterclass-nov-2026</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/analyst-circle</loc>
+    <loc>https://psainvestment.com.ng/analyst-circle</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/videos</loc>
+    <loc>https://psainvestment.com.ng/videos</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/contact</loc>
+    <loc>https://psainvestment.com.ng/contact</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/privacy</loc>
+    <loc>https://psainvestment.com.ng/privacy</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/terms</loc>
+    <loc>https://psainvestment.com.ng/terms</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.60</priority>
@@ -82,37 +82,37 @@
 
   <!-- Institutional Equity Research Dossiers -->
   <url>
-    <loc>https://psainvestment.com/research/gtco-holdings-fy2026-valuation-dossier</loc>
+    <loc>https://psainvestment.com.ng/research/gtco-holdings-fy2026-valuation-dossier</loc>
     <lastmod>2026-11-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/research/zenith-bank-recapitalization-equity-dossier</loc>
+    <loc>https://psainvestment.com.ng/research/zenith-bank-recapitalization-equity-dossier</loc>
     <lastmod>2026-11-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/research/seplat-energy-anoh-gas-valuation-dossier</loc>
+    <loc>https://psainvestment.com.ng/research/seplat-energy-anoh-gas-valuation-dossier</loc>
     <lastmod>2026-11-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/research/mtn-nigeria-telecoms-infrastructure-dossier</loc>
+    <loc>https://psainvestment.com.ng/research/mtn-nigeria-telecoms-infrastructure-dossier</loc>
     <lastmod>2026-11-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/research/dangote-cement-industrial-growth-dossier</loc>
+    <loc>https://psainvestment.com.ng/research/dangote-cement-industrial-growth-dossier</loc>
     <lastmod>2026-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/research/presco-plantation-agriculture-expansion-dossier</loc>
+    <loc>https://psainvestment.com.ng/research/presco-plantation-agriculture-expansion-dossier</loc>
     <lastmod>2026-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.90</priority>
@@ -120,19 +120,19 @@
 
   <!-- Daily NGX Pre-Market Briefings -->
   <url>
-    <loc>https://psainvestment.com/market-briefings/ngx-pre-market-briefing-2026-11-27</loc>
+    <loc>https://psainvestment.com.ng/market-briefings/ngx-pre-market-briefing-2026-11-27</loc>
     <lastmod>2026-11-27</lastmod>
     <changefreq>never</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/market-briefings/ngx-pre-market-briefing-2026-11-26</loc>
+    <loc>https://psainvestment.com.ng/market-briefings/ngx-pre-market-briefing-2026-11-26</loc>
     <lastmod>2026-11-26</lastmod>
     <changefreq>never</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://psainvestment.com/market-briefings/ngx-pre-market-briefing-2026-11-13</loc>
+    <loc>https://psainvestment.com.ng/market-briefings/ngx-pre-market-briefing-2026-11-13</loc>
     <lastmod>2026-11-13</lastmod>
     <changefreq>never</changefreq>
     <priority>0.80</priority>

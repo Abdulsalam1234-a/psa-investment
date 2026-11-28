@@ -46,7 +46,7 @@ export const ResourceComments: React.FC<ResourceCommentsProps> = ({
       const authorName =
         currentUser?.displayName || memberProfile?.fullName || 'Circle Analyst';
       const authorEmail =
-        currentUser?.email || memberProfile?.email || 'analyst@circle.psainvestment.com';
+        currentUser?.email || memberProfile?.email || 'analyst@circle.psainvestment.com.ng';
 
       let authorTier = 'Associate Analyst';
       if (isAdmin) {

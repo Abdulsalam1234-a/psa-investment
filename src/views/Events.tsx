@@ -25,7 +25,8 @@ import {
   ExternalLink,
   Laptop,
   ShieldCheck,
-  FileText
+  FileText,
+  Mail
 } from 'lucide-react';
 import { EventProgram, EventCategory, EventRegistration, FormFieldDefinition } from '../types';
 import { useData } from '../context/DataContext';
@@ -43,7 +44,7 @@ export const Events: React.FC<EventsProps> = ({
   onNavigateEvent,
   onOpenAuthModal
 }) => {
-  const { events, registerForEvent } = useData();
+  const { events, registerForEvent, getEventConfirmationEmail } = useData();
   const { currentUser, memberProfile } = useAuth();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -51,6 +52,7 @@ export const Events: React.FC<EventsProps> = ({
   const [selectedEventForDetail, setSelectedEventForDetail] = useState<EventProgram | null>(null);
   const [selectedEventForRegister, setSelectedEventForRegister] = useState<EventProgram | null>(null);
   const [copyToast, setCopyToast] = useState<boolean>(false);
+  const [emailCopied, setEmailCopied] = useState<boolean>(false);
 
   // Registration Form State
   const [regFullName, setRegFullName] = useState<string>('');
@@ -599,7 +601,7 @@ export const Events: React.FC<EventsProps> = ({
                         <h4 className="font-serif font-black text-xl text-[#0A1F44]">Registration Confirmed!</h4>
                         <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                           Thank you, <strong className="text-slate-800">{regSuccess.fullName}</strong>. Your seat for the{' '}
-                          <strong>{regSuccess.eventTitle}</strong> has been secured. A confirmation email and calendar link have been logged.
+                          <strong>{regSuccess.eventTitle}</strong> has been secured.
                         </p>
                       </div>
 
@@ -623,27 +625,78 @@ export const Events: React.FC<EventsProps> = ({
                         </div>
                       </div>
 
+                      {/* Official Confirmation Email Preview */}
+                      {(() => {
+                        const emailInfo = getEventConfirmationEmail(regSuccess);
+                        return (
+                          <div className="p-4 bg-slate-900 text-white rounded-2xl text-left border border-slate-800 space-y-2">
+                            <div className="flex items-center justify-between text-xs text-[#C9A84C] font-bold border-b border-slate-800 pb-2">
+                              <span className="flex items-center gap-1.5">
+                                <Mail className="w-3.5 h-3.5 text-[#C9A84C]" />
+                                <span>Official Confirmation Email Dispatched</span>
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">From: {emailInfo.from}</span>
+                            </div>
+                            <div className="text-[11px] text-slate-300 font-semibold">{emailInfo.subject}</div>
+                            <div className="max-h-36 overflow-y-auto text-[11px] font-mono text-slate-300 whitespace-pre-wrap bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 leading-relaxed">
+                              {emailInfo.body}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(emailInfo.body);
+                                setEmailCopied(true);
+                                setTimeout(() => setEmailCopied(false), 2000);
+                              }}
+                              className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Copy className="w-3 h-3 text-[#C9A84C]" />
+                              <span>{emailCopied ? 'Email Copied to Clipboard!' : 'Copy Official Confirmation Email'}</span>
+                            </button>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Official WhatsApp Channels (NEXT STEPS) */}
+                      <div className="p-4 bg-emerald-950/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
+                        <div className="text-xs font-bold text-emerald-800 flex items-center gap-1.5 uppercase tracking-wide">
+                          <MessageCircle className="w-4 h-4 text-emerald-600" />
+                          <span>Next Steps - Join Official Channels Immediately</span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          All class schedules, starter Excel templates, Zoom links, and assessments will be distributed exclusively through our official WhatsApp channels:
+                        </p>
+                        <div className="grid grid-cols-1 gap-2 pt-1">
+                          <a
+                            href="https://whatsapp.com/channel/0029VbDmqAvGOj9lfbP6uT3U"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>1. Join PSAI FMVA Bootcamp Cohort Channel</span>
+                          </a>
+                          <a
+                            href="https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            <span>2. Join PSA Investment Main Intelligence Channel</span>
+                          </a>
+                        </div>
+                      </div>
+
                       {/* Actions */}
-                      <div className="space-y-2 pt-2">
+                      <div className="space-y-2 pt-1">
                         <button
                           onClick={() => downloadIcs(currentEvent)}
-                          className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                          className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
                         >
-                          <Download className="w-4 h-4 text-[#C9A84C]" />
+                          <Download className="w-4 h-4 text-[#0A1F44]" />
                           <span>Download Calendar Invite (.ics)</span>
                         </button>
-
-                        <a
-                          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                            `I just registered for the ${regSuccess.eventTitle}! Ticket Code: ${regSuccess.ticketCode}`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          <span>Share on WhatsApp Community</span>
-                        </a>
 
                         <button
                           onClick={() => {
@@ -1228,7 +1281,7 @@ export const Events: React.FC<EventsProps> = ({
                     <h4 className="font-serif font-black text-xl text-[#0A1F44]">Registration Confirmed!</h4>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                       Thank you, <strong className="text-slate-800">{regSuccess.fullName}</strong>. Your seat for the{' '}
-                      <strong>{regSuccess.eventTitle}</strong> has been secured. A confirmation email and calendar link have been logged.
+                      <strong>{regSuccess.eventTitle}</strong> has been secured.
                     </p>
                   </div>
 
@@ -1252,27 +1305,78 @@ export const Events: React.FC<EventsProps> = ({
                     </div>
                   </div>
 
+                  {/* Official Confirmation Email Preview */}
+                  {(() => {
+                    const emailInfo = getEventConfirmationEmail(regSuccess);
+                    return (
+                      <div className="p-4 bg-slate-900 text-white rounded-2xl text-left border border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between text-xs text-[#C9A84C] font-bold border-b border-slate-800 pb-2">
+                          <span className="flex items-center gap-1.5">
+                            <Mail className="w-3.5 h-3.5 text-[#C9A84C]" />
+                            <span>Official Confirmation Email Dispatched</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">From: {emailInfo.from}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-300 font-semibold">{emailInfo.subject}</div>
+                        <div className="max-h-36 overflow-y-auto text-[11px] font-mono text-slate-300 whitespace-pre-wrap bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 leading-relaxed">
+                          {emailInfo.body}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(emailInfo.body);
+                            setEmailCopied(true);
+                            setTimeout(() => setEmailCopied(false), 2000);
+                          }}
+                          className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <Copy className="w-3 h-3 text-[#C9A84C]" />
+                          <span>{emailCopied ? 'Email Copied to Clipboard!' : 'Copy Official Confirmation Email'}</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Official WhatsApp Channels (NEXT STEPS) */}
+                  <div className="p-4 bg-emerald-950/10 border border-emerald-500/30 rounded-2xl text-left space-y-2">
+                    <div className="text-xs font-bold text-emerald-800 flex items-center gap-1.5 uppercase tracking-wide">
+                      <MessageCircle className="w-4 h-4 text-emerald-600" />
+                      <span>Next Steps - Join Official Channels Immediately</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      All class schedules, starter Excel templates, Zoom links, and assessments will be distributed exclusively through our official WhatsApp channels:
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 pt-1">
+                      <a
+                        href="https://whatsapp.com/channel/0029VbDmqAvGOj9lfbP6uT3U"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>1. Join PSAI FMVA Bootcamp Cohort Channel</span>
+                      </a>
+                      <a
+                        href="https://whatsapp.com/channel/0029Vb7oZ03D38CbwP1M8f0R"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-2.5 bg-[#0A1F44] hover:bg-[#13306B] text-[#C9A84C] font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>2. Join PSA Investment Main Intelligence Channel</span>
+                      </a>
+                    </div>
+                  </div>
+
                   {/* Actions */}
-                  <div className="space-y-2 pt-2">
+                  <div className="space-y-2 pt-1">
                     <button
                       onClick={() => downloadIcs(selectedEventForRegister)}
-                      className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                      className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
                     >
-                      <Download className="w-4 h-4 text-[#C9A84C]" />
+                      <Download className="w-4 h-4 text-[#0A1F44]" />
                       <span>Download Calendar Invite (.ics)</span>
                     </button>
-
-                    <a
-                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                        `I just registered for the ${regSuccess.eventTitle}! Ticket Code: ${regSuccess.ticketCode}`
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>Share on WhatsApp Community</span>
-                    </a>
 
                     <button
                       onClick={() => {

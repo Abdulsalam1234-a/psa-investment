@@ -65,7 +65,7 @@ export const ResearchDossierView: React.FC<ResearchDossierViewProps> = ({
     // Dynamic Canonical Tag
     let canonical = document.querySelector('link[rel="canonical"]');
     if (canonical) {
-      canonical.setAttribute('href', `https://psainvestment.com/research/${dossier.slug}`);
+      canonical.setAttribute('href', `https://psainvestment.com.ng/research/${dossier.slug}`);
     }
 
     // Dynamic Open Graph Tags
@@ -76,7 +76,7 @@ export const ResearchDossierView: React.FC<ResearchDossierViewProps> = ({
     if (ogDesc) ogDesc.setAttribute('content', dossier.metaDescription);
 
     const ogUrl = document.querySelector('meta[property="og:url"]');
-    if (ogUrl) ogUrl.setAttribute('content', `https://psainvestment.com/research/${dossier.slug}`);
+    if (ogUrl) ogUrl.setAttribute('content', `https://psainvestment.com.ng/research/${dossier.slug}`);
 
     // Inject Per-Page JSON-LD (AnalysisNewsArticle + BreadcrumbList)
     const scriptId = 'dossier-jsonld-schema';
@@ -98,42 +98,42 @@ export const ResearchDossierView: React.FC<ResearchDossierViewProps> = ({
               '@type': 'ListItem',
               'position': 1,
               'name': 'Home',
-              'item': 'https://psainvestment.com'
+              'item': 'https://psainvestment.com.ng'
             },
             {
               '@type': 'ListItem',
               'position': 2,
               'name': 'Equity Research',
-              'item': 'https://psainvestment.com/research'
+              'item': 'https://psainvestment.com.ng/research'
             },
             {
               '@type': 'ListItem',
               'position': 3,
               'name': dossier.ticker,
-              'item': `https://psainvestment.com/research/${dossier.slug}`
+              'item': `https://psainvestment.com.ng/research/${dossier.slug}`
             }
           ]
         },
         {
           '@type': 'AnalysisNewsArticle',
-          '@id': `https://psainvestment.com/research/${dossier.slug}#article`,
+          '@id': `https://psainvestment.com.ng/research/${dossier.slug}#article`,
           'headline': dossier.title,
           'description': dossier.metaDescription,
           'datePublished': dossier.publishedAt,
           'dateModified': dossier.updatedAt,
-          'mainEntityOfPage': `https://psainvestment.com/research/${dossier.slug}`,
+          'mainEntityOfPage': `https://psainvestment.com.ng/research/${dossier.slug}`,
           'author': {
             '@type': 'Person',
-            '@id': 'https://psainvestment.com/#founder',
+            '@id': 'https://psainvestment.com.ng/#founder',
             'name': 'Salami Abdullahi Adaviruku',
             'jobTitle': 'Founder & Chief Analyst',
             'alumniOf': 'Ahmadu Bello University'
           },
           'publisher': {
             '@type': 'FinancialService',
-            '@id': 'https://psainvestment.com/#organization',
+            '@id': 'https://psainvestment.com.ng/#organization',
             'name': 'PSA Investment',
-            'url': 'https://psainvestment.com'
+            'url': 'https://psainvestment.com.ng'
           },
           'about': {
             '@type': 'Corporation',
@@ -168,7 +168,7 @@ export const ResearchDossierView: React.FC<ResearchDossierViewProps> = ({
     );
   }
 
-  const shareUrl = `https://psainvestment.com/research/${dossier.slug}?utm_source=whatsapp&utm_medium=social`;
+  const shareUrl = `https://psainvestment.com.ng/research/${dossier.slug}?utm_source=whatsapp&utm_medium=social`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);

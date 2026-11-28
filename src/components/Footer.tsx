@@ -250,10 +250,10 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenAuthModal })
               <li className="flex items-center gap-2.5 text-slate-400">
                 <Phone className="w-4 h-4 text-[#C9A84C] shrink-0" />
                 <a
-                  href={`tel:${(siteSettings?.officialPhone || '+234 706 837 1292').replace(/[^0-9+]/g, '')}`}
+                  href={`tel:${(siteSettings?.officialPhone || '+234 706 837 1295').replace(/[^0-9+]/g, '')}`}
                   className="hover:text-white font-mono transition-colors text-xs"
                 >
-                  {siteSettings?.officialPhone || '+234 706 837 1292'}
+                  {siteSettings?.officialPhone || '+234 706 837 1295'}
                 </a>
               </li>
             </ul>
