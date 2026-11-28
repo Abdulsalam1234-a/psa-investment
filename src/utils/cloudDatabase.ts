@@ -180,10 +180,10 @@ export const testCloudConnection = async (
     }
 
     try {
-      const endpoint = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents?key=${encodeURIComponent(apiKey)}`;
+      const endpoint = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/briefings/probe-doc?key=${encodeURIComponent(apiKey)}`;
       const res = await fetch(endpoint, { method: 'GET' });
       const latencyMs = Date.now() - start;
-      if (res.ok || res.status === 200) {
+      if (res.ok || res.status === 200 || res.status === 404) {
         return {
           success: true,
           message: `Successfully connected to Google Cloud Firestore (Spark Tier) for project '${projectId}'!`,
